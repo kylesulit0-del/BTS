@@ -22,7 +22,7 @@ Requirements for v1.0 milestone. Each maps to roadmap phases.
 ### Infrastructure
 
 - [x] **INFRA-01**: CORS proxy attempts run in parallel (all proxies tried simultaneously, first success used)
-- [ ] **INFRA-02**: Feed source fetchers split into per-source modules with a source registry mapping type to fetcher function
+- [x] **INFRA-02**: Feed source fetchers split into per-source modules with a source registry mapping type to fetcher function
 
 ### Feed Sources
 
@@ -85,7 +85,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SEC-01 | Phase 1 | Complete |
 | SEC-02 | Phase 1 | Complete |
 | INFRA-01 | Phase 1 | Complete |
-| INFRA-02 | Phase 1 | Pending |
+| INFRA-02 | Phase 1 | Complete |
 | SRC-01 | Phase 2 | Pending |
 | SRC-02 | Phase 2 | Pending |
 | SRC-03 | Phase 2 | Pending |

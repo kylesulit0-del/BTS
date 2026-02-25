@@ -10,16 +10,16 @@ See: .planning/PROJECT.md (updated 2026-02-25)
 ## Current Position
 
 Phase: 1 of 4 (Foundation)
-Plan: 3 of 4 in current phase
+Plan: 4 of 4 in current phase
 Status: Executing
-Last activity: 2026-02-25 -- Completed 01-01-PLAN.md (DOMPurify sanitization + parallel CORS proxy)
+Last activity: 2026-02-25 -- Completed 01-03-PLAN.md (Source registry and feed refactor)
 
-Progress: [██████░░░░] 25%
+Progress: [███████░░░] 75%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 2
+- Total plans completed: 3
 - Average duration: 3min
 - Total execution time: 0.1 hours
 
@@ -27,11 +27,11 @@ Progress: [██████░░░░] 25%
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01-foundation | 2 | 6min | 3min |
+| 01-foundation | 3 | 8min | 3min |
 
 **Recent Trend:**
-- Last 5 plans: 01-02 (3min), 01-01 (3min)
-- Trend: Starting
+- Last 5 plans: 01-03 (2min), 01-02 (3min), 01-01 (3min)
+- Trend: Stable
 
 *Updated after each plan completion*
 
@@ -52,6 +52,9 @@ Recent decisions affecting current work:
 - Used import type { Config } from dompurify (v3 exports at top level, not namespace)
 - Cast DOMPurify.sanitize() return as string for TrustedHTML compatibility
 - Used AbortSignal.any() for combined shared abort + per-request timeout in CORS proxy
+- Fetchers throw on error, orchestrator catches uniformly -- no per-fetcher try/catch
+- RSS fetcher is generic (handles Soompi, AllKPop, any future RSS) via SourceEntry
+- useFeed.ts bias filtering migrated from MEMBER_KEYWORDS to config.members.aliases
 
 ### Pending Todos
 
@@ -66,5 +69,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: Completed 01-01-PLAN.md
+Stopped at: Completed 01-03-PLAN.md
 Resume file: None
