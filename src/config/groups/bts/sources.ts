@@ -102,9 +102,9 @@ export const sources: SourceEntry[] = [
   // Fan YouTube channels
   {
     type: "youtube",
-    id: "yt-bangtansubs",
-    label: "BANGTANSUBS",
-    url: "UC5m4L0y_OJIJ2NWPRcayXvg",
+    id: "yt-jackpotarmy",
+    label: "Jackpot Army",
+    url: "UCdSjMikohmTPDF2bggxa9CQ",
     needsFilter: false,
     fetchCount: 10,
     priority: 12,
