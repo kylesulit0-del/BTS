@@ -16,12 +16,12 @@ Requirements for v1.0 milestone. Each maps to roadmap phases.
 
 ### Security
 
-- [ ] **SEC-01**: `stripHtml` replaced with DOMPurify sanitization for all RSS/HTML content
-- [ ] **SEC-02**: Tumblr HTML content sanitized with restrictive DOMPurify allowlist before rendering
+- [x] **SEC-01**: `stripHtml` replaced with DOMPurify sanitization for all RSS/HTML content
+- [x] **SEC-02**: Tumblr HTML content sanitized with restrictive DOMPurify allowlist before rendering
 
 ### Infrastructure
 
-- [ ] **INFRA-01**: CORS proxy attempts run in parallel (all proxies tried simultaneously, first success used)
+- [x] **INFRA-01**: CORS proxy attempts run in parallel (all proxies tried simultaneously, first success used)
 - [ ] **INFRA-02**: Feed source fetchers split into per-source modules with a source registry mapping type to fetcher function
 
 ### Feed Sources
@@ -82,9 +82,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CONFIG-02 | Phase 1 | Pending |
 | CONFIG-03 | Phase 4 | Pending |
 | CONFIG-04 | Phase 4 | Pending |
-| SEC-01 | Phase 1 | Pending |
-| SEC-02 | Phase 1 | Pending |
-| INFRA-01 | Phase 1 | Pending |
+| SEC-01 | Phase 1 | Complete |
+| SEC-02 | Phase 1 | Complete |
+| INFRA-01 | Phase 1 | Complete |
 | INFRA-02 | Phase 1 | Pending |
 | SRC-01 | Phase 2 | Pending |
 | SRC-02 | Phase 2 | Pending |
