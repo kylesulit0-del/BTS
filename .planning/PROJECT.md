@@ -39,6 +39,19 @@ Fans see a rich, diverse stream of BTS content from everywhere — official and 
 - User accounts or authentication
 - Content posting or commenting within the app
 
+## Current Milestone: v1.0 Army Feed Expansion
+
+**Goal:** Expand the feed with engagement stats, short-form video embeds, new content sources (Tumblr, Weverse, fan YouTube, more Reddit), and refactor to config-driven architecture for fandom portability.
+
+**Target features:**
+- Engagement stats on feed cards (likes, views, comments)
+- Embedded short-form video (TikTok, Instagram Reels, YouTube Shorts)
+- Expanded Reddit sources (memes, fan discussion)
+- Tumblr fan content integration
+- Fan forum/site content (Weverse, fan communities)
+- Fan YouTube channels (beyond official)
+- Config-driven architecture (clone-and-swap for any fandom)
+
 ## Context
 
 **Existing codebase:** React 19 + TypeScript + Vite 7 SPA. Feed system in `src/services/feeds.ts` fetches from 5 sources via CORS proxies. `FeedItem` type in `src/types/feed.ts` currently lacks engagement fields. BTS-specific keywords, subreddit names, and channel IDs are hardcoded throughout `feeds.ts` and `feed.ts`.
@@ -74,4 +87,4 @@ Fans see a rich, diverse stream of BTS content from everywhere — official and 
 | Keep client-side only (no backend) | Matches existing architecture, reduces deployment complexity | — Pending |
 
 ---
-*Last updated: 2026-02-25 after initialization*
+*Last updated: 2026-02-25 after milestone v1.0 started*
