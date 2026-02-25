@@ -12,7 +12,7 @@ Expand the Army Feed from 5 sources to 8+ with engagement stats, short-form vide
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Foundation** - Security patches, infrastructure hardening, config extraction, and source registry
+- [x] **Phase 1: Foundation** - Security patches, infrastructure hardening, config extraction, and source registry (completed 2026-02-25)
 - [ ] **Phase 2: Feed Expansion** - New content sources (Tumblr, expanded Reddit, fan YouTube) with engagement stats
 - [ ] **Phase 3: Short-Form Video** - YouTube Shorts and TikTok embeds with click-to-load pattern
 - [ ] **Phase 4: Config-Driven UI** - Dynamic filter/chip generation from config and clone-and-swap validation
@@ -85,7 +85,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 2/4 | In Progress | - |
+| 1. Foundation | 2/4 | Complete    | 2026-02-25 |
 | 2. Feed Expansion | 0/0 | Not started | - |
 | 3. Short-Form Video | 0/0 | Not started | - |
 | 4. Config-Driven UI | 0/0 | Not started | - |
