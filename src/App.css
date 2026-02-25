@@ -1,8 +1,8 @@
-/* === BTS Theme === */
+/* === Theme === */
 :root {
-  --bts-purple: #562B8B;
-  --bts-purple-light: #7c4dbd;
-  --bts-purple-dark: #3a1d5c;
+  --theme-primary: #562B8B;
+  --theme-accent: #7c4dbd;
+  --theme-dark: #3a1d5c;
   --bg-primary: #0d0d0d;
   --bg-card: #1a1a2e;
   --bg-card-hover: #222244;
@@ -56,7 +56,7 @@ a {
   font-size: 28px;
   font-weight: 800;
   margin-bottom: 4px;
-  background: linear-gradient(135deg, var(--bts-purple-light), #c084fc);
+  background: linear-gradient(135deg, var(--theme-accent), #c084fc);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -105,7 +105,7 @@ a {
 }
 
 .navbar a.active {
-  color: var(--bts-purple-light);
+  color: var(--theme-accent);
 }
 
 /* === Home Page === */
@@ -125,7 +125,7 @@ a {
   font-size: 64px;
   font-weight: 900;
   letter-spacing: 12px;
-  background: linear-gradient(135deg, var(--bts-purple), #c084fc, var(--bts-purple-light));
+  background: linear-gradient(135deg, var(--theme-primary), #c084fc, var(--theme-accent));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -201,7 +201,7 @@ a {
 .stat-number {
   font-size: 28px;
   font-weight: 800;
-  color: var(--bts-purple-light);
+  color: var(--theme-accent);
 }
 
 .stat-label {
@@ -216,7 +216,7 @@ a {
   text-align: center;
   padding: 20px;
   border-radius: 16px;
-  background: linear-gradient(135deg, var(--bts-purple-dark), var(--bg-card));
+  background: linear-gradient(135deg, var(--theme-dark), var(--bg-card));
   border: 1px solid rgba(124, 77, 189, 0.3);
 }
 
@@ -281,7 +281,7 @@ a {
 
 .member-role {
   font-size: 11px;
-  color: var(--bts-purple-light);
+  color: var(--theme-accent);
   font-weight: 600;
 }
 
@@ -294,7 +294,7 @@ a {
 /* === Member Detail === */
 .back-link {
   display: inline-block;
-  color: var(--bts-purple-light);
+  color: var(--theme-accent);
   font-size: 14px;
   font-weight: 600;
   margin-bottom: 16px;
@@ -309,7 +309,7 @@ a {
   width: 100px;
   height: 100px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--bts-purple), var(--bts-purple-light));
+  background: linear-gradient(135deg, var(--theme-primary), var(--theme-accent));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -333,7 +333,7 @@ a {
 
 .member-detail-role {
   display: inline-block;
-  background: var(--bts-purple);
+  background: var(--theme-primary);
   color: white;
   padding: 4px 14px;
   border-radius: 20px;
@@ -352,7 +352,7 @@ a {
   font-size: 16px;
   font-weight: 700;
   margin-bottom: 12px;
-  color: var(--bts-purple-light);
+  color: var(--theme-accent);
 }
 
 .member-detail-section p {
@@ -401,7 +401,7 @@ a {
 
 .fun-facts-list li::before {
   content: "•";
-  color: var(--bts-purple-light);
+  color: var(--theme-accent);
   position: absolute;
   left: 0;
   font-weight: bold;
@@ -414,8 +414,8 @@ a {
 }
 
 .solo-project-tag {
-  background: var(--bts-purple-dark);
-  color: var(--bts-purple-light);
+  background: var(--theme-dark);
+  color: var(--theme-accent);
   padding: 6px 14px;
   border-radius: 20px;
   font-size: 12px;
@@ -436,7 +436,7 @@ a {
 }
 
 .social-link:hover {
-  color: var(--bts-purple-light);
+  color: var(--theme-accent);
 }
 
 /* === Event Card === */
@@ -462,7 +462,7 @@ a {
   display: flex;
   flex-direction: column;
   align-items: center;
-  background: var(--bts-purple-dark);
+  background: var(--theme-dark);
   border-radius: 12px;
   padding: 8px 4px;
 }
@@ -470,7 +470,7 @@ a {
 .event-month {
   font-size: 10px;
   font-weight: 700;
-  color: var(--bts-purple-light);
+  color: var(--theme-accent);
   letter-spacing: 1px;
 }
 
@@ -555,7 +555,7 @@ a {
 .news-source {
   font-size: 11px;
   font-weight: 700;
-  color: var(--bts-purple-light);
+  color: var(--theme-accent);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -581,7 +581,7 @@ a {
 
 .news-link {
   font-size: 13px;
-  color: var(--bts-purple-light);
+  color: var(--theme-accent);
   font-weight: 600;
 }
 
@@ -594,7 +594,7 @@ a {
 }
 
 .feed-refresh-btn {
-  background: var(--bts-purple);
+  background: var(--theme-primary);
   color: white;
   border: none;
   border-radius: 20px;
@@ -607,7 +607,7 @@ a {
 }
 
 .feed-refresh-btn:hover {
-  background: var(--bts-purple-light);
+  background: var(--theme-accent);
 }
 
 .feed-refresh-btn:disabled {
@@ -648,9 +648,9 @@ a {
 }
 
 .feed-filter-tab.active {
-  background: var(--bts-purple);
+  background: var(--theme-primary);
   color: white;
-  border-color: var(--bts-purple);
+  border-color: var(--theme-primary);
 }
 
 /* === Feed Follow Bar === */
@@ -672,7 +672,7 @@ a {
 
 .feed-follow-link:hover {
   background: var(--bg-card-hover);
-  color: var(--bts-purple-light);
+  color: var(--theme-accent);
 }
 
 /* === Feed List === */
@@ -852,7 +852,7 @@ a {
   margin: 0 auto 16px;
   border-radius: 50%;
   overflow: hidden;
-  border: 3px solid var(--bts-purple);
+  border: 3px solid var(--theme-primary);
 }
 
 .hero-group-img {
@@ -869,7 +869,7 @@ a {
 .tour-region-header {
   font-size: 16px;
   font-weight: 700;
-  color: var(--bts-purple-light);
+  color: var(--theme-accent);
   text-transform: uppercase;
   letter-spacing: 1.5px;
   margin-bottom: 12px;
@@ -947,9 +947,9 @@ a {
 }
 
 .bias-chip-active {
-  background: var(--bts-purple);
+  background: var(--theme-primary);
   color: white;
-  border-color: var(--bts-purple);
+  border-color: var(--theme-primary);
 }
 
 .bias-chip-emoji {
@@ -959,7 +959,7 @@ a {
 /* === Bias Indicator === */
 .bias-indicator {
   font-size: 12px;
-  color: var(--bts-purple-light);
+  color: var(--theme-accent);
   font-weight: 600;
   padding: 8px 12px;
   background: rgba(86, 43, 139, 0.15);
@@ -1000,7 +1000,7 @@ a {
 }
 
 .gallery-thumb:hover {
-  border-color: var(--bts-purple-light);
+  border-color: var(--theme-accent);
 }
 
 .gallery-thumb:active {
@@ -1141,9 +1141,9 @@ a {
 }
 
 .view-toggle-btn.active {
-  background: var(--bts-purple);
+  background: var(--theme-primary);
   color: white;
-  border-color: var(--bts-purple);
+  border-color: var(--theme-primary);
 }
 
 /* === Swipe Mode Page === */
@@ -1240,7 +1240,7 @@ a {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, var(--bts-purple-dark), var(--bg-card));
+  background: linear-gradient(135deg, var(--theme-dark), var(--bg-card));
 }
 
 .swipe-placeholder-emoji {
@@ -1272,7 +1272,7 @@ a {
 
 .swipe-read-more {
   display: inline-block;
-  background: var(--bts-purple);
+  background: var(--theme-primary);
   color: white;
   padding: 10px 24px;
   border-radius: 24px;
@@ -1282,7 +1282,7 @@ a {
 }
 
 .swipe-read-more:hover {
-  background: var(--bts-purple-light);
+  background: var(--theme-accent);
 }
 
 .swipe-counter {

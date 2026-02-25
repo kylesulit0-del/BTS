@@ -3,7 +3,8 @@ import type { FeedItem, FeedSource, BiasId } from "../types/feed";
 import { getConfig } from "../config";
 import { fetchAllFeedsIncremental } from "../services/feeds";
 
-const CACHE_KEY = "bts-feed-cache";
+const config = getConfig();
+const CACHE_KEY = `${config.theme.groupName.toLowerCase()}-feed-cache`;
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 interface CacheData {

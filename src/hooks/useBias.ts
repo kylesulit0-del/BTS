@@ -1,7 +1,9 @@
 import { useState, useCallback } from "react";
 import type { BiasId } from "../types/feed";
+import { getConfig } from "../config";
 
-const STORAGE_KEY = "bts-bias-selection";
+const config = getConfig();
+const STORAGE_KEY = `${config.theme.groupName.toLowerCase()}-bias-selection`;
 
 function loadBiases(): BiasId[] {
   try {
