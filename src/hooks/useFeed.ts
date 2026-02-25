@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import type { FeedItem, FeedSource, BiasId } from "../types/feed";
-import { MEMBER_KEYWORDS } from "../types/feed";
+import { getConfig } from "../config";
 import { fetchAllFeedsIncremental } from "../services/feeds";
 
 const CACHE_KEY = "bts-feed-cache";
@@ -34,9 +34,12 @@ function setCache(items: FeedItem[]) {
 
 function matchesBias(item: FeedItem, biases: BiasId[]): boolean {
   const text = `${item.title} ${item.preview || ""}`.toLowerCase();
-  return biases.some((biasId) =>
-    MEMBER_KEYWORDS[biasId].some((kw) => text.includes(kw.toLowerCase()))
-  );
+  const config = getConfig();
+  return biases.some((biasId) => {
+    const member = config.members.find((m) => m.id === biasId);
+    if (!member) return false;
+    return member.aliases.some((alias) => text.includes(alias.toLowerCase()));
+  });
 }
 
 export function useFeed(filter: FeedSource | "all" = "all", biases: BiasId[] = []) {
