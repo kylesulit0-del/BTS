@@ -4,9 +4,7 @@ import { getConfig } from "../../config";
 import { parseRSS } from "../../utils/xmlParser";
 import { stripToText } from "../../utils/sanitize";
 import { fetchWithProxy } from "../../utils/corsProxy";
-import { registerFetcher } from "./registry";
-
-async function fetchRssSource(source: SourceEntry): Promise<FeedItem[]> {
+export async function fetchRssSource(source: SourceEntry): Promise<FeedItem[]> {
   const xml = await fetchWithProxy(source.url);
   const rssItems = parseRSS(xml);
 
@@ -27,4 +25,3 @@ async function fetchRssSource(source: SourceEntry): Promise<FeedItem[]> {
     }));
 }
 
-registerFetcher("rss", fetchRssSource);

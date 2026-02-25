@@ -2,9 +2,7 @@ import type { SourceEntry } from "../../config/types";
 import type { FeedItem } from "../../types/feed";
 import { stripToText } from "../../utils/sanitize";
 import { fetchWithProxy } from "../../utils/corsProxy";
-import { registerFetcher } from "./registry";
-
-async function fetchTwitterSource(source: SourceEntry): Promise<FeedItem[]> {
+export async function fetchTwitterSource(source: SourceEntry): Promise<FeedItem[]> {
   const html = await fetchWithProxy(source.url);
   const limit = source.fetchCount ?? 10;
 
@@ -39,4 +37,3 @@ async function fetchTwitterSource(source: SourceEntry): Promise<FeedItem[]> {
   return items;
 }
 
-registerFetcher("twitter", fetchTwitterSource);

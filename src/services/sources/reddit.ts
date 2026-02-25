@@ -3,9 +3,7 @@ import type { FeedItem } from "../../types/feed";
 import { getConfig } from "../../config";
 import { stripToText } from "../../utils/sanitize";
 import { fetchWithProxy } from "../../utils/corsProxy";
-import { registerFetcher } from "./registry";
-
-async function fetchRedditSource(source: SourceEntry): Promise<FeedItem[]> {
+export async function fetchRedditSource(source: SourceEntry): Promise<FeedItem[]> {
   const limit = source.fetchCount ?? 15;
   const url = `https://www.reddit.com/r/${source.url}/hot.json?limit=${limit}`;
   const text = await fetchWithProxy(url);
@@ -36,4 +34,3 @@ async function fetchRedditSource(source: SourceEntry): Promise<FeedItem[]> {
   return items;
 }
 
-registerFetcher("reddit", fetchRedditSource);

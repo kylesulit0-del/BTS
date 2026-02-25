@@ -1,20 +1,19 @@
 import type { SourceEntry } from "../../config/types";
 import type { FeedItem } from "../../types/feed";
+import { fetchRedditSource } from "./reddit";
+import { fetchYouTubeSource } from "./youtube";
+import { fetchRssSource } from "./rss";
+import { fetchTwitterSource } from "./twitter";
 
 export type SourceFetcher = (source: SourceEntry) => Promise<FeedItem[]>;
 
-const fetchers = new Map<string, SourceFetcher>();
-
-export function registerFetcher(type: string, fetcher: SourceFetcher): void {
-  fetchers.set(type, fetcher);
-}
+const fetchers: Record<string, SourceFetcher> = {
+  reddit: fetchRedditSource,
+  youtube: fetchYouTubeSource,
+  rss: fetchRssSource,
+  twitter: fetchTwitterSource,
+};
 
 export function getFetcher(type: string): SourceFetcher | undefined {
-  return fetchers.get(type);
+  return fetchers[type];
 }
-
-// Import all fetcher modules to trigger self-registration
-import "./reddit";
-import "./youtube";
-import "./rss";
-import "./twitter";
