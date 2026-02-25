@@ -29,11 +29,13 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Every BTS-specific keyword, subreddit name, channel ID, and member data value comes from a single typed GroupConfig object -- grep for hardcoded BTS references in service/component code returns zero matches
   4. Feed source fetchers are split into per-source modules with a registry that maps source type to fetcher function
   5. The app produces identical feed results as before the refactor (no regressions in existing functionality)
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
-- [ ] 01-01: TBD
-- [ ] 01-02: TBD
+- [ ] 01-01-PLAN.md — DOMPurify sanitization utility and parallel CORS proxy (SEC-01, SEC-02, INFRA-01)
+- [ ] 01-02-PLAN.md — GroupConfig type system and BTS config data extraction (CONFIG-01)
+- [ ] 01-03-PLAN.md — Source registry and per-source fetcher modules (INFRA-02)
+- [ ] 01-04-PLAN.md — Wire config throughout app, eliminate hardcoded BTS references (CONFIG-02)
 
 ### Phase 2: Feed Expansion
 **Goal**: Users see content from Tumblr fan blogs, additional Reddit subreddits, and fan YouTube channels, with Reddit engagement stats visible on feed cards
@@ -83,7 +85,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 0/0 | Not started | - |
+| 1. Foundation | 0/4 | Planned | - |
 | 2. Feed Expansion | 0/0 | Not started | - |
 | 3. Short-Form Video | 0/0 | Not started | - |
 | 4. Config-Driven UI | 0/0 | Not started | - |
