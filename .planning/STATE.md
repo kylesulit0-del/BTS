@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-25)
 
 **Core value:** Fans see a rich, diverse stream of BTS content from everywhere with engagement stats that help surface the best content, all without leaving the app.
-**Current focus:** Phase 2: Feed Expansion
+**Current focus:** Phase 3: Short-Form Video
 
 ## Current Position
 
-Phase: 2 of 4 (Feed Expansion)
-Plan: 5 of 5 in current phase
-Status: Phase 2 complete
-Last activity: 2026-02-25 -- Completed 02-05-PLAN.md (Tumblr + YouTube source curation)
+Phase: 3 of 4 (Short-Form Video)
+Plan: 1 of 2 in current phase
+Status: Executing
+Last activity: 2026-02-25 -- Completed 03-01-PLAN.md (Video detection data layer)
 
-Progress: [██████████] 100% (Phase 2: 5/5 plans)
+Progress: [█████-----] 50% (Phase 3: 1/2 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 9
+- Total plans completed: 10
 - Average duration: 3min
-- Total execution time: 0.52 hours
+- Total execution time: 0.55 hours
 
 **By Phase:**
 
@@ -29,15 +29,17 @@ Progress: [██████████] 100% (Phase 2: 5/5 plans)
 |-------|-------|-------|----------|
 | 01-foundation | 4 | 13min | 3min |
 | 02-feed-expansion | 5 | 18min | 4min |
+| 03-short-form-video | 1 | 2min | 2min |
 
 **Recent Trend:**
-- Last 5 plans: 02-05 (13min), 02-04 (1min), 02-03 (1min), 02-02 (2min), 02-01 (2min)
-- Trend: 02-05 higher due to extensive Tumblr/YouTube source research
+- Last 5 plans: 03-01 (2min), 02-05 (13min), 02-04 (1min), 02-03 (1min), 02-02 (2min)
+- Trend: Stable, 03-01 straightforward utility creation
 
 *Updated after each plan completion*
 | Phase 02 P03 | 1min | 1 tasks | 1 files |
 | Phase 02 P04 | 1min | 1 tasks | 2 files |
 | Phase 02 P05 | 13min | 2 tasks | 1 files |
+| Phase 03 P01 | 2min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -74,6 +76,10 @@ Recent decisions affecting current work:
 - [Phase 02]: 30-day age window chosen to match YouTube posting cadences (BANGTANTV posts every 2-3 weeks)
 - [Phase 02]: Tumblr sources curated: bts-trans (needsFilter:false), kimtaegis/userparkjimin/namjin/jikook (needsFilter:true for mixed content)
 - [Phase 02]: Jackpot Army YouTube channel selected as BangtanSubs replacement (BTS-dedicated reaction/commentary, needsFilter:false)
+- [Phase 03]: VideoType defined in feed.ts alongside FeedItem for colocation
+- [Phase 03]: detectVideo checks url_overridden_by_dest plus selftext for video URL detection
+- [Phase 03]: TikTok short URLs store short path as videoId with isShortUrl flag (CORS blocks redirect resolution)
+- [Phase 03]: TikTok compilation YouTube channel added as enabled:false pending verified channel ID
 
 ### Pending Todos
 
@@ -88,5 +94,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: Completed 02-05-PLAN.md (Tumblr + YouTube source curation) -- Phase 2 complete
+Stopped at: Completed 03-01-PLAN.md (Video detection data layer)
 Resume file: None
