@@ -10,33 +10,34 @@ See: .planning/PROJECT.md (updated 2026-02-25)
 ## Current Position
 
 Phase: 2 of 4 (Feed Expansion)
-Plan: 4 of 5 in current phase
-Status: In progress (gap closure plans)
-Last activity: 2026-02-25 -- Completed 02-04-PLAN.md (YouTube age filter + HYBE channel fix)
+Plan: 5 of 5 in current phase
+Status: Phase 2 complete
+Last activity: 2026-02-25 -- Completed 02-05-PLAN.md (Tumblr + YouTube source curation)
 
-Progress: [████████░░] 80% (Phase 2: 4/5 plans)
+Progress: [██████████] 100% (Phase 2: 5/5 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 8
-- Average duration: 2min
-- Total execution time: 0.30 hours
+- Total plans completed: 9
+- Average duration: 3min
+- Total execution time: 0.52 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-foundation | 4 | 13min | 3min |
-| 02-feed-expansion | 3 | 5min | 2min |
+| 02-feed-expansion | 5 | 18min | 4min |
 
 **Recent Trend:**
-- Last 5 plans: 02-03 (1min), 02-02 (2min), 02-01 (2min), 01-04 (5min), 01-03 (2min)
-- Trend: Stable
+- Last 5 plans: 02-05 (13min), 02-04 (1min), 02-03 (1min), 02-02 (2min), 02-01 (2min)
+- Trend: 02-05 higher due to extensive Tumblr/YouTube source research
 
 *Updated after each plan completion*
 | Phase 02 P03 | 1min | 1 tasks | 1 files |
 | Phase 02 P04 | 1min | 1 tasks | 2 files |
+| Phase 02 P05 | 13min | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -62,7 +63,7 @@ Recent decisions affecting current work:
 - FeedCard uses div wrapper with internal View original link instead of anchor wrapper
 - Auto-retry uses 5s/10s delays, max 2 retries, no error messages during retry
 - Tours.tsx BTS WORLD TOUR title left as event-specific content, not group branding
-- Fan YouTube IDs verified: BangtanSubs (UC5m4L0y_OJIJ2NWPRcayXvg), DKDKTV (UCVEzR8VHu0JC5xlTr53cMwQ) -- both enabled
+- Fan YouTube IDs: Jackpot Army (UCdSjMikohmTPDF2bggxa9CQ) replaced inactive BangtanSubs, DKDKTV (UCVEzR8VHu0JC5xlTr53cMwQ) retained
 - DKDKTV set needsFilter:true since it covers broader K-pop topics beyond BTS
 - Tumblr fetcher is separate from generic RSS fetcher for future API upgrade path
 - Reddit stats use d.score (accurate) not d.ups (fuzzed by Reddit)
@@ -71,6 +72,8 @@ Recent decisions affecting current work:
 - applyFeedPipeline extracted as shared function for incremental and batch fetch paths
 - Per-source cap (30 items) sorts by engagement before truncating to keep best content
 - [Phase 02]: 30-day age window chosen to match YouTube posting cadences (BANGTANTV posts every 2-3 weeks)
+- [Phase 02]: Tumblr sources curated: bts-trans (needsFilter:false), kimtaegis/userparkjimin/namjin/jikook (needsFilter:true for mixed content)
+- [Phase 02]: Jackpot Army YouTube channel selected as BangtanSubs replacement (BTS-dedicated reaction/commentary, needsFilter:false)
 
 ### Pending Todos
 
@@ -85,5 +88,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: Completed 02-04-PLAN.md (YouTube age filter + HYBE channel fix)
+Stopped at: Completed 02-05-PLAN.md (Tumblr + YouTube source curation) -- Phase 2 complete
 Resume file: None
