@@ -14,7 +14,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation** - Security patches, infrastructure hardening, config extraction, and source registry (completed 2026-02-25)
 - [x] **Phase 2: Feed Expansion** - New content sources (Tumblr, expanded Reddit, fan YouTube) with engagement stats (completed 2026-02-25)
-- [ ] **Phase 3: Short-Form Video** - YouTube Shorts and TikTok embeds with click-to-load pattern
+- [ ] **Phase 3: Short-Form Video** - YouTube Shorts and TikTok embeds with autoplay-on-scroll
 - [ ] **Phase 4: Config-Driven UI** - Dynamic filter/chip generation from config and clone-and-swap validation
 
 ## Phase Details
@@ -57,17 +57,18 @@ Plans:
 - [ ] 02-05-PLAN.md — Gap closure: replace inactive Tumblr blogs and BangtanSubs with active sources (SRC-02, SRC-03, SRC-04)
 
 ### Phase 3: Short-Form Video
-**Goal**: Users encounter short-form video content (YouTube Shorts, TikTok) rendered as embedded players directly in the feed
+**Goal**: Users encounter short-form video content (YouTube Shorts, TikTok) rendered as embedded players directly in the feed with autoplay-on-scroll
 **Depends on**: Phase 2
 **Requirements**: EMBED-01, EMBED-02, EMBED-03
 **Success Criteria** (what must be TRUE):
   1. YouTube Shorts URLs render as vertical (9:16 aspect ratio) embedded video players in the feed
   2. TikTok URLs found in Reddit posts render as lazy-loaded embed players in the feed
-  3. All video embeds use a click-to-load pattern -- user sees a thumbnail with play overlay, iframe loads only on click
-**Plans**: TBD
+  3. Video embeds autoplay on scroll into view (muted initially), with one-at-a-time playback, looping, and pause on scroll away
+**Plans**: 2 plans
 
 Plans:
-- [ ] 03-01: TBD
+- [ ] 03-01-PLAN.md — Data layer: video URL detection utility, FeedItem type extension, Reddit fetcher enrichment, TikTok compilation channels (EMBED-01, EMBED-02)
+- [ ] 03-02-PLAN.md — UI layer: VideoEmbed component, autoplay hook, FeedCard/SwipeFeed integration, CSS styling (EMBED-01, EMBED-02, EMBED-03)
 
 ### Phase 4: Config-Driven UI
 **Goal**: All UI elements that display group-specific data are generated from config, completing the clone-and-swap architecture
@@ -90,5 +91,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 |-------|----------------|--------|-----------|
 | 1. Foundation | 4/4 | Complete    | 2026-02-25 |
 | 2. Feed Expansion | 3/5 | Gap closure | 2026-02-25 |
-| 3. Short-Form Video | 0/0 | Not started | - |
+| 3. Short-Form Video | 0/2 | Planning complete | - |
 | 4. Config-Driven UI | 0/0 | Not started | - |
