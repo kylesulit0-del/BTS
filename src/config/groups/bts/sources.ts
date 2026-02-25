@@ -79,6 +79,48 @@ export const sources: SourceEntry[] = [
     priority: 8,
   },
 
+  // Additional Reddit sources
+  {
+    type: "reddit",
+    id: "reddit-kpoopheads",
+    label: "r/kpoopheads",
+    url: "kpoopheads",
+    needsFilter: true,
+    fetchCount: 10,
+    priority: 10,
+  },
+  {
+    type: "reddit",
+    id: "reddit-btsworld",
+    label: "r/BTSWorld",
+    url: "BTSWorld",
+    needsFilter: false,
+    fetchCount: 10,
+    priority: 11,
+  },
+
+  // Fan YouTube channels
+  {
+    type: "youtube",
+    id: "yt-bangtansubs",
+    label: "BANGTANSUBS",
+    url: "UCfBiWbcbqMGBnfBLcsZFDeA",
+    needsFilter: false,
+    fetchCount: 10,
+    priority: 12,
+    enabled: false, // Channel ID needs verification
+  },
+  {
+    type: "youtube",
+    id: "yt-bts-fan-edits",
+    label: "BTS Fan Edits",
+    url: "UCplaceholder-fan-edits",
+    needsFilter: true,
+    fetchCount: 10,
+    priority: 13,
+    enabled: false, // Channel ID needs verification
+  },
+
   // Twitter sources
   {
     type: "twitter",
@@ -88,5 +130,52 @@ export const sources: SourceEntry[] = [
     needsFilter: false,
     fetchCount: 10,
     priority: 9,
+  },
+
+  // Tumblr sources
+  {
+    type: "tumblr",
+    id: "tumblr-btsfandom",
+    label: "btsfandom",
+    url: "https://btsfandom.tumblr.com/rss",
+    needsFilter: false,
+    fetchCount: 10,
+    priority: 20,
+  },
+  {
+    type: "tumblr",
+    id: "tumblr-bangtan",
+    label: "bangtan",
+    url: "https://bangtan.tumblr.com/rss",
+    needsFilter: false,
+    fetchCount: 10,
+    priority: 21,
+  },
+  {
+    type: "tumblr",
+    id: "tumblr-allforbts",
+    label: "allforbts",
+    url: "https://allforbts.tumblr.com/rss",
+    needsFilter: false,
+    fetchCount: 10,
+    priority: 22,
+  },
+  {
+    type: "tumblr",
+    id: "tumblr-0613data",
+    label: "0613data",
+    url: "https://0613data.tumblr.com/rss",
+    needsFilter: false,
+    fetchCount: 8,
+    priority: 23,
+  },
+  {
+    type: "tumblr",
+    id: "tumblr-beautifulpersonpeach",
+    label: "beautifulpersonpeach",
+    url: "https://beautifulpersonpeach.tumblr.com/rss",
+    needsFilter: false,
+    fetchCount: 8,
+    priority: 24,
   },
 ];
