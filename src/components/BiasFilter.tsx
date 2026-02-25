@@ -1,14 +1,6 @@
 import type { BiasId } from "../types/feed";
 import { getConfig } from "../config";
 
-const config = getConfig();
-const memberChips = config.members.map((m) => ({
-  id: m.id as BiasId,
-  label: m.stageName,
-  emoji: m.emoji,
-  color: m.color,
-}));
-
 interface Props {
   biases: BiasId[];
   onToggle: (id: BiasId) => void;
@@ -16,6 +8,14 @@ interface Props {
 }
 
 export default function BiasFilter({ biases, onToggle, onClear }: Props) {
+  const config = getConfig();
+  const memberChips = config.members.map((m) => ({
+    id: m.id as BiasId,
+    label: m.stageName,
+    emoji: m.emoji,
+    color: m.color,
+  }));
+
   return (
     <div className="bias-filter">
       <div className="bias-filter-label">Select Your Bias</div>

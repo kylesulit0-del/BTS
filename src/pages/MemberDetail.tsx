@@ -3,8 +3,6 @@ import { useParams, Link } from "react-router-dom";
 import { getConfig } from "../config";
 import PhotoGallery from "../components/PhotoGallery";
 
-const config = getConfig();
-
 function getSocialUrl(platform: string, handle: string): string {
   const clean = handle.replace(/^@/, "");
   switch (platform.toLowerCase()) {
@@ -23,6 +21,7 @@ function getSocialUrl(platform: string, handle: string): string {
 }
 
 export default function MemberDetail() {
+  const config = getConfig();
   const { id } = useParams<{ id: string }>();
   const member = config.members.find((m) => m.id === id);
   const [imgError, setImgError] = useState(false);

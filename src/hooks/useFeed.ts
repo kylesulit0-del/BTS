@@ -3,8 +3,9 @@ import type { FeedItem, FeedSource, BiasId } from "../types/feed";
 import { getConfig } from "../config";
 import { fetchAllFeedsIncremental } from "../services/feeds";
 
-const config = getConfig();
-const CACHE_KEY = `${config.theme.groupName.toLowerCase()}-feed-cache`;
+function getCacheKey() {
+  return `${getConfig().theme.groupName.toLowerCase()}-feed-cache`;
+}
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 const RETRY_DELAYS = [5000, 10000]; // 5s, then 10s
 const MAX_RETRIES = 2;
@@ -16,7 +17,7 @@ interface CacheData {
 
 function getCache(): CacheData | null {
   try {
-    const raw = localStorage.getItem(CACHE_KEY);
+    const raw = localStorage.getItem(getCacheKey());
     if (!raw) return null;
     const data: CacheData = JSON.parse(raw);
     if (Date.now() - data.timestamp > CACHE_TTL) return null;
@@ -29,7 +30,7 @@ function getCache(): CacheData | null {
 function setCache(items: FeedItem[]) {
   try {
     const data: CacheData = { items, timestamp: Date.now() };
-    localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+    localStorage.setItem(getCacheKey(), JSON.stringify(data));
   } catch {
     // localStorage full or unavailable
   }
@@ -118,7 +119,7 @@ export function useFeed(filter: FeedSource | "all" = "all", biases: BiasId[] = [
     } catch {
       // Try to use stale cache
       try {
-        const raw = localStorage.getItem(CACHE_KEY);
+        const raw = localStorage.getItem(getCacheKey());
         if (raw) {
           const data: CacheData = JSON.parse(raw);
           setAllItems(data.items);

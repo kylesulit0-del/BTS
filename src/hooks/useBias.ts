@@ -2,12 +2,13 @@ import { useState, useCallback } from "react";
 import type { BiasId } from "../types/feed";
 import { getConfig } from "../config";
 
-const config = getConfig();
-const STORAGE_KEY = `${config.theme.groupName.toLowerCase()}-bias-selection`;
+function getStorageKey() {
+  return `${getConfig().theme.groupName.toLowerCase()}-bias-selection`;
+}
 
 function loadBiases(): BiasId[] {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(getStorageKey());
     if (!raw) return [];
     return JSON.parse(raw) as BiasId[];
   } catch {
@@ -17,7 +18,7 @@ function loadBiases(): BiasId[] {
 
 function saveBiases(biases: BiasId[]) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(biases));
+    localStorage.setItem(getStorageKey(), JSON.stringify(biases));
   } catch {
     // localStorage unavailable
   }

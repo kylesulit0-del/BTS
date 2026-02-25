@@ -1,9 +1,8 @@
 import { getConfig } from "../config";
 import MemberCard from "../components/MemberCard";
 
-const config = getConfig();
-
 export default function Members() {
+  const config = getConfig();
   return (
     <div className="page">
       <h1 className="page-title">Members</h1>

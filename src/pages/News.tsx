@@ -11,9 +11,8 @@ import { news } from "../data/news";
 import NewsCard from "../components/NewsCard";
 import { getConfig } from "../config";
 
-const config = getConfig();
-
 export default function News() {
+  const config = getConfig();
   const [filter, setFilter] = useState<FeedSource | "all">("all");
   const [viewMode, setViewMode] = useState<"list" | "swipe">("list");
   const { biases, toggleBias, clearBiases } = useBias();

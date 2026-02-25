@@ -1,9 +1,8 @@
 import { Link } from "react-router-dom";
 import { getConfig } from "../config";
 
-const config = getConfig();
-
 export default function Home() {
+  const config = getConfig();
   return (
     <div className="page home-page">
       <div className="hero">
