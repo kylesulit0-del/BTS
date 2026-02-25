@@ -1,5 +1,7 @@
 export type FeedSource = "reddit" | "youtube" | "news" | "rss" | "twitter" | "tumblr";
 
+export type VideoType = "youtube-short" | "tiktok";
+
 // TODO: Move BiasId to config-derived type in Plan 04
 export type BiasId = "rm" | "jin" | "suga" | "jhope" | "jimin" | "v" | "jungkook";
 
@@ -22,4 +24,6 @@ export interface FeedItem {
   thumbnail?: string;
   author?: string;
   stats?: FeedStats;
+  videoType?: VideoType;
+  videoId?: string;
 }
