@@ -104,21 +104,19 @@ export const sources: SourceEntry[] = [
     type: "youtube",
     id: "yt-bangtansubs",
     label: "BANGTANSUBS",
-    url: "UCfBiWbcbqMGBnfBLcsZFDeA",
+    url: "UC5m4L0y_OJIJ2NWPRcayXvg",
     needsFilter: false,
     fetchCount: 10,
     priority: 12,
-    enabled: false, // Channel ID needs verification
   },
   {
     type: "youtube",
-    id: "yt-bts-fan-edits",
-    label: "BTS Fan Edits",
-    url: "UCplaceholder-fan-edits",
+    id: "yt-dkdktv",
+    label: "DKDKTV",
+    url: "UCVEzR8VHu0JC5xlTr53cMwQ",
     needsFilter: true,
     fetchCount: 10,
     priority: 13,
-    enabled: false, // Channel ID needs verification
   },
 
   // Twitter sources
