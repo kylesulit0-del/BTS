@@ -1,9 +1,9 @@
 ---
-status: diagnosed
+status: resolved
 phase: 02-feed-expansion
 source: [02-01-SUMMARY.md, 02-02-SUMMARY.md, 02-03-SUMMARY.md]
 started: 2026-02-25T09:25:00Z
-updated: 2026-02-25T09:50:00Z
+updated: 2026-02-25T11:30:00Z
 ---
 
 ## Current Test
@@ -64,7 +64,7 @@ skipped: 0
 ## Gaps
 
 - truth: "Tumblr fan blog posts appear in the feed with properly rendered text and working thumbnails"
-  status: failed
+  status: resolved
   reason: "User reported: thumbnails of images on feed pages is not loading"
   severity: major
   test: 1
@@ -79,7 +79,7 @@ skipped: 0
     - "Consider source-specific age windows or increase MAX_AGE_MS"
   debug_session: ".planning/debug/thumbnails-not-loading.md"
 - truth: "Tumblr filter chip filters feed to show only Tumblr posts"
-  status: failed
+  status: resolved
   reason: "User reported: filter chip for Tumblr appears but clicking it shows no Tumblr content available"
   severity: major
   test: 2
@@ -94,7 +94,7 @@ skipped: 0
     - "Consider source-specific or longer age window for Tumblr"
   debug_session: ".planning/debug/tumblr-filter-no-content.md"
 - truth: "YouTube feed cards display view count and/or like count with icons, abbreviated"
-  status: failed
+  status: resolved
   reason: "User reported: no stats showing on youtube cards"
   severity: major
   test: 4
@@ -108,7 +108,7 @@ skipped: 0
     - "Fix HYBE channel ID and increase MAX_AGE_MS to allow YouTube videos with stats into feed"
   debug_session: ".planning/debug/youtube-stats-missing.md"
 - truth: "Feed contains YouTube videos from fan channels (BangtanSubs, DKDKTV) alongside official content"
-  status: failed
+  status: resolved
   reason: "User reported: youtube is only showing 1 video, needs more work to ensure feed has youtube content from more sources and is showing correctly"
   severity: major
   test: 6
