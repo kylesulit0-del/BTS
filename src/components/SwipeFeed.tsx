@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import type { FeedItem } from "../types/feed";
+import VideoEmbed from "./VideoEmbed";
 
 const sourceBadgeColors: Record<string, string> = {
   reddit: "#FF4500",
@@ -95,7 +96,14 @@ export default function SwipeFeed({ items }: SwipeFeedProps) {
               </div>
 
               <div className="swipe-media">
-                {videoId ? (
+                {item.videoType && item.videoId ? (
+                  <VideoEmbed
+                    videoType={item.videoType}
+                    videoId={item.videoId}
+                    title={item.title}
+                    thumbnail={item.thumbnail}
+                  />
+                ) : videoId ? (
                   <iframe
                     className="swipe-video"
                     src={`https://www.youtube.com/embed/${videoId}?rel=0`}

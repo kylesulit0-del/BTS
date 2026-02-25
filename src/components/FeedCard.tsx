@@ -1,5 +1,6 @@
 import type { FeedItem } from "../types/feed";
 import { abbreviateNumber } from "../utils/formatNumber";
+import VideoEmbed from "./VideoEmbed";
 
 const sourceBadgeColors: Record<string, string> = {
   reddit: "#FF4500",
@@ -26,11 +27,18 @@ function timeAgo(timestamp: number): string {
 export default function FeedCard({ item }: { item: FeedItem }) {
   return (
     <div className="feed-card">
-      {item.thumbnail && (
+      {item.videoType && item.videoId ? (
+        <VideoEmbed
+          videoType={item.videoType}
+          videoId={item.videoId}
+          title={item.title}
+          thumbnail={item.thumbnail}
+        />
+      ) : item.thumbnail ? (
         <div className="feed-card-thumbnail">
           <img src={item.thumbnail} alt="" loading="lazy" />
         </div>
-      )}
+      ) : null}
       <div className="feed-card-content">
         <div className="feed-card-meta">
           <span
@@ -39,6 +47,11 @@ export default function FeedCard({ item }: { item: FeedItem }) {
           >
             {item.sourceName}
           </span>
+          {item.videoType && (
+            <span className="feed-card-video-badge">
+              {item.videoType === "youtube-short" ? "Shorts" : "TikTok"}
+            </span>
+          )}
           <span className="feed-card-time">{timeAgo(item.timestamp)}</span>
           {item.stats && (
             <span className="feed-card-stats">
