@@ -10,6 +10,7 @@ const filters: { label: string; value: FeedSource | "all" }[] = [
   { label: "Reddit", value: "reddit" },
   { label: "YouTube", value: "youtube" },
   { label: "News", value: "news" },
+  { label: "Tumblr", value: "tumblr" },
   { label: "Twitter", value: "twitter" },
 ];
 
