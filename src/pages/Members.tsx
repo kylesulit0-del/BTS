@@ -1,13 +1,15 @@
-import { members } from "../data/members";
+import { getConfig } from "../config";
 import MemberCard from "../components/MemberCard";
+
+const config = getConfig();
 
 export default function Members() {
   return (
     <div className="page">
       <h1 className="page-title">Members</h1>
-      <p className="page-subtitle">The 7 members of BTS</p>
+      <p className="page-subtitle">The {config.members.length} members of {config.theme.groupName}</p>
       <div className="members-list">
-        {members.map((member) => (
+        {config.members.map((member) => (
           <MemberCard key={member.id} member={member} />
         ))}
       </div>

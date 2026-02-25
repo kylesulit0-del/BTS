@@ -1,17 +1,9 @@
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { members } from "../data/members";
+import { getConfig } from "../config";
 import PhotoGallery from "../components/PhotoGallery";
 
-const memberEmojis: Record<string, string> = {
-  rm: "🐨",
-  jin: "🐹",
-  suga: "🐱",
-  jhope: "🐿️",
-  jimin: "🐥",
-  v: "🐯",
-  jungkook: "🐰",
-};
+const config = getConfig();
 
 function getSocialUrl(platform: string, handle: string): string {
   const clean = handle.replace(/^@/, "");
@@ -32,7 +24,7 @@ function getSocialUrl(platform: string, handle: string): string {
 
 export default function MemberDetail() {
   const { id } = useParams<{ id: string }>();
-  const member = members.find((m) => m.id === id);
+  const member = config.members.find((m) => m.id === id);
   const [imgError, setImgError] = useState(false);
 
   if (!member) {
@@ -58,7 +50,7 @@ export default function MemberDetail() {
               onError={() => setImgError(true)}
             />
           ) : (
-            <span className="member-detail-emoji">{memberEmojis[member.id]}</span>
+            <span className="member-detail-emoji">{member.emoji}</span>
           )}
         </div>
         <h1>{member.stageName}</h1>

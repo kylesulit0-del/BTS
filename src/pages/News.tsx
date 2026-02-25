@@ -8,7 +8,9 @@ import BiasFilter from "../components/BiasFilter";
 import SwipeFeed from "../components/SwipeFeed";
 import { news } from "../data/news";
 import NewsCard from "../components/NewsCard";
-import { members } from "../data/members";
+import { getConfig } from "../config";
+
+const config = getConfig();
 
 export default function News() {
   const [filter, setFilter] = useState<FeedSource | "all">("all");
@@ -17,15 +19,15 @@ export default function News() {
   const { items, loading, error, refresh, hasItems } = useFeed(filter, biases);
 
   const biasNames = biases
-    .map((id) => members.find((m) => m.id === id)?.stageName)
+    .map((id) => config.members.find((m) => m.id === id)?.stageName)
     .filter(Boolean);
 
   return (
     <div className={`page${viewMode === "swipe" ? " swipe-mode" : ""}`}>
       <div className="feed-header">
         <div>
-          <h1 className="page-title">ARMY Feed</h1>
-          <p className="page-subtitle">BTS content from across the web</p>
+          <h1 className="page-title">{config.theme.fandomName} Feed</h1>
+          <p className="page-subtitle">{config.theme.groupName} content from across the web</p>
         </div>
         <div className="feed-header-actions">
           <button
@@ -64,16 +66,21 @@ export default function News() {
         </div>
       )}
 
-      <div className="feed-follow-bar">
-        <a
-          href="https://x.com/BTS_twt"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="feed-follow-link"
-        >
-          Follow @BTS_twt on X →
-        </a>
-      </div>
+      {config.theme.socialLinks.length > 0 && (
+        <div className="feed-follow-bar">
+          {config.theme.socialLinks.map((link) => (
+            <a
+              key={link.handle}
+              href={link.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="feed-follow-link"
+            >
+              Follow {link.handle} on {link.platform} &rarr;
+            </a>
+          ))}
+        </div>
+      )}
 
       {loading && !hasItems && (
         <div className="feed-skeletons">

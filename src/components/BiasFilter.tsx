@@ -1,14 +1,13 @@
 import type { BiasId } from "../types/feed";
+import { getConfig } from "../config";
 
-const memberChips: { id: BiasId; label: string; emoji: string; color: string }[] = [
-  { id: "rm", label: "RM", emoji: "🐨", color: "#1a1a2e" },
-  { id: "jin", label: "Jin", emoji: "🐹", color: "#16213e" },
-  { id: "suga", label: "SUGA", emoji: "🐱", color: "#0f3460" },
-  { id: "jhope", label: "j-hope", emoji: "🐿️", color: "#533483" },
-  { id: "jimin", label: "Jimin", emoji: "🐥", color: "#5b2c6f" },
-  { id: "v", label: "V", emoji: "🐯", color: "#4a235a" },
-  { id: "jungkook", label: "JK", emoji: "🐰", color: "#1b2631" },
-];
+const config = getConfig();
+const memberChips = config.members.map((m) => ({
+  id: m.id as BiasId,
+  label: m.stageName,
+  emoji: m.emoji,
+  color: m.color,
+}));
 
 interface Props {
   biases: BiasId[];

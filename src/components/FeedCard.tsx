@@ -21,12 +21,7 @@ function timeAgo(timestamp: number): string {
 
 export default function FeedCard({ item }: { item: FeedItem }) {
   return (
-    <a
-      href={item.url}
-      className="feed-card"
-      target="_blank"
-      rel="noopener noreferrer"
-    >
+    <div className="feed-card">
       {item.thumbnail && (
         <div className="feed-card-thumbnail">
           <img src={item.thumbnail} alt="" loading="lazy" />
@@ -49,7 +44,15 @@ export default function FeedCard({ item }: { item: FeedItem }) {
         {item.author && (
           <span className="feed-card-author">{item.author}</span>
         )}
+        <a
+          href={item.url}
+          className="feed-card-original-link"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          View original
+        </a>
       </div>
-    </a>
+    </div>
   );
 }

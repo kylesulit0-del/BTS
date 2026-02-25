@@ -1,32 +1,12 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import type { Member } from "../data/members";
+import type { MemberConfig } from "../config/types";
 
-const memberColors: Record<string, string> = {
-  rm: "#1a1a2e",
-  jin: "#16213e",
-  suga: "#0f3460",
-  jhope: "#533483",
-  jimin: "#5b2c6f",
-  v: "#4a235a",
-  jungkook: "#1b2631",
-};
-
-const memberEmojis: Record<string, string> = {
-  rm: "🐨",
-  jin: "🐹",
-  suga: "🐱",
-  jhope: "🐿️",
-  jimin: "🐥",
-  v: "🐯",
-  jungkook: "🐰",
-};
-
-export default function MemberCard({ member }: { member: Member }) {
+export default function MemberCard({ member }: { member: MemberConfig }) {
   const [imgError, setImgError] = useState(false);
 
   return (
-    <Link to={`/members/${member.id}`} className="member-card" style={{ background: memberColors[member.id] || "#1a1a2e" }}>
+    <Link to={`/members/${member.id}`} className="member-card" style={{ background: member.color }}>
       <div className="member-card-avatar">
         {!imgError && member.image ? (
           <img
@@ -36,7 +16,7 @@ export default function MemberCard({ member }: { member: Member }) {
             onError={() => setImgError(true)}
           />
         ) : (
-          <span className="member-emoji">{memberEmojis[member.id]}</span>
+          <span className="member-emoji">{member.emoji}</span>
         )}
       </div>
       <div className="member-card-info">
@@ -44,7 +24,7 @@ export default function MemberCard({ member }: { member: Member }) {
         <p className="member-real-name">{member.realName}</p>
         <p className="member-role">{member.role}</p>
       </div>
-      <div className="member-card-arrow">›</div>
+      <div className="member-card-arrow">&rsaquo;</div>
     </Link>
   );
 }
