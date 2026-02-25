@@ -25,6 +25,7 @@ export interface SourceEntry {
   fetchCount?: number;
   refreshInterval?: number;
   priority?: number;
+  enabled?: boolean;
 }
 
 export interface ThemeConfig {
