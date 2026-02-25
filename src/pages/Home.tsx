@@ -4,6 +4,9 @@ export default function Home() {
   return (
     <div className="page home-page">
       <div className="hero">
+        <div className="hero-group-photo">
+          <img src="/members/group.jpg" alt="BTS" className="hero-group-img" />
+        </div>
         <div className="hero-logo">
           <span className="hero-logo-text">BTS</span>
           <span className="hero-subtitle">방탄소년단</span>
@@ -12,11 +15,11 @@ export default function Home() {
       </div>
 
       <div className="nav-cards">
-        <Link to="/members" className="nav-card">
-          <span className="nav-card-emoji">👥</span>
+        <Link to="/news" className="nav-card">
+          <span className="nav-card-emoji">📰</span>
           <div>
-            <h3>Members</h3>
-            <p>Meet all 7 members</p>
+            <h3>ARMY Feed</h3>
+            <p>BTS content from the web</p>
           </div>
         </Link>
 
@@ -28,11 +31,11 @@ export default function Home() {
           </div>
         </Link>
 
-        <Link to="/news" className="nav-card">
-          <span className="nav-card-emoji">📰</span>
+        <Link to="/members" className="nav-card">
+          <span className="nav-card-emoji">👥</span>
           <div>
-            <h3>Latest News</h3>
-            <p>Stay updated with BTS</p>
+            <h3>Members</h3>
+            <p>Meet all 7 members</p>
           </div>
         </Link>
       </div>

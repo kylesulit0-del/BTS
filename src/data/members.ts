@@ -5,10 +5,12 @@ export interface Member {
   birthday: string;
   role: string;
   position: string;
+  image: string;
+  gallery?: string[];
   bio: string;
   funFacts: string[];
   soloProjects: string[];
-  socialMedia: { platform: string; handle: string }[];
+  socialMedia: { platform: string; handle: string; url?: string }[];
 }
 
 export const members: Member[] = [
@@ -19,6 +21,8 @@ export const members: Member[] = [
     birthday: "September 12, 1994",
     role: "Leader, Main Rapper",
     position: "Leader",
+    image: "/members/rm.jpg",
+    gallery: ["/members/rm-2.jpg", "/members/rm-3.jpg", "/members/rm-4.jpg", "/members/rm-5.jpg"],
     bio: "RM is the leader and main rapper of BTS. Known for his high IQ of 148 and fluent English, he is the primary songwriter and producer of the group. He learned English by watching Friends and has written and produced hundreds of songs.",
     funFacts: [
       "IQ of 148",
@@ -29,7 +33,8 @@ export const members: Member[] = [
     ],
     soloProjects: ["mono. (mixtape)", "Indigo (solo album)", "Right Place, Wrong Person"],
     socialMedia: [
-      { platform: "Instagram", handle: "@rkive" }
+      { platform: "Instagram", handle: "@rkive" },
+      { platform: "Spotify", handle: "RM", url: "https://open.spotify.com/artist/4rghtUEklOGTB3MgHIWnOF" }
     ]
   },
   {
@@ -39,6 +44,8 @@ export const members: Member[] = [
     birthday: "December 4, 1992",
     role: "Vocalist, Visual",
     position: "Sub Vocalist, Visual",
+    image: "/members/jin.jpg",
+    gallery: ["/members/jin-2.jpg", "/members/jin-3.jpg", "/members/jin-4.jpg", "/members/jin-5.jpg"],
     bio: "Jin is the eldest member of BTS, known as the group's visual and for his incredible vocal range. His warm personality and dad jokes have earned him the nickname 'Worldwide Handsome.' He studied acting at Konkuk University.",
     funFacts: [
       "Known as 'Worldwide Handsome'",
@@ -49,7 +56,8 @@ export const members: Member[] = [
     ],
     soloProjects: ["The Astronaut (single)", "Running Wild"],
     socialMedia: [
-      { platform: "Instagram", handle: "@jin" }
+      { platform: "Instagram", handle: "@jin" },
+      { platform: "Spotify", handle: "Jin", url: "https://open.spotify.com/artist/5vV3bFXnspGKeFokaIXJvY" }
     ]
   },
   {
@@ -59,6 +67,8 @@ export const members: Member[] = [
     birthday: "March 9, 1993",
     role: "Lead Rapper, Producer",
     position: "Lead Rapper",
+    image: "/members/suga.jpg",
+    gallery: ["/members/suga-2.jpg", "/members/suga-3.jpg", "/members/suga-4.jpg", "/members/suga-5.jpg"],
     bio: "SUGA is a rapper, songwriter, and record producer. Also known by his solo alias Agust D, he is one of the most prolific producers in K-pop. Before BTS, he worked as an underground rapper in Daegu.",
     funFacts: [
       "Also known as Agust D",
@@ -69,7 +79,8 @@ export const members: Member[] = [
     ],
     soloProjects: ["Agust D (mixtape)", "D-2 (mixtape)", "D-DAY (solo album)"],
     socialMedia: [
-      { platform: "Instagram", handle: "@agustd" }
+      { platform: "Instagram", handle: "@agustd" },
+      { platform: "Spotify", handle: "Agust D", url: "https://open.spotify.com/artist/1oSPZhvZMIrWW5I3cAvSCz" }
     ]
   },
   {
@@ -79,6 +90,8 @@ export const members: Member[] = [
     birthday: "February 18, 1994",
     role: "Main Dancer, Sub Rapper",
     position: "Main Dancer",
+    image: "/members/jhope.jpg",
+    gallery: ["/members/jhope-2.jpg", "/members/jhope-3.jpg", "/members/jhope-4.jpg", "/members/jhope-5.jpg"],
     bio: "j-hope is the main dancer and sub rapper of BTS. Known as the group's sunshine and mood maker, he was a street dancer before joining BTS. His energy and positive attitude are infectious both on and off stage.",
     funFacts: [
       "Known as BTS's sunshine",
@@ -89,7 +102,8 @@ export const members: Member[] = [
     ],
     soloProjects: ["Hope World (mixtape)", "Jack In The Box (solo album)", "HOPE ON THE STREET"],
     socialMedia: [
-      { platform: "Instagram", handle: "@uarmyhope" }
+      { platform: "Instagram", handle: "@uarmyhope" },
+      { platform: "Spotify", handle: "j-hope", url: "https://open.spotify.com/artist/0b1sIQumIAsNbqAoAClMHY" }
     ]
   },
   {
@@ -99,6 +113,8 @@ export const members: Member[] = [
     birthday: "October 13, 1995",
     role: "Main Dancer, Lead Vocalist",
     position: "Main Dancer, Lead Vocalist",
+    image: "/members/jimin.jpg",
+    gallery: ["/members/jimin-2.jpg", "/members/jimin-3.jpg", "/members/jimin-4.jpg", "/members/jimin-5.jpg"],
     bio: "Jimin is a main dancer and lead vocalist known for his contemporary dance background, powerful stage presence, and emotive vocals. He studied contemporary dance at Busan High School of Arts before transferring to Korea Arts High School.",
     funFacts: [
       "Trained in contemporary dance",
@@ -109,7 +125,8 @@ export const members: Member[] = [
     ],
     soloProjects: ["FACE (solo album)", "MUSE (solo album)"],
     socialMedia: [
-      { platform: "Instagram", handle: "@j.m" }
+      { platform: "Instagram", handle: "@j.m" },
+      { platform: "Spotify", handle: "Jimin", url: "https://open.spotify.com/artist/1oSPZhvZMIrWW5I3cAvSCz" }
     ]
   },
   {
@@ -119,6 +136,8 @@ export const members: Member[] = [
     birthday: "December 30, 1995",
     role: "Vocalist, Visual",
     position: "Sub Vocalist, Visual",
+    image: "/members/v.jpg",
+    gallery: ["/members/v-2.jpg", "/members/v-3.jpg", "/members/v-4.jpg", "/members/v-5.jpg"],
     bio: "V is known for his deep, soulful baritone voice, acting talent, and unique artistic sensibility. He was a hidden member, revealed only at BTS's debut. His love for art, photography, and vintage aesthetics makes him a true creative soul.",
     funFacts: [
       "Has a unique deep baritone voice",
@@ -129,7 +148,8 @@ export const members: Member[] = [
     ],
     soloProjects: ["Layover (solo album)", "Winter Ahead (single)"],
     socialMedia: [
-      { platform: "Instagram", handle: "@thv" }
+      { platform: "Instagram", handle: "@thv" },
+      { platform: "Spotify", handle: "V", url: "https://open.spotify.com/artist/2cFrymmkijnjDg9SS92EPM" }
     ]
   },
   {
@@ -139,6 +159,8 @@ export const members: Member[] = [
     birthday: "September 1, 1997",
     role: "Main Vocalist, Lead Dancer, Sub Rapper",
     position: "Main Vocalist, Center",
+    image: "/members/jungkook.jpg",
+    gallery: ["/members/jungkook-2.jpg", "/members/jungkook-3.jpg", "/members/jungkook-4.jpg", "/members/jungkook-5.jpg"],
     bio: "Jungkook is the youngest member (maknae) of BTS and is often called the 'Golden Maknae' for his exceptional talent in singing, dancing, and virtually everything he tries. He joined BTS at just 15 years old.",
     funFacts: [
       "Known as the 'Golden Maknae'",
@@ -149,7 +171,8 @@ export const members: Member[] = [
     ],
     soloProjects: ["GOLDEN (solo album)", "Standing Next to You (single)"],
     socialMedia: [
-      { platform: "Instagram", handle: "@jungkook.97" }
+      { platform: "Instagram", handle: "@jungkook" },
+      { platform: "Spotify", handle: "Jung Kook", url: "https://open.spotify.com/artist/6HaGTQPmv1OTuIE5MgJiBE" }
     ]
   }
 ];

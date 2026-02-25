@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import type { Member } from "../data/members";
 
@@ -22,10 +23,21 @@ const memberEmojis: Record<string, string> = {
 };
 
 export default function MemberCard({ member }: { member: Member }) {
+  const [imgError, setImgError] = useState(false);
+
   return (
     <Link to={`/members/${member.id}`} className="member-card" style={{ background: memberColors[member.id] || "#1a1a2e" }}>
       <div className="member-card-avatar">
-        <span className="member-emoji">{memberEmojis[member.id]}</span>
+        {!imgError && member.image ? (
+          <img
+            src={member.image}
+            alt={member.stageName}
+            className="member-avatar-img"
+            onError={() => setImgError(true)}
+          />
+        ) : (
+          <span className="member-emoji">{memberEmojis[member.id]}</span>
+        )}
       </div>
       <div className="member-card-info">
         <h3>{member.stageName}</h3>
