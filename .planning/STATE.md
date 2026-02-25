@@ -5,32 +5,33 @@
 See: .planning/PROJECT.md (updated 2026-02-25)
 
 **Core value:** Fans see a rich, diverse stream of BTS content from everywhere with engagement stats that help surface the best content, all without leaving the app.
-**Current focus:** Phase 1: Foundation
+**Current focus:** Phase 2: Feed Expansion
 
 ## Current Position
 
-Phase: 1 of 4 (Foundation) -- COMPLETE
-Plan: 4 of 4 in current phase -- COMPLETE
-Status: Phase Complete
-Last activity: 2026-02-25 -- Completed 01-04-PLAN.md (Config wiring and UI integration)
+Phase: 2 of 4 (Feed Expansion)
+Plan: 1 of 2 in current phase -- COMPLETE
+Status: Executing
+Last activity: 2026-02-25 -- Completed 02-01-PLAN.md (Data layer expansion)
 
-Progress: [██████████] 100% (Phase 1 complete)
+Progress: [█████░░░░░] 50% (Phase 2: 1/2 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 4
+- Total plans completed: 5
 - Average duration: 3min
-- Total execution time: 0.2 hours
+- Total execution time: 0.25 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-foundation | 4 | 13min | 3min |
+| 02-feed-expansion | 1 | 2min | 2min |
 
 **Recent Trend:**
-- Last 5 plans: 01-04 (5min), 01-03 (2min), 01-02 (3min), 01-01 (3min)
+- Last 5 plans: 02-01 (2min), 01-04 (5min), 01-03 (2min), 01-02 (3min), 01-01 (3min)
 - Trend: Stable
 
 *Updated after each plan completion*
@@ -59,6 +60,9 @@ Recent decisions affecting current work:
 - FeedCard uses div wrapper with internal View original link instead of anchor wrapper
 - Auto-retry uses 5s/10s delays, max 2 retries, no error messages during retry
 - Tours.tsx BTS WORLD TOUR title left as event-specific content, not group branding
+- YouTube fan channel IDs marked enabled:false since IDs cannot be verified at implementation time
+- Tumblr fetcher is separate from generic RSS fetcher for future API upgrade path
+- Reddit stats use d.score (accurate) not d.ups (fuzzed by Reddit)
 
 ### Pending Todos
 
@@ -73,5 +77,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: Completed 01-04-PLAN.md (Phase 1 Foundation complete)
+Stopped at: Completed 02-01-PLAN.md (Data layer expansion)
 Resume file: None
