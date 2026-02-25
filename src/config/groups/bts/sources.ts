@@ -119,6 +119,20 @@ export const sources: SourceEntry[] = [
     priority: 13,
   },
 
+  // TikTok compilation YouTube channels
+  // Enabled: false -- no verified active BTS TikTok compilation channel found.
+  // Enable and update channel ID when a suitable channel is identified.
+  {
+    type: "youtube",
+    id: "yt-bts-tiktok-compilations",
+    label: "BTS TikTok Compilations",
+    url: "PENDING_CHANNEL_ID",
+    needsFilter: true,
+    fetchCount: 10,
+    priority: 14,
+    enabled: false,
+  },
+
   // Twitter sources
   {
     type: "twitter",
