@@ -29,13 +29,13 @@ Requirements for v1.0 milestone. Each maps to roadmap phases.
 - [x] **SRC-01**: User can see content from additional Reddit subreddits (memes, fan discussion) in the feed
 - [x] **SRC-02**: User can see content from fan YouTube channels (beyond official BANGTANTV/HYBE) in the feed
 - [x] **SRC-03**: User can see Tumblr fan blog content in the feed via RSS integration
-- [ ] **SRC-04**: User can filter feed by new source types (Tumblr appears as a filter option)
+- [x] **SRC-04**: User can filter feed by new source types (Tumblr appears as a filter option)
 
 ### Engagement Stats
 
 - [x] **STAT-01**: User can see upvote count on Reddit feed cards
 - [x] **STAT-02**: User can see comment count on Reddit feed cards
-- [ ] **STAT-03**: Engagement stats display gracefully — shown when available, hidden when not (no empty/zero stats)
+- [x] **STAT-03**: Engagement stats display gracefully — shown when available, hidden when not (no empty/zero stats)
 
 ### Short-Form Video
 
@@ -89,10 +89,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SRC-01 | Phase 2 | Complete |
 | SRC-02 | Phase 2 | Complete |
 | SRC-03 | Phase 2 | Complete |
-| SRC-04 | Phase 2 | Pending |
+| SRC-04 | Phase 2 | Complete |
 | STAT-01 | Phase 2 | Complete |
 | STAT-02 | Phase 2 | Complete |
-| STAT-03 | Phase 2 | Pending |
+| STAT-03 | Phase 2 | Complete |
 | EMBED-01 | Phase 3 | Pending |
 | EMBED-02 | Phase 3 | Pending |
 | EMBED-03 | Phase 3 | Pending |

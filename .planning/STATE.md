@@ -9,29 +9,29 @@ See: .planning/PROJECT.md (updated 2026-02-25)
 
 ## Current Position
 
-Phase: 2 of 4 (Feed Expansion)
-Plan: 1 of 2 in current phase -- COMPLETE
-Status: Executing
-Last activity: 2026-02-25 -- Completed 02-01-PLAN.md (Data layer expansion)
+Phase: 2 of 4 (Feed Expansion) -- COMPLETE
+Plan: 2 of 2 in current phase -- COMPLETE
+Status: Phase complete
+Last activity: 2026-02-25 -- Completed 02-02-PLAN.md (Stats display & feed ordering)
 
-Progress: [█████░░░░░] 50% (Phase 2: 1/2 plans)
+Progress: [██████████] 100% (Phase 2: 2/2 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 5
+- Total plans completed: 6
 - Average duration: 3min
-- Total execution time: 0.25 hours
+- Total execution time: 0.28 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-foundation | 4 | 13min | 3min |
-| 02-feed-expansion | 1 | 2min | 2min |
+| 02-feed-expansion | 2 | 4min | 2min |
 
 **Recent Trend:**
-- Last 5 plans: 02-01 (2min), 01-04 (5min), 01-03 (2min), 01-02 (3min), 01-01 (3min)
+- Last 5 plans: 02-02 (2min), 02-01 (2min), 01-04 (5min), 01-03 (2min), 01-02 (3min)
 - Trend: Stable
 
 *Updated after each plan completion*
@@ -63,6 +63,10 @@ Recent decisions affecting current work:
 - YouTube fan channel IDs marked enabled:false since IDs cannot be verified at implementation time
 - Tumblr fetcher is separate from generic RSS fetcher for future API upgrade path
 - Reddit stats use d.score (accurate) not d.ups (fuzzed by Reddit)
+- MIN_STAT_THRESHOLD=2 hides trivial single-digit stats on feed cards
+- Inline SVG icons (14x14, path-only, currentColor) over icon library to avoid dependency
+- applyFeedPipeline extracted as shared function for incremental and batch fetch paths
+- Per-source cap (30 items) sorts by engagement before truncating to keep best content
 
 ### Pending Todos
 
@@ -77,5 +81,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: Completed 02-01-PLAN.md (Data layer expansion)
+Stopped at: Completed 02-02-PLAN.md (Stats display & feed ordering) -- Phase 2 complete
 Resume file: None
