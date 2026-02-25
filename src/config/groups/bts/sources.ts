@@ -53,7 +53,7 @@ export const sources: SourceEntry[] = [
     type: "youtube",
     id: "yt-hybe",
     label: "HYBE LABELS",
-    url: "UCx2hOXK_cGnRolCRilNUfA",
+    url: "UC3IZKseVpdzPSBaWxBxundA",
     needsFilter: true,
     fetchCount: 10,
     priority: 6,
