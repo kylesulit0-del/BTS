@@ -13,7 +13,7 @@ Expand the Army Feed from 5 sources to 8+ with engagement stats, short-form vide
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation** - Security patches, infrastructure hardening, config extraction, and source registry (completed 2026-02-25)
-- [ ] **Phase 2: Feed Expansion** - New content sources (Tumblr, expanded Reddit, fan YouTube) with engagement stats
+- [x] **Phase 2: Feed Expansion** - New content sources (Tumblr, expanded Reddit, fan YouTube) with engagement stats (completed 2026-02-25)
 - [ ] **Phase 3: Short-Form Video** - YouTube Shorts and TikTok embeds with click-to-load pattern
 - [ ] **Phase 4: Config-Driven UI** - Dynamic filter/chip generation from config and clone-and-swap validation
 
@@ -34,8 +34,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 Plans:
 - [x] 01-01-PLAN.md — DOMPurify sanitization utility and parallel CORS proxy (SEC-01, SEC-02, INFRA-01)
 - [x] 01-02-PLAN.md — GroupConfig type system and BTS config data extraction (CONFIG-01)
-- [ ] 01-03-PLAN.md — Source registry and per-source fetcher modules (INFRA-02)
-- [ ] 01-04-PLAN.md — Wire config throughout app, eliminate hardcoded BTS references (CONFIG-02)
+- [x] 01-03-PLAN.md — Source registry and per-source fetcher modules (INFRA-02)
+- [x] 01-04-PLAN.md — Wire config throughout app, eliminate hardcoded BTS references (CONFIG-02)
 
 ### Phase 2: Feed Expansion
 **Goal**: Users see content from Tumblr fan blogs, additional Reddit subreddits, and fan YouTube channels, with Reddit engagement stats visible on feed cards
@@ -50,9 +50,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 02-01-PLAN.md — Data layer: types, engagement stats extraction, Tumblr fetcher, expanded source config (SRC-01, SRC-02, SRC-03, STAT-01, STAT-02)
-- [ ] 02-02-PLAN.md — UI + feed logic: stats display on cards, Tumblr filter chip, engagement-weighted ordering, deduplication (SRC-04, STAT-03)
-- [ ] 02-03-PLAN.md — Gap closure: replace placeholder fan YouTube channel IDs with verified IDs (SRC-02)
+- [x] 02-01-PLAN.md — Data layer: types, engagement stats extraction, Tumblr fetcher, expanded source config (SRC-01, SRC-02, SRC-03, STAT-01, STAT-02)
+- [x] 02-02-PLAN.md — UI + feed logic: stats display on cards, Tumblr filter chip, engagement-weighted ordering, deduplication (SRC-04, STAT-03)
+- [x] 02-03-PLAN.md — Gap closure: replace placeholder fan YouTube channel IDs with verified IDs (SRC-02)
 
 ### Phase 3: Short-Form Video
 **Goal**: Users encounter short-form video content (YouTube Shorts, TikTok) rendered as embedded players directly in the feed
@@ -86,7 +86,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 2/4 | Complete    | 2026-02-25 |
-| 2. Feed Expansion | 0/3 | In Progress | - |
+| 1. Foundation | 4/4 | Complete    | 2026-02-25 |
+| 2. Feed Expansion | 3/3 | Complete | 2026-02-25 |
 | 3. Short-Form Video | 0/0 | Not started | - |
 | 4. Config-Driven UI | 0/0 | Not started | - |
