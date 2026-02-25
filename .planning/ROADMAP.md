@@ -47,11 +47,12 @@ Plans:
   3. User can see Tumblr fan blog posts in the feed with properly sanitized HTML content
   4. User can filter the feed by Tumblr as a source type using the filter UI
   5. Reddit feed cards display upvote count and comment count when available, and show no empty/zero stats when data is missing
-**Plans**: 2 plans
+**Plans**: 3 plans
 
 Plans:
 - [ ] 02-01-PLAN.md — Data layer: types, engagement stats extraction, Tumblr fetcher, expanded source config (SRC-01, SRC-02, SRC-03, STAT-01, STAT-02)
 - [ ] 02-02-PLAN.md — UI + feed logic: stats display on cards, Tumblr filter chip, engagement-weighted ordering, deduplication (SRC-04, STAT-03)
+- [ ] 02-03-PLAN.md — Gap closure: replace placeholder fan YouTube channel IDs with verified IDs (SRC-02)
 
 ### Phase 3: Short-Form Video
 **Goal**: Users encounter short-form video content (YouTube Shorts, TikTok) rendered as embedded players directly in the feed
@@ -86,6 +87,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 2/4 | Complete    | 2026-02-25 |
-| 2. Feed Expansion | 0/2 | In Progress | - |
+| 2. Feed Expansion | 0/3 | In Progress | - |
 | 3. Short-Form Video | 0/0 | Not started | - |
 | 4. Config-Driven UI | 0/0 | Not started | - |
