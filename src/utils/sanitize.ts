@@ -1,6 +1,7 @@
 import DOMPurify from "dompurify";
+import type { Config } from "dompurify";
 
-const SANITIZE_CONFIG: DOMPurify.Config = {
+const SANITIZE_CONFIG: Config = {
   ALLOWED_TAGS: ["b", "i", "em", "strong", "a", "img", "br", "p"],
   ALLOWED_ATTR: ["href", "src", "alt", "target", "rel"],
   ALLOW_DATA_ATTR: false,
@@ -12,7 +13,7 @@ const SANITIZE_CONFIG: DOMPurify.Config = {
  * Policy: text, links, basic formatting, and images only.
  */
 export function sanitizeHtml(dirty: string): string {
-  return DOMPurify.sanitize(dirty, SANITIZE_CONFIG);
+  return DOMPurify.sanitize(dirty, SANITIZE_CONFIG) as string;
 }
 
 /**
@@ -20,5 +21,5 @@ export function sanitizeHtml(dirty: string): string {
  * Replacement for the old unsafe stripHtml function (which used div.innerHTML).
  */
 export function stripToText(dirty: string): string {
-  return DOMPurify.sanitize(dirty, { ALLOWED_TAGS: [] });
+  return DOMPurify.sanitize(dirty, { ALLOWED_TAGS: [] }) as string;
 }

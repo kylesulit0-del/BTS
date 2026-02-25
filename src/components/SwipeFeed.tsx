@@ -37,7 +37,7 @@ interface SwipeFeedProps {
 }
 
 export default function SwipeFeed({ items }: SwipeFeedProps) {
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [_currentIndex, setCurrentIndex] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const slideRefs = useRef<(HTMLDivElement | null)[]>([]);
 

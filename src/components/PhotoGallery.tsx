@@ -7,7 +7,7 @@ interface PhotoGalleryProps {
 
 export default function PhotoGallery({ images, memberName }: PhotoGalleryProps) {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
-  const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set([0]));
+  const [_loadedImages, setLoadedImages] = useState<Set<number>>(new Set([0]));
 
   const openLightbox = (index: number) => setLightboxIndex(index);
   const closeLightbox = () => setLightboxIndex(null);

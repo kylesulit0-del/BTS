@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import type { FeedItem, FeedSource, BiasId } from "../types/feed";
 import { MEMBER_KEYWORDS } from "../types/feed";
-import { fetchAllFeedsIncremental, fetchAllFeeds } from "../services/feeds";
+import { fetchAllFeedsIncremental } from "../services/feeds";
 
 const CACHE_KEY = "bts-feed-cache";
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes

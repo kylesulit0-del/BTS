@@ -5,18 +5,28 @@ const PROXIES = [
 ];
 
 export async function fetchWithProxy(url: string): Promise<string> {
-  let lastError: Error | null = null;
+  const controller = new AbortController();
 
-  for (const buildProxy of PROXIES) {
-    try {
-      const proxyUrl = buildProxy(url);
-      const res = await fetch(proxyUrl, { signal: AbortSignal.timeout(7000) });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      return await res.text();
-    } catch (err) {
-      lastError = err as Error;
+  try {
+    const text = await Promise.any(
+      PROXIES.map(async (buildProxy) => {
+        const proxyUrl = buildProxy(url);
+        const res = await fetch(proxyUrl, {
+          signal: AbortSignal.any([controller.signal, AbortSignal.timeout(7000)]),
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        // Fully read the body before returning so abort() doesn't corrupt it
+        return await res.text();
+      })
+    );
+    // Cancel remaining in-flight requests after first success resolves
+    controller.abort();
+    return text;
+  } catch (err) {
+    controller.abort();
+    if (err instanceof AggregateError) {
+      throw new Error(`All proxies failed for ${url}`);
     }
+    throw err;
   }
-
-  throw lastError || new Error("All proxies failed");
 }
