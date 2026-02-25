@@ -19,6 +19,8 @@ export async function fetchYouTubeSource(source: SourceEntry): Promise<FeedItem[
         ? entry.link.split("watch?v=")[1]?.split("&")[0]
         : entry.link.split("/").pop() || "";
 
+      const hasStats = (entry.views && entry.views > 0) || (entry.likes && entry.likes > 0);
+
       return {
         id: `youtube-${videoId || i}-${source.label}`,
         title: entry.title,
@@ -27,6 +29,12 @@ export async function fetchYouTubeSource(source: SourceEntry): Promise<FeedItem[
         sourceName: source.label,
         timestamp: new Date(entry.published).getTime() || Date.now(),
         thumbnail: videoId ? `https://img.youtube.com/vi/${videoId}/mqdefault.jpg` : undefined,
+        stats: hasStats
+          ? {
+              views: entry.views && entry.views > 0 ? entry.views : undefined,
+              likes: entry.likes && entry.likes > 0 ? entry.likes : undefined,
+            }
+          : undefined,
       };
     });
 }

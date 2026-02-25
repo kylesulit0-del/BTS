@@ -4,6 +4,7 @@ import { fetchRedditSource } from "./reddit";
 import { fetchYouTubeSource } from "./youtube";
 import { fetchRssSource } from "./rss";
 import { fetchTwitterSource } from "./twitter";
+import { fetchTumblrSource } from "./tumblr";
 
 export type SourceFetcher = (source: SourceEntry) => Promise<FeedItem[]>;
 
@@ -12,6 +13,7 @@ const fetchers: Record<string, SourceFetcher> = {
   youtube: fetchYouTubeSource,
   rss: fetchRssSource,
   twitter: fetchTwitterSource,
+  tumblr: fetchTumblrSource,
 };
 
 export function getFetcher(type: string): SourceFetcher | undefined {

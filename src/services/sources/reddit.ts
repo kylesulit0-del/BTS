@@ -28,6 +28,10 @@ export async function fetchRedditSource(source: SourceEntry): Promise<FeedItem[]
       preview: d.selftext ? stripToText(d.selftext).slice(0, 200) : undefined,
       thumbnail: d.thumbnail && d.thumbnail.startsWith("http") ? d.thumbnail : undefined,
       author: `u/${d.author}`,
+      stats: {
+        upvotes: d.score > 0 ? d.score : undefined,
+        comments: d.num_comments > 0 ? d.num_comments : undefined,
+      },
     });
   }
 
