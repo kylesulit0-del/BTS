@@ -6,6 +6,7 @@ import FeedCard from "../components/FeedCard";
 import FeedFilter from "../components/FeedFilter";
 import BiasFilter from "../components/BiasFilter";
 import SwipeFeed from "../components/SwipeFeed";
+import SkeletonCard from "../components/SkeletonCard";
 import { news } from "../data/news";
 import NewsCard from "../components/NewsCard";
 import { getConfig } from "../config";
@@ -16,7 +17,7 @@ export default function News() {
   const [filter, setFilter] = useState<FeedSource | "all">("all");
   const [viewMode, setViewMode] = useState<"list" | "swipe">("list");
   const { biases, toggleBias, clearBiases } = useBias();
-  const { items, loading, error, refresh, hasItems } = useFeed(filter, biases);
+  const { items, isLoading, isRetrying, error, refresh, hasItems } = useFeed(filter, biases);
 
   const biasNames = biases
     .map((id) => config.members.find((m) => m.id === id)?.stageName)
@@ -50,8 +51,8 @@ export default function News() {
               </svg>
             )}
           </button>
-          <button className="feed-refresh-btn" onClick={refresh} disabled={loading}>
-            {loading ? "..." : "Refresh"}
+          <button className="feed-refresh-btn" onClick={refresh} disabled={isLoading}>
+            {isLoading ? "..." : "Refresh"}
           </button>
         </div>
       </div>
@@ -82,19 +83,26 @@ export default function News() {
         </div>
       )}
 
-      {loading && !hasItems && (
+      {isLoading && !hasItems && (
         <div className="feed-skeletons">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="feed-skeleton">
-              <div className="skeleton-meta" />
-              <div className="skeleton-title" />
-              <div className="skeleton-preview" />
-            </div>
+            <SkeletonCard key={i} />
           ))}
         </div>
       )}
 
-      {!loading && error && !hasItems && (
+      {!isLoading && isRetrying && !hasItems && (
+        <div className="feed-skeletons">
+          {[1, 2, 3, 4].map((i) => (
+            <SkeletonCard key={i} />
+          ))}
+          <div className="feed-retry-indicator">
+            <span className="feed-retry-dot" />
+          </div>
+        </div>
+      )}
+
+      {!isLoading && !isRetrying && error && !hasItems && (
         <div className="feed-fallback">
           <p className="feed-error-msg">{error}</p>
           <h2 className="feed-fallback-title">Latest News</h2>

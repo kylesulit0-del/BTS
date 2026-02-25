@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import type { FeedItem, FeedSource, BiasId } from "../types/feed";
 import { getConfig } from "../config";
 import { fetchAllFeedsIncremental } from "../services/feeds";
@@ -6,6 +6,8 @@ import { fetchAllFeedsIncremental } from "../services/feeds";
 const config = getConfig();
 const CACHE_KEY = `${config.theme.groupName.toLowerCase()}-feed-cache`;
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+const RETRY_DELAYS = [5000, 10000]; // 5s, then 10s
+const MAX_RETRIES = 2;
 
 interface CacheData {
   items: FeedItem[];
@@ -35,9 +37,9 @@ function setCache(items: FeedItem[]) {
 
 function matchesBias(item: FeedItem, biases: BiasId[]): boolean {
   const text = `${item.title} ${item.preview || ""}`.toLowerCase();
-  const config = getConfig();
+  const cfg = getConfig();
   return biases.some((biasId) => {
-    const member = config.members.find((m) => m.id === biasId);
+    const member = cfg.members.find((m) => m.id === biasId);
     if (!member) return false;
     return member.aliases.some((alias) => text.includes(alias.toLowerCase()));
   });
@@ -45,25 +47,64 @@ function matchesBias(item: FeedItem, biases: BiasId[]): boolean {
 
 export function useFeed(filter: FeedSource | "all" = "all", biases: BiasId[] = []) {
   const [allItems, setAllItems] = useState<FeedItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRetrying, setIsRetrying] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const retryTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  const silentRetry = useCallback(async (attempt: number) => {
+    if (attempt >= MAX_RETRIES) {
+      setIsRetrying(false);
+      return;
+    }
+
+    setIsRetrying(true);
+
+    retryTimerRef.current = setTimeout(async () => {
+      try {
+        const retryItems = await fetchAllFeedsIncremental((items) => {
+          if (items.length > 0) {
+            setAllItems(items);
+          }
+        });
+
+        if (retryItems.length > 0) {
+          setAllItems(retryItems);
+          setCache(retryItems);
+          setIsRetrying(false);
+          setError(null);
+        } else {
+          // Retry again with next delay
+          silentRetry(attempt + 1);
+        }
+      } catch {
+        silentRetry(attempt + 1);
+      }
+    }, RETRY_DELAYS[attempt]);
+  }, []);
 
   const load = useCallback(async (force = false) => {
-    setLoading(true);
+    setIsLoading(true);
     setError(null);
+    setIsRetrying(false);
+
+    // Clear any pending retry timers
+    if (retryTimerRef.current) {
+      clearTimeout(retryTimerRef.current);
+    }
 
     // Check cache first (unless forced refresh)
     if (!force) {
       const cached = getCache();
       if (cached) {
         setAllItems(cached.items);
-        setLoading(false);
+        setIsLoading(false);
         return;
       }
     }
 
     try {
-      // Use incremental loading — items appear as each source resolves
+      // Use incremental loading -- items appear as each source resolves
       const finalItems = await fetchAllFeedsIncremental((items) => {
         setAllItems(items);
       });
@@ -71,27 +112,36 @@ export function useFeed(filter: FeedSource | "all" = "all", biases: BiasId[] = [
       setCache(finalItems);
 
       if (finalItems.length === 0) {
-        setError("No feed items found. Showing static news instead.");
+        // Total outage: auto-retry silently in background (no error message)
+        silentRetry(0);
       }
     } catch {
-      setError("Failed to load feeds. Showing static news instead.");
       // Try to use stale cache
       try {
         const raw = localStorage.getItem(CACHE_KEY);
         if (raw) {
           const data: CacheData = JSON.parse(raw);
           setAllItems(data.items);
+        } else {
+          // No cache available, start silent retry
+          silentRetry(0);
         }
       } catch {
-        // Nothing to fall back on
+        // Nothing to fall back on, start silent retry
+        silentRetry(0);
       }
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
-  }, []);
+  }, [silentRetry]);
 
   useEffect(() => {
     load();
+    return () => {
+      if (retryTimerRef.current) {
+        clearTimeout(retryTimerRef.current);
+      }
+    };
   }, [load]);
 
   let filtered = filter === "all"
@@ -104,7 +154,9 @@ export function useFeed(filter: FeedSource | "all" = "all", biases: BiasId[] = [
 
   return {
     items: filtered,
-    loading,
+    loading: isLoading,
+    isLoading,
+    isRetrying,
     error,
     refresh: () => load(true),
     hasItems: allItems.length > 0,
