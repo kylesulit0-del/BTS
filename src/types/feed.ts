@@ -1,9 +1,8 @@
-export type FeedSource = "reddit" | "youtube" | "news" | "rss" | "twitter" | "tumblr";
+export type FeedSource = string;
 
 export type VideoType = "youtube-short" | "tiktok";
 
-// TODO: Move BiasId to config-derived type in Plan 04
-export type BiasId = "rm" | "jin" | "suga" | "jhope" | "jimin" | "v" | "jungkook";
+export type BiasId = string;
 
 export interface FeedStats {
   upvotes?: number;
