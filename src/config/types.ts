@@ -40,9 +40,44 @@ export interface ThemeConfig {
   socialLinks: { platform: string; handle: string; url: string }[];
 }
 
+export interface GroupLabels {
+  appName: string;
+  appTitle: string;
+  appDescription: string;
+  sourceLabels: Record<string, string>;
+  memberFilterLabel: string;
+  homeQuote: string;
+  tourTitle: string;
+  tourSubtitle: string;
+}
+
+export interface Event {
+  id: string;
+  title: string;
+  date: string;
+  venue: string;
+  city: string;
+  region: string;
+  description: string;
+  status: string;
+  ticketUrl?: string;
+}
+
+export interface NewsItem {
+  id: string;
+  headline: string;
+  date: string;
+  summary: string;
+  source: string;
+  sourceUrl: string;
+}
+
 export interface GroupConfig {
   members: MemberConfig[];
   sources: SourceEntry[];
   theme: ThemeConfig;
   keywords: RegExp;
+  labels: GroupLabels;
+  events: Event[];
+  news: NewsItem[];
 }
