@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-25)
 ## Current Position
 
 Phase: 4 of 4 (Config-Driven UI)
-Plan: 1 of 2 in current phase
-Status: In Progress
-Last activity: 2026-02-26 -- Completed 04-01-PLAN.md (Config type extension)
+Plan: 2 of 2 in current phase
+Status: Complete
+Last activity: 2026-02-26 -- Completed 04-02-PLAN.md (Config-driven UI wiring)
 
-Progress: [█████████░] 50% (Phase 4: 1/2 plans)
+Progress: [██████████] 100% (Phase 4: 2/2 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 12
+- Total plans completed: 13
 - Average duration: 3min
-- Total execution time: 0.73 hours
+- Total execution time: 0.77 hours
 
 **By Phase:**
 
@@ -30,11 +30,11 @@ Progress: [█████████░] 50% (Phase 4: 1/2 plans)
 | 01-foundation | 4 | 13min | 3min |
 | 02-feed-expansion | 5 | 18min | 4min |
 | 03-short-form-video | 2 | 10min | 5min |
-| 04-config-driven-ui | 1 | 3min | 3min |
+| 04-config-driven-ui | 2 | 5min | 3min |
 
 **Recent Trend:**
-- Last 5 plans: 04-01 (3min), 03-02 (8min), 03-01 (2min), 02-05 (13min), 02-04 (1min)
-- Trend: 04-01 clean execution, no deviations
+- Last 5 plans: 04-02 (2min), 04-01 (3min), 03-02 (8min), 03-01 (2min), 02-05 (13min)
+- Trend: Phase 4 complete, both plans clean and fast
 
 *Updated after each plan completion*
 | Phase 02 P03 | 1min | 1 tasks | 1 files |
@@ -43,6 +43,7 @@ Progress: [█████████░] 50% (Phase 4: 1/2 plans)
 | Phase 03 P01 | 2min | 2 tasks | 4 files |
 | Phase 03 P02 | 8min | 3 tasks | 6 files |
 | Phase 04 P01 | 3min | 2 tasks | 6 files |
+| Phase 04 P02 | 2min | 2 tasks | 14 files |
 
 ## Accumulated Context
 
@@ -90,6 +91,9 @@ Recent decisions affecting current work:
 - [Phase 04]: Event/NewsItem interfaces use string types for region/status (config-driven flexibility)
 - [Phase 04]: FeedSource and BiasId loosened from literal unions to string for config-driven source tabs and member chips
 - [Phase 04]: src/data/* files preserved unchanged; Plan 02 will migrate imports and delete old files
+- [Phase 04]: vite.config.ts imports from src/config/index.ts (single swap point) not directly from groups/bts/
+- [Phase 04]: index.html keeps hardcoded values as dev-server fallbacks; transformIndexHtml overwrites at build
+- [Phase 04]: Example config uses buildKeywords pattern matching BTS config for clone-and-swap consistency
 
 ### Pending Todos
 
@@ -104,5 +108,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-26
-Stopped at: Completed 04-01-PLAN.md (Config type extension)
+Stopped at: Completed 04-02-PLAN.md (Config-driven UI wiring) -- Phase 4 complete, all phases done
 Resume file: None
