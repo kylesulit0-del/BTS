@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-25)
 
 **Core value:** Fans see a rich, diverse stream of BTS content from everywhere with engagement stats that help surface the best content, all without leaving the app.
-**Current focus:** Phase 3: Short-Form Video
+**Current focus:** Phase 4: Config-Driven UI
 
 ## Current Position
 
-Phase: 3 of 4 (Short-Form Video)
-Plan: 2 of 2 in current phase
-Status: Phase Complete
-Last activity: 2026-02-26 -- Completed 03-02-PLAN.md (Video embed UI)
+Phase: 4 of 4 (Config-Driven UI)
+Plan: 1 of 2 in current phase
+Status: In Progress
+Last activity: 2026-02-26 -- Completed 04-01-PLAN.md (Config type extension)
 
-Progress: [██████████] 100% (Phase 3: 2/2 plans)
+Progress: [█████████░] 50% (Phase 4: 1/2 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 11
+- Total plans completed: 12
 - Average duration: 3min
-- Total execution time: 0.68 hours
+- Total execution time: 0.73 hours
 
 **By Phase:**
 
@@ -30,10 +30,11 @@ Progress: [██████████] 100% (Phase 3: 2/2 plans)
 | 01-foundation | 4 | 13min | 3min |
 | 02-feed-expansion | 5 | 18min | 4min |
 | 03-short-form-video | 2 | 10min | 5min |
+| 04-config-driven-ui | 1 | 3min | 3min |
 
 **Recent Trend:**
-- Last 5 plans: 03-02 (8min), 03-01 (2min), 02-05 (13min), 02-04 (1min), 02-03 (1min)
-- Trend: 03-02 took longer due to human-verify checkpoint and oEmbed Shorts detection fix
+- Last 5 plans: 04-01 (3min), 03-02 (8min), 03-01 (2min), 02-05 (13min), 02-04 (1min)
+- Trend: 04-01 clean execution, no deviations
 
 *Updated after each plan completion*
 | Phase 02 P03 | 1min | 1 tasks | 1 files |
@@ -41,6 +42,7 @@ Progress: [██████████] 100% (Phase 3: 2/2 plans)
 | Phase 02 P05 | 13min | 2 tasks | 1 files |
 | Phase 03 P01 | 2min | 2 tasks | 4 files |
 | Phase 03 P02 | 8min | 3 tasks | 6 files |
+| Phase 04 P01 | 3min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -85,6 +87,9 @@ Recent decisions affecting current work:
 - [Phase 03]: postMessage API for cross-origin iframe control (YouTube JSON event/command, TikTok x-tiktok-player)
 - [Phase 03]: Module-level currentlyPlaying state enforces one-video-at-a-time across all VideoEmbed instances
 - [Phase 03]: Videos start muted per browser autoplay policy, unmute on user tap
+- [Phase 04]: Event/NewsItem interfaces use string types for region/status (config-driven flexibility)
+- [Phase 04]: FeedSource and BiasId loosened from literal unions to string for config-driven source tabs and member chips
+- [Phase 04]: src/data/* files preserved unchanged; Plan 02 will migrate imports and delete old files
 
 ### Pending Todos
 
@@ -99,5 +104,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-26
-Stopped at: Completed 03-02-PLAN.md (Video embed UI) -- Phase 3 complete
+Stopped at: Completed 04-01-PLAN.md (Config type extension)
 Resume file: None

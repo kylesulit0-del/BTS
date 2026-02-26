@@ -11,8 +11,8 @@ Requirements for v1.0 milestone. Each maps to roadmap phases.
 
 - [x] **CONFIG-01**: All BTS-specific keywords, subreddit names, channel IDs, and member data extracted to a single typed GroupConfig object
 - [x] **CONFIG-02**: App reads all group-specific data from config — zero hardcoded BTS references in service/component code
-- [ ] **CONFIG-03**: FeedFilter tabs and BiasFilter chips generated dynamically from config instead of hardcoded arrays
-- [ ] **CONFIG-04**: Changing the config import in `config/index.ts` swaps the entire app to a different group with no code changes
+- [x] **CONFIG-03**: FeedFilter tabs and BiasFilter chips generated dynamically from config instead of hardcoded arrays
+- [x] **CONFIG-04**: Changing the config import in `config/index.ts` swaps the entire app to a different group with no code changes
 
 ### Security
 
@@ -80,8 +80,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 |-------------|-------|--------|
 | CONFIG-01 | Phase 1 | Complete |
 | CONFIG-02 | Phase 1 | Complete |
-| CONFIG-03 | Phase 4 | Pending |
-| CONFIG-04 | Phase 4 | Pending |
+| CONFIG-03 | Phase 4 | Complete |
+| CONFIG-04 | Phase 4 | Complete |
 | SEC-01 | Phase 1 | Complete |
 | SEC-02 | Phase 1 | Complete |
 | INFRA-01 | Phase 1 | Complete |
