@@ -14,7 +14,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation** - Security patches, infrastructure hardening, config extraction, and source registry (completed 2026-02-25)
 - [x] **Phase 2: Feed Expansion** - New content sources (Tumblr, expanded Reddit, fan YouTube) with engagement stats (completed 2026-02-25)
-- [ ] **Phase 3: Short-Form Video** - YouTube Shorts and TikTok embeds with autoplay-on-scroll
+- [x] **Phase 3: Short-Form Video** - YouTube Shorts and TikTok embeds with autoplay-on-scroll (completed 2026-02-26)
 - [ ] **Phase 4: Config-Driven UI** - Dynamic filter/chip generation from config and clone-and-swap validation
 
 ## Phase Details
@@ -67,8 +67,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 03-01-PLAN.md — Data layer: video URL detection utility, FeedItem type extension, Reddit fetcher enrichment, TikTok compilation channels (EMBED-01, EMBED-02)
-- [ ] 03-02-PLAN.md — UI layer: VideoEmbed component, autoplay hook, FeedCard/SwipeFeed integration, CSS styling (EMBED-01, EMBED-02, EMBED-03)
+- [x] 03-01-PLAN.md — Data layer: video URL detection utility, FeedItem type extension, Reddit fetcher enrichment, TikTok compilation channels (EMBED-01, EMBED-02)
+- [x] 03-02-PLAN.md — UI layer: VideoEmbed component, autoplay hook, FeedCard/SwipeFeed integration, CSS styling (EMBED-01, EMBED-02, EMBED-03)
 
 ### Phase 4: Config-Driven UI
 **Goal**: All UI elements that display group-specific data are generated from config, completing the clone-and-swap architecture
@@ -91,5 +91,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 |-------|----------------|--------|-----------|
 | 1. Foundation | 4/4 | Complete    | 2026-02-25 |
 | 2. Feed Expansion | 3/5 | Gap closure | 2026-02-25 |
-| 3. Short-Form Video | 0/2 | Planning complete | - |
+| 3. Short-Form Video | 2/2 | Complete | 2026-02-26 |
 | 4. Config-Driven UI | 0/0 | Not started | - |

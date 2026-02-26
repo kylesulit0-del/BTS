@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-25)
 ## Current Position
 
 Phase: 3 of 4 (Short-Form Video)
-Plan: 1 of 2 in current phase
-Status: Executing
-Last activity: 2026-02-25 -- Completed 03-01-PLAN.md (Video detection data layer)
+Plan: 2 of 2 in current phase
+Status: Phase Complete
+Last activity: 2026-02-26 -- Completed 03-02-PLAN.md (Video embed UI)
 
-Progress: [█████-----] 50% (Phase 3: 1/2 plans)
+Progress: [██████████] 100% (Phase 3: 2/2 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 10
+- Total plans completed: 11
 - Average duration: 3min
-- Total execution time: 0.55 hours
+- Total execution time: 0.68 hours
 
 **By Phase:**
 
@@ -29,17 +29,18 @@ Progress: [█████-----] 50% (Phase 3: 1/2 plans)
 |-------|-------|-------|----------|
 | 01-foundation | 4 | 13min | 3min |
 | 02-feed-expansion | 5 | 18min | 4min |
-| 03-short-form-video | 1 | 2min | 2min |
+| 03-short-form-video | 2 | 10min | 5min |
 
 **Recent Trend:**
-- Last 5 plans: 03-01 (2min), 02-05 (13min), 02-04 (1min), 02-03 (1min), 02-02 (2min)
-- Trend: Stable, 03-01 straightforward utility creation
+- Last 5 plans: 03-02 (8min), 03-01 (2min), 02-05 (13min), 02-04 (1min), 02-03 (1min)
+- Trend: 03-02 took longer due to human-verify checkpoint and oEmbed Shorts detection fix
 
 *Updated after each plan completion*
 | Phase 02 P03 | 1min | 1 tasks | 1 files |
 | Phase 02 P04 | 1min | 1 tasks | 2 files |
 | Phase 02 P05 | 13min | 2 tasks | 1 files |
 | Phase 03 P01 | 2min | 2 tasks | 4 files |
+| Phase 03 P02 | 8min | 3 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -80,6 +81,10 @@ Recent decisions affecting current work:
 - [Phase 03]: detectVideo checks url_overridden_by_dest plus selftext for video URL detection
 - [Phase 03]: TikTok short URLs store short path as videoId with isShortUrl flag (CORS blocks redirect resolution)
 - [Phase 03]: TikTok compilation YouTube channel added as enabled:false pending verified channel ID
+- [Phase 03]: YouTube Shorts in channel feeds detected via oEmbed dimensions (height > width = vertical = Shorts)
+- [Phase 03]: postMessage API for cross-origin iframe control (YouTube JSON event/command, TikTok x-tiktok-player)
+- [Phase 03]: Module-level currentlyPlaying state enforces one-video-at-a-time across all VideoEmbed instances
+- [Phase 03]: Videos start muted per browser autoplay policy, unmute on user tap
 
 ### Pending Todos
 
@@ -93,6 +98,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-25
-Stopped at: Completed 03-01-PLAN.md (Video detection data layer)
+Last session: 2026-02-26
+Stopped at: Completed 03-02-PLAN.md (Video embed UI) -- Phase 3 complete
 Resume file: None

@@ -41,7 +41,7 @@ Requirements for v1.0 milestone. Each maps to roadmap phases.
 
 - [x] **EMBED-01**: YouTube Shorts detected and rendered in 9:16 vertical aspect ratio iframe
 - [x] **EMBED-02**: TikTok URLs detected in Reddit posts and rendered as lazy-loaded embed players
-- [ ] **EMBED-03**: Video embeds use click-to-load pattern (thumbnail + play overlay, load iframe on click)
+- [x] **EMBED-03**: Video embeds use click-to-load pattern (thumbnail + play overlay, load iframe on click)
 
 ## v2 Requirements
 
@@ -95,7 +95,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | STAT-03 | Phase 2 | Complete |
 | EMBED-01 | Phase 3 | Complete |
 | EMBED-02 | Phase 3 | Complete |
-| EMBED-03 | Phase 3 | Pending |
+| EMBED-03 | Phase 3 | Complete |
 
 **Coverage:**
 - v1 requirements: 18 total
