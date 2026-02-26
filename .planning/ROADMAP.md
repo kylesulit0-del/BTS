@@ -77,10 +77,11 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. FeedFilter tabs and BiasFilter member chips are generated dynamically from the GroupConfig -- no hardcoded filter arrays in component code
   2. Changing the config import in config/index.ts to a different group's config file swaps the entire app (members, sources, filters, keywords) with zero code changes
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 04-01: TBD
+- [ ] 04-01-PLAN.md — Config type expansion: GroupLabels, events/news in GroupConfig, FeedSource/BiasId as string types (CONFIG-03, CONFIG-04)
+- [ ] 04-02-PLAN.md — UI wiring, build-time injection, example group config, hardcoded-reference audit (CONFIG-03, CONFIG-04)
 
 ## Progress
 
