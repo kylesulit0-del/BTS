@@ -23,7 +23,8 @@ export default function VideoEmbed({
   const [embedError, setEmbedError] = useState(false);
   const [thumbnail, setThumbnail] = useState(initialThumbnail);
 
-  useVideoAutoplay(containerRef, iframeRef, videoType);
+  // Only renders iframe when in viewport — returns true when >= 50% visible
+  const inView = useVideoAutoplay(containerRef, iframeRef, videoType);
 
   // Fetch TikTok thumbnail via oEmbed if none provided
   useEffect(() => {
@@ -54,8 +55,8 @@ export default function VideoEmbed({
 
   const src =
     videoType === "youtube-short"
-      ? `https://www.youtube.com/embed/${videoId}?enablejsapi=1&autoplay=0&mute=1&loop=1&playlist=${videoId}&playsinline=1&rel=0&controls=1`
-      : `https://www.tiktok.com/player/v1/${videoId}?autoplay=0&loop=1&controls=1&progress_bar=1&play_button=1&volume_control=1&music_info=0&description=0&rel=0`;
+      ? `https://www.youtube.com/embed/${videoId}?enablejsapi=1&autoplay=1&mute=1&loop=1&playlist=${videoId}&playsinline=1&rel=0&controls=1&origin=${encodeURIComponent(window.location.origin)}`
+      : `https://www.tiktok.com/player/v1/${videoId}?autoplay=1&loop=1&controls=1&progress_bar=1&play_button=1&volume_control=1&music_info=0&description=0&rel=0`;
 
   const handleUnmute = useCallback(() => {
     const iframe = iframeRef.current;
@@ -91,31 +92,34 @@ export default function VideoEmbed({
       className="video-embed"
       style={{ aspectRatio: "9 / 16" }}
     >
-      {/* Loading placeholder: thumbnail + spinner */}
+      {/* Placeholder: shown until iframe loads (or when iframe not yet mounted) */}
       {!loaded && (
         <div className="video-embed-placeholder">
           {thumbnail && <img src={thumbnail} alt="" />}
-          <div className="video-embed-spinner" />
+          {inView && <div className="video-embed-spinner" />}
         </div>
       )}
 
-      <iframe
-        ref={iframeRef}
-        src={src}
-        title={title}
-        allow="autoplay; encrypted-media"
-        allowFullScreen
-        onLoad={() => setLoaded(true)}
-        onError={() => setEmbedError(true)}
-        style={{
-          opacity: loaded ? 1 : 0,
-          position: "absolute",
-          inset: 0,
-          width: "100%",
-          height: "100%",
-          border: "none",
-        }}
-      />
+      {/* Iframe only mounts when video scrolls into viewport */}
+      {inView && (
+        <iframe
+          ref={iframeRef}
+          src={src}
+          title={title}
+          allow="autoplay; encrypted-media"
+          allowFullScreen
+          onLoad={() => setLoaded(true)}
+          onError={() => setEmbedError(true)}
+          style={{
+            opacity: loaded ? 1 : 0,
+            position: "absolute",
+            inset: 0,
+            width: "100%",
+            height: "100%",
+            border: "none",
+          }}
+        />
+      )}
 
       {/* Mute indicator */}
       {loaded && muted && (

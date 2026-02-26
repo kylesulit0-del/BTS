@@ -1,4 +1,4 @@
-import { useEffect, type RefObject } from "react";
+import { useEffect, useState, type RefObject } from "react";
 import type { VideoType } from "../types/feed";
 
 /** Module-level state for one-at-a-time video enforcement */
@@ -47,26 +47,28 @@ export function sendMuteCommand(
 }
 
 /**
- * IntersectionObserver-driven autoplay with one-video-at-a-time enforcement.
- * Plays the video when >= 50% visible, pauses when it scrolls away.
- * Automatically pauses any previously playing video.
+ * IntersectionObserver-driven lazy loading and autoplay.
+ * Returns `inView` — iframe should only be rendered when true.
+ * Handles one-at-a-time enforcement and pause/resume on scroll.
  */
 export function useVideoAutoplay(
   containerRef: RefObject<HTMLDivElement | null>,
   iframeRef: RefObject<HTMLIFrameElement | null>,
   videoType: VideoType,
-) {
+): boolean {
+  const [inView, setInView] = useState(false);
+
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        const iframe = iframeRef.current;
-        if (!iframe) return;
-
         if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
-          // Pause currently playing video if it's a different one
+          setInView(true);
+
+          // Pause currently playing video if different
+          const iframe = iframeRef.current;
           if (currentlyPlaying && currentlyPlaying.iframe !== iframe) {
             sendCommand(
               currentlyPlaying.iframe,
@@ -74,13 +76,17 @@ export function useVideoAutoplay(
               "pause",
             );
           }
-          // Play this video
-          sendCommand(iframe, videoType, "play");
-          currentlyPlaying = { iframe, videoType };
-        } else if (currentlyPlaying?.iframe === iframe) {
-          // This video scrolled away -- pause it
-          sendCommand(iframe, videoType, "pause");
-          currentlyPlaying = null;
+          // Play this video (if iframe is loaded)
+          if (iframe) {
+            sendCommand(iframe, videoType, "play");
+            currentlyPlaying = { iframe, videoType };
+          }
+        } else {
+          const iframe = iframeRef.current;
+          if (iframe && currentlyPlaying?.iframe === iframe) {
+            sendCommand(iframe, videoType, "pause");
+            currentlyPlaying = null;
+          }
         }
       },
       { threshold: 0.5 },
@@ -89,4 +95,6 @@ export function useVideoAutoplay(
     observer.observe(container);
     return () => observer.disconnect();
   }, [containerRef, iframeRef, videoType]);
+
+  return inView;
 }

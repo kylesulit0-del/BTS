@@ -6,18 +6,19 @@ import { parseAtom } from "../../utils/xmlParser";
 import { fetchWithProxy } from "../../utils/corsProxy";
 
 /**
- * Check if a YouTube video is a Short using oEmbed dimensions.
- * When requesting oEmbed with a /shorts/ URL, YouTube returns portrait
- * dimensions (height > width) for actual Shorts, landscape for regular videos.
+ * Check if a YouTube video is a Short using redirect behavior.
+ * /shorts/VIDEO_ID returns 200 for actual Shorts, 303 redirect for regular videos.
+ * Using redirect:'error' + mode:'no-cors': Shorts resolve, regular videos reject.
  */
 async function checkYouTubeShort(videoId: string): Promise<boolean> {
   try {
-    const oembedUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent(`https://www.youtube.com/shorts/${videoId}`)}&format=json`;
-    const text = await fetchWithProxy(oembedUrl);
-    const data = JSON.parse(text);
-    return data.height > data.width;
+    await fetch(`https://www.youtube.com/shorts/${videoId}`, {
+      mode: "no-cors",
+      redirect: "error",
+    });
+    return true; // 200 = it's a Short
   } catch {
-    return false;
+    return false; // redirect (303) or network error = not a Short
   }
 }
 
