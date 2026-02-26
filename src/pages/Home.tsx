@@ -58,7 +58,7 @@ export default function Home() {
       </div>
 
       <div className="home-quote">
-        <p>"Love yourself, speak yourself"</p>
+        <p>"{config.labels.homeQuote}"</p>
       </div>
     </div>
   );

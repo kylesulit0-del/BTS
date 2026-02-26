@@ -1,29 +1,36 @@
-import type { FeedSource } from "../types/feed";
+import { getConfig } from "../config";
 
 interface FeedFilterProps {
-  active: FeedSource | "all";
-  onChange: (source: FeedSource | "all") => void;
+  active: string | "all";
+  onChange: (source: string | "all") => void;
 }
 
-const filters: { label: string; value: FeedSource | "all" }[] = [
-  { label: "All", value: "all" },
-  { label: "Reddit", value: "reddit" },
-  { label: "YouTube", value: "youtube" },
-  { label: "News", value: "news" },
-  { label: "Tumblr", value: "tumblr" },
-  { label: "Twitter", value: "twitter" },
-];
-
 export default function FeedFilter({ active, onChange }: FeedFilterProps) {
+  const config = getConfig();
+  const sourceTypes: { type: string; label: string }[] = [];
+  const seen = new Set<string>();
+  for (const source of config.sources) {
+    if (source.enabled !== false && !seen.has(source.type)) {
+      seen.add(source.type);
+      sourceTypes.push({ type: source.type, label: config.labels.sourceLabels[source.type] });
+    }
+  }
+
   return (
     <div className="feed-filter">
-      {filters.map((f) => (
+      <button
+        className={`feed-filter-tab${active === "all" ? " active" : ""}`}
+        onClick={() => onChange("all")}
+      >
+        All
+      </button>
+      {sourceTypes.map((s) => (
         <button
-          key={f.value}
-          className={`feed-filter-tab${active === f.value ? " active" : ""}`}
-          onClick={() => onChange(f.value)}
+          key={s.type}
+          className={`feed-filter-tab${active === s.type ? " active" : ""}`}
+          onClick={() => onChange(s.type)}
         >
-          {f.label}
+          {s.label}
         </button>
       ))}
     </div>

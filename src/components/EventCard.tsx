@@ -1,4 +1,4 @@
-import type { Event } from "../data/events";
+import type { Event } from "../config/types";
 
 const statusColors: Record<string, string> = {
   upcoming: "#7c3aed",

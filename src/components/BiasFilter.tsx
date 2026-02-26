@@ -10,7 +10,7 @@ interface Props {
 export default function BiasFilter({ biases, onToggle, onClear }: Props) {
   const config = getConfig();
   const memberChips = config.members.map((m) => ({
-    id: m.id as BiasId,
+    id: m.id,
     label: m.stageName,
     emoji: m.emoji,
     color: m.color,
@@ -18,7 +18,7 @@ export default function BiasFilter({ biases, onToggle, onClear }: Props) {
 
   return (
     <div className="bias-filter">
-      <div className="bias-filter-label">Select Your Bias</div>
+      <div className="bias-filter-label">{config.labels.memberFilterLabel}</div>
       <div className="bias-filter-chips">
         <button
           className={`bias-chip${biases.length === 0 ? " bias-chip-active" : ""}`}

@@ -7,7 +7,6 @@ import FeedFilter from "../components/FeedFilter";
 import BiasFilter from "../components/BiasFilter";
 import SwipeFeed from "../components/SwipeFeed";
 import SkeletonCard from "../components/SkeletonCard";
-import { news } from "../data/news";
 import NewsCard from "../components/NewsCard";
 import { getConfig } from "../config";
 
@@ -106,7 +105,7 @@ export default function News() {
           <p className="feed-error-msg">{error}</p>
           <h2 className="feed-fallback-title">Latest News</h2>
           <div className="news-list">
-            {news.map((item) => (
+            {config.news.map((item) => (
               <NewsCard key={item.id} item={item} />
             ))}
           </div>

@@ -1,4 +1,4 @@
-import type { NewsItem } from "../data/news";
+import type { NewsItem } from "../config/types";
 
 export default function NewsCard({ item }: { item: NewsItem }) {
   const date = new Date(item.date + "T00:00:00");

@@ -1,4 +1,4 @@
-import { events } from "../data/events";
+import { getConfig } from "../config";
 import EventCard from "../components/EventCard";
 
 const regionLabels: Record<string, string> = {
@@ -11,7 +11,8 @@ const regionLabels: Record<string, string> = {
 const regionOrder = ["worldwide", "asia", "north-america", "europe"];
 
 export default function Tours() {
-  const sorted = [...events].sort((a, b) => a.date.localeCompare(b.date));
+  const config = getConfig();
+  const sorted = [...config.events].sort((a, b) => a.date.localeCompare(b.date));
   const grouped = regionOrder
     .map((region) => ({
       region,
@@ -22,8 +23,8 @@ export default function Tours() {
 
   return (
     <div className="page">
-      <h1 className="page-title">BTS WORLD TOUR 'ARIRANG'</h1>
-      <p className="page-subtitle">82+ shows across 34 cities in 23 countries</p>
+      <h1 className="page-title">{config.labels.tourTitle}</h1>
+      <p className="page-subtitle">{config.labels.tourSubtitle}</p>
 
       {grouped.map((group) => (
         <div key={group.region} className="tour-region">
