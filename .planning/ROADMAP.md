@@ -15,7 +15,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: Foundation** - Security patches, infrastructure hardening, config extraction, and source registry (completed 2026-02-25)
 - [x] **Phase 2: Feed Expansion** - New content sources (Tumblr, expanded Reddit, fan YouTube) with engagement stats (completed 2026-02-25)
 - [x] **Phase 3: Short-Form Video** - YouTube Shorts and TikTok embeds with autoplay-on-scroll (completed 2026-02-26)
-- [ ] **Phase 4: Config-Driven UI** - Dynamic filter/chip generation from config and clone-and-swap validation
+- [x] **Phase 4: Config-Driven UI** - Dynamic filter/chip generation from config and clone-and-swap validation (completed 2026-02-26)
 
 ## Phase Details
 
@@ -53,8 +53,8 @@ Plans:
 - [x] 02-01-PLAN.md — Data layer: types, engagement stats extraction, Tumblr fetcher, expanded source config (SRC-01, SRC-02, SRC-03, STAT-01, STAT-02)
 - [x] 02-02-PLAN.md — UI + feed logic: stats display on cards, Tumblr filter chip, engagement-weighted ordering, deduplication (SRC-04, STAT-03)
 - [x] 02-03-PLAN.md — Gap closure: replace placeholder fan YouTube channel IDs with verified IDs (SRC-02)
-- [ ] 02-04-PLAN.md — Gap closure: increase MAX_AGE_MS to 30 days and fix HYBE channel ID (SRC-02, STAT-01, STAT-02, STAT-03)
-- [ ] 02-05-PLAN.md — Gap closure: replace inactive Tumblr blogs and BangtanSubs with active sources (SRC-02, SRC-03, SRC-04)
+- [x] 02-04-PLAN.md — Gap closure: increase MAX_AGE_MS to 30 days and fix HYBE channel ID (SRC-02, STAT-01, STAT-02, STAT-03)
+- [x] 02-05-PLAN.md — Gap closure: replace inactive Tumblr blogs and BangtanSubs with active sources (SRC-02, SRC-03, SRC-04)
 
 ### Phase 3: Short-Form Video
 **Goal**: Users encounter short-form video content (YouTube Shorts, TikTok) rendered as embedded players directly in the feed with autoplay-on-scroll
@@ -80,8 +80,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 04-01-PLAN.md — Config type expansion: GroupLabels, events/news in GroupConfig, FeedSource/BiasId as string types (CONFIG-03, CONFIG-04)
-- [ ] 04-02-PLAN.md — UI wiring, build-time injection, example group config, hardcoded-reference audit (CONFIG-03, CONFIG-04)
+- [x] 04-01-PLAN.md — Config type expansion: GroupLabels, events/news in GroupConfig, FeedSource/BiasId as string types (CONFIG-03, CONFIG-04)
+- [x] 04-02-PLAN.md — UI wiring, build-time injection, example group config, hardcoded-reference audit (CONFIG-03, CONFIG-04)
 
 ## Progress
 
@@ -91,6 +91,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 4/4 | Complete    | 2026-02-25 |
-| 2. Feed Expansion | 3/5 | Gap closure | 2026-02-25 |
+| 2. Feed Expansion | 5/5 | Complete | 2026-02-25 |
 | 3. Short-Form Video | 2/2 | Complete | 2026-02-26 |
-| 4. Config-Driven UI | 0/0 | Not started | - |
+| 4. Config-Driven UI | 2/2 | Complete | 2026-02-26 |

@@ -42,7 +42,7 @@ Add Tumblr fan blogs, additional Reddit subreddits, and fan YouTube channels to 
 - Engagement-weighted ordering: equal weight between recency and engagement scores
 - New sources appear naturally — no special "new" badges
 - Deduplicate cross-source content by URL — show version with higher engagement
-- Maximum post age: 7 days
+- Maximum post age: 30 days (revised from 7 days after UAT — YouTube/Tumblr posting cadences exceed 7 days)
 - Add Tumblr filter chip to existing source filter UI in this phase (don't defer to Phase 4)
 
 ### Claude's Discretion

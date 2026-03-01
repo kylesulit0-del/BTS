@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-02-25)
 
 **Core value:** Fans see a rich, diverse stream of BTS content from everywhere with engagement stats that help surface the best content, all without leaving the app.
-**Current focus:** Phase 4: Config-Driven UI
+**Current focus:** Milestone v1.0 complete — audit passed with tech debt
 
 ## Current Position
 
-Phase: 4 of 4 (Config-Driven UI)
+Phase: 4 of 4 (Config-Driven UI) — ALL PHASES COMPLETE
 Plan: 2 of 2 in current phase
-Status: Complete
-Last activity: 2026-02-26 -- Completed 04-02-PLAN.md (Config-driven UI wiring)
+Status: Milestone v1.0 audit complete (tech_debt status, 18/18 requirements satisfied)
+Last activity: 2026-03-01 -- Milestone audit completed, all 4 phases verified
 
 Progress: [██████████] 100% (Phase 4: 2/2 plans)
 
@@ -101,12 +101,29 @@ None yet.
 
 ### Blockers/Concerns
 
-- Zero test coverage for feed logic -- config refactor in Phase 1 risks regressions
+- Zero test coverage for feed logic
 - CORS proxy services have no SLA -- increased source count amplifies fragility
-- TikTok embed library (react-social-media-embed) needs React 19 compatibility verification before Phase 3
+
+## Next Steps
+
+Milestone v1.0 is complete. All 18 requirements satisfied, 46/46 must-haves verified.
+
+**Options:**
+1. `/gsd:complete-milestone v1.0` — archive and tag the milestone, accept tech debt
+2. `/gsd:plan-milestone-gaps` — address 10 tech debt items before completing
+3. `/gsd:verify-work` — run manual UAT (15 human verification items across phases)
+4. `/gsd:new-milestone` — start v2.0 planning (ENRICH-01, CONTENT-01, etc.)
+
+**Tech debt summary (10 items, all low/info):**
+- Dead code: sanitizeHtml, fetchAllFeeds
+- Cosmetic: SwipeFeed tumblr badge color, index.html fallbacks
+- Stale docs: ROADMAP checkboxes for plans 02-04/05 and 04-01/02
+- TikTok: short URL embeds degraded, PENDING_CHANNEL_ID placeholder, detectVideo not wired to non-Reddit fetchers
+- EMBED-03 requirement text not updated to reflect autoplay-on-scroll decision
 
 ## Session Continuity
 
-Last session: 2026-02-26
-Stopped at: Completed 04-02-PLAN.md (Config-driven UI wiring) -- Phase 4 complete, all phases done
+Last session: 2026-03-01
+Stopped at: Milestone v1.0 audit complete (tech_debt status, 18/18 requirements)
+Resume with: `/gsd:complete-milestone v1.0` or `/gsd:plan-milestone-gaps`
 Resume file: None
