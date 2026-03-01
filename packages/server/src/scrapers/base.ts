@@ -3,10 +3,10 @@
  *
  * All scrapers (Reddit now, YouTube/RSS/Tumblr/Bluesky in Phase 6) implement
  * the Scraper interface. runAllScrapers() handles DB upserts, deduplication,
- * scrape run tracking, and 30-day content retention cleanup.
+ * scrape run tracking, and 14-day soft-delete content retention.
  */
 
-import { eq, sql, lt } from 'drizzle-orm';
+import { and, eq, sql, lt, isNull } from 'drizzle-orm';
 import { contentItems, scrapeRuns } from '../db/schema.js';
 import { normalizeUrl } from './utils.js';
 import type { Db } from '../db/index.js';
@@ -60,7 +60,7 @@ interface RunStats {
  * - Uses INSERT ... ON CONFLICT (normalized_url) DO UPDATE for atomic dedup
  * - New items get full insert; existing items get engagement stats refreshed
  *
- * After scraping, cleans up items older than 30 days.
+ * After scraping, soft-deletes items older than 14 days.
  */
 export async function runAllScrapers(db: Db, scrapers: Scraper[]): Promise<RunStats> {
   const overallStart = Date.now();
@@ -121,6 +121,8 @@ export async function runAllScrapers(db: Db, scrapers: Scraper[]): Promise<RunSt
             flair: item.flair,
             contentType: item.contentType,
             externalId: item.externalId,
+            thumbnailUrl: item.thumbnailUrl,
+            engagementStats: item.engagementStats ? JSON.stringify(item.engagementStats) : null,
             publishedAt: item.publishedAt,
             scrapedAt: item.scrapedAt,
             updatedAt: now,
@@ -130,6 +132,8 @@ export async function runAllScrapers(db: Db, scrapers: Scraper[]): Promise<RunSt
               score: sql`excluded.score`,
               commentCount: sql`excluded.comment_count`,
               flair: sql`excluded.flair`,
+              thumbnailUrl: sql`excluded.thumbnail_url`,
+              engagementStats: sql`excluded.engagement_stats`,
               updatedAt: sql`unixepoch()`,
             },
           }).run();
@@ -141,13 +145,20 @@ export async function runAllScrapers(db: Db, scrapers: Scraper[]): Promise<RunSt
           }
         }
 
-        // Update scrape_runs with success
+        // Migrate existing Reddit items: populate engagement_stats from score/comment_count
+        if (result.source === 'reddit') {
+          db.run(sql`UPDATE content_items SET engagement_stats = json_object('upvotes', score, 'comments', comment_count) WHERE source = 'reddit' AND engagement_stats IS NULL AND score > 0`);
+        }
+
+        // Update scrape_runs with success/empty status and duration
+        const runStatus = result.items.length === 0 ? 'empty' : 'success';
         db.update(scrapeRuns)
           .set({
             itemsFound: result.items.length,
             itemsNew,
             itemsUpdated,
-            status: 'success',
+            status: runStatus,
+            duration: result.duration,
             completedAt: new Date(),
           })
           .where(eq(scrapeRuns.id, run.id))
@@ -161,13 +172,15 @@ export async function runAllScrapers(db: Db, scrapers: Scraper[]): Promise<RunSt
           stats.totalErrors.push(...result.errors);
         }
 
-        console.log(`[scraper] ${result.sourceDetail}: found=${result.items.length} new=${itemsNew} updated=${itemsUpdated}`);
+        console.log(`[scraper] ${result.sourceDetail}: status=${runStatus} found=${result.items.length} new=${itemsNew} updated=${itemsUpdated}`);
       } catch (error) {
-        // Update scrape_runs with error
+        // Update scrape_runs with error, stack trace, and duration
         db.update(scrapeRuns)
           .set({
             status: 'error',
             error: String(error),
+            errorStack: error instanceof Error ? error.stack ?? String(error) : String(error),
+            duration: Date.now() - startedAt.getTime(),
             completedAt: new Date(),
           })
           .where(eq(scrapeRuns.id, run.id))
@@ -180,13 +193,14 @@ export async function runAllScrapers(db: Db, scrapers: Scraper[]): Promise<RunSt
     }
   }
 
-  // 30-day content retention cleanup
-  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-  const deleted = db.delete(contentItems)
-    .where(lt(contentItems.scrapedAt, thirtyDaysAgo))
+  // 14-day content retention: soft-delete old items (set deletedAt, don't hard delete)
+  const fourteenDaysAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
+  const softDeleted = db.update(contentItems)
+    .set({ deletedAt: new Date() })
+    .where(and(lt(contentItems.publishedAt, fourteenDaysAgo), isNull(contentItems.deletedAt)))
     .run();
-  if (deleted.changes > 0) {
-    console.log(`[scraper] Cleaned up ${deleted.changes} items older than 30 days`);
+  if (softDeleted.changes > 0) {
+    console.log(`[scraper] Soft-deleted ${softDeleted.changes} items older than 14 days`);
   }
 
   stats.duration = Date.now() - overallStart;

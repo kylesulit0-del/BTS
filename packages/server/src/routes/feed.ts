@@ -6,7 +6,7 @@
  */
 
 import type { FastifyInstance } from 'fastify';
-import { and, desc, lt, eq, sql } from 'drizzle-orm';
+import { and, desc, lt, eq, sql, isNull } from 'drizzle-orm';
 import { contentItems } from '../db/schema.js';
 import type { Db } from '../db/index.js';
 import type { FeedItem, FeedResponse } from '@bts/shared/types/feed.js';
@@ -22,8 +22,8 @@ export function registerFeedRoutes(server: FastifyInstance, db: Db) {
     if (isNaN(limit) || limit < 1) limit = 1;
     if (limit > 100) limit = 100;
 
-    // Build WHERE conditions
-    const conditions = [];
+    // Build WHERE conditions (always exclude soft-deleted items)
+    const conditions = [isNull(contentItems.deletedAt)];
     if (cursor) {
       const cursorId = parseInt(cursor, 10);
       if (!isNaN(cursorId)) {
@@ -35,7 +35,7 @@ export function registerFeedRoutes(server: FastifyInstance, db: Db) {
     }
 
     // Query items (fetch limit + 1 to detect hasMore)
-    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+    const whereClause = and(...conditions);
     const rows = db
       .select()
       .from(contentItems)
@@ -50,8 +50,12 @@ export function registerFeedRoutes(server: FastifyInstance, db: Db) {
       ? String(items[items.length - 1].id)
       : null;
 
-    // Count total items (with source filter if applicable)
-    const countWhere = source ? eq(contentItems.source, source) : undefined;
+    // Count total items (with source filter if applicable, always exclude soft-deleted)
+    const countConditions = [isNull(contentItems.deletedAt)];
+    if (source) {
+      countConditions.push(eq(contentItems.source, source));
+    }
+    const countWhere = and(...countConditions);
     const countResult = db
       .select({ count: sql<number>`count(*)` })
       .from(contentItems)
@@ -70,6 +74,8 @@ export function registerFeedRoutes(server: FastifyInstance, db: Db) {
       commentCount: row.commentCount,
       flair: row.flair,
       contentType: row.contentType as FeedItem['contentType'],
+      thumbnailUrl: row.thumbnailUrl ?? null,
+      engagementStats: row.engagementStats ? JSON.parse(row.engagementStats) : null,
       publishedAt: row.publishedAt instanceof Date
         ? row.publishedAt.toISOString()
         : new Date(row.publishedAt as unknown as number * 1000).toISOString(),
@@ -98,7 +104,7 @@ export function registerFeedRoutes(server: FastifyInstance, db: Db) {
     const row = db
       .select()
       .from(contentItems)
-      .where(eq(contentItems.id, parsed))
+      .where(and(eq(contentItems.id, parsed), isNull(contentItems.deletedAt)))
       .get();
 
     if (!row) {
@@ -115,6 +121,8 @@ export function registerFeedRoutes(server: FastifyInstance, db: Db) {
       commentCount: row.commentCount,
       flair: row.flair,
       contentType: row.contentType as FeedItem['contentType'],
+      thumbnailUrl: row.thumbnailUrl ?? null,
+      engagementStats: row.engagementStats ? JSON.parse(row.engagementStats) : null,
       publishedAt: row.publishedAt instanceof Date
         ? row.publishedAt.toISOString()
         : new Date(row.publishedAt as unknown as number * 1000).toISOString(),
