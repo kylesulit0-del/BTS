@@ -9,13 +9,13 @@ Requirements for the Content Scraping Engine milestone. Each maps to roadmap pha
 
 ### Infrastructure
 
-- [ ] **INFRA-01**: Monorepo with shared types between frontend and backend (npm workspaces)
-- [ ] **INFRA-02**: SQLite database with Drizzle ORM schema for content items, engagement snapshots, moderation results, and scrape runs
+- [x] **INFRA-01**: Monorepo with shared types between frontend and backend (npm workspaces)
+- [x] **INFRA-02**: SQLite database with Drizzle ORM schema for content items, engagement snapshots, moderation results, and scrape runs
 - [ ] **INFRA-03**: Scraping engine framework with abstract scraper interface, error handling, rate limiting, and retry logic
 - [ ] **INFRA-04**: Scheduled scraping via node-cron at configurable 15-30 minute intervals
 - [ ] **INFRA-05**: URL-based deduplication with normalized canonical URLs as unique constraint
 - [ ] **INFRA-06**: Content age windowing with configurable max age and periodic cleanup
-- [ ] **INFRA-07**: Config-driven group targeting -- all scrape targets, keywords, and member names in swappable config
+- [x] **INFRA-07**: Config-driven group targeting -- all scrape targets, keywords, and member names in swappable config
 
 ### Source Scrapers
 
@@ -81,13 +81,13 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| INFRA-01 | Phase 5 | Pending |
-| INFRA-02 | Phase 5 | Pending |
+| INFRA-01 | Phase 5 | Complete |
+| INFRA-02 | Phase 5 | Complete |
 | INFRA-03 | Phase 5 | Pending |
 | INFRA-04 | Phase 5 | Pending |
 | INFRA-05 | Phase 5 | Pending |
 | INFRA-06 | Phase 6 | Pending |
-| INFRA-07 | Phase 5 | Pending |
+| INFRA-07 | Phase 5 | Complete |
 | SCRAPE-01 | Phase 5 | Pending |
 | SCRAPE-02 | Phase 6 | Pending |
 | SCRAPE-03 | Phase 6 | Pending |

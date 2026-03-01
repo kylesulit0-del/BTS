@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-03-01)
 ## Current Position
 
 Phase: 5 of 8 (Foundation)
-Plan: --
-Status: Ready to plan
-Last activity: 2026-03-01 -- Roadmap created for v2.0
+Plan: 1 of 3 complete
+Status: Executing
+Last activity: 2026-03-01 -- Completed 05-01-PLAN.md (monorepo + shared types + database)
 
-Progress: [=============.............] 50% (4/8 phases complete -- v1.0 shipped)
+Progress: [=============.............] 50% (4/8 phases complete -- v1.0 shipped, Phase 5 plan 1/3)
 
 ## Performance Metrics
 
@@ -43,6 +43,9 @@ Recent decisions affecting current work:
 - v2.0: Scraping-first over API-first (avoids API key requirements)
 - v2.0: Monorepo over separate service (shared TypeScript types)
 - v2.0: Twitter/X, TikTok, Instagram descoped to v2.1+ (fragile, expensive)
+- 05-01: Live TypeScript exports from @bts/shared (no build step) via package.json exports pointing at .ts files
+- 05-01: import.meta.url-based path resolution for DB and migrations to avoid CWD sensitivity
+- 05-01: fetchCount set to 50 per subreddit in scraping config (matching user decision)
 
 ### Pending Todos
 
@@ -50,13 +53,13 @@ None.
 
 ### Blockers/Concerns
 
-- ESM/CJS module interop must be resolved in Phase 5 before any cross-package code
+- ~~ESM/CJS module interop must be resolved in Phase 5 before any cross-package code~~ (resolved: all packages use "type": "module", tsx handles .ts imports)
 - LLM moderation costs need guardrails (batching, pre-filtering, spending limits)
 - Engagement normalization needs 7+ days of real data before percentile calculation works
 
 ## Session Continuity
 
 Last session: 2026-03-01
-Stopped at: Roadmap created for v2.0 milestone
-Resume with: `/gsd:plan-phase 5`
-Resume file: None
+Stopped at: Completed 05-01-PLAN.md
+Resume with: `/gsd:execute-phase` (plan 05-02)
+Resume file: .planning/phases/05-foundation/05-02-PLAN.md
