@@ -13,6 +13,8 @@ import { registerScrapeRoutes } from './routes/scrape.js';
 import { registerHealthRoutes } from './routes/health.js';
 import { startScheduler } from './scheduler.js';
 import { RedditScraper } from './scrapers/reddit.js';
+import { YouTubeScraper } from './scrapers/youtube.js';
+import { RssNewsScraper } from './scrapers/rss-news.js';
 import { getBtsScrapingConfig } from '@bts/shared/config/sources.js';
 
 const server = fastify({ logger: true });
@@ -23,7 +25,11 @@ const db = initDb();
 
 // Create scrapers
 const config = getBtsScrapingConfig();
-const scrapers = [new RedditScraper(config)];
+const scrapers = [
+  new RedditScraper(config),
+  new YouTubeScraper(config),
+  new RssNewsScraper(config),
+];
 
 // Register API routes under /api prefix
 await server.register(async (api) => {
