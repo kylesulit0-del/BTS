@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { FeedItem } from "../types/feed";
 import { abbreviateNumber } from "../utils/formatNumber";
 import VideoEmbed from "./VideoEmbed";
@@ -8,6 +9,7 @@ const sourceBadgeColors: Record<string, string> = {
   news: "#7c4dbd",
   twitter: "#1DA1F2",
   tumblr: "#001935",
+  bluesky: "#0085FF",
 };
 
 const MIN_STAT_THRESHOLD = 2;
@@ -25,6 +27,9 @@ function timeAgo(timestamp: number): string {
 }
 
 export default function FeedCard({ item }: { item: FeedItem }) {
+  const [imageError, setImageError] = useState(false);
+  const showThumbnail = item.thumbnail && !imageError;
+
   return (
     <div className="feed-card">
       {item.videoType && item.videoId ? (
@@ -34,9 +39,15 @@ export default function FeedCard({ item }: { item: FeedItem }) {
           title={item.title}
           thumbnail={item.thumbnail}
         />
-      ) : item.thumbnail ? (
+      ) : showThumbnail ? (
         <div className="feed-card-thumbnail">
-          <img src={item.thumbnail} alt="" loading="lazy" />
+          <img
+            src={item.thumbnail}
+            alt=""
+            loading="lazy"
+            onError={() => setImageError(true)}
+            style={{ width: "100%", aspectRatio: "16/9", objectFit: "cover" }}
+          />
         </div>
       ) : null}
       <div className="feed-card-content">

@@ -5,6 +5,7 @@ import Members from "./pages/Members";
 import MemberDetail from "./pages/MemberDetail";
 import Tours from "./pages/Tours";
 import News from "./pages/News";
+import Status from "./pages/Status";
 import "./App.css";
 
 export default function App() {
@@ -18,6 +19,7 @@ export default function App() {
             <Route path="/members/:id" element={<MemberDetail />} />
             <Route path="/tours" element={<Tours />} />
             <Route path="/news" element={<News />} />
+            <Route path="/status" element={<Status />} />
           </Routes>
         </main>
         <Navbar />
