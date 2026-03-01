@@ -52,12 +52,13 @@ Plans:
   2. Every content item in the database has a thumbnail URL (or explicit null for text-only sources), and feed cards display media from all sources
   3. Content older than the configured age window is automatically cleaned up, and the database does not grow unbounded
   4. Scrape health is observable -- `scrape_runs` table tracks success/failure per source per run
-**Plans**: TBD
+**Plans:** 4 plans
 
 Plans:
-- [ ] 06-01: TBD
-- [ ] 06-02: TBD
-- [ ] 06-03: TBD
+- [ ] 06-01-PLAN.md -- Schema evolution, shared types, soft-delete cleanup, engagement stats JSON
+- [ ] 06-02-PLAN.md -- Source config expansion, thumbnail utilities, YouTube + RSS/news scrapers
+- [ ] 06-03-PLAN.md -- Tumblr + Bluesky scrapers, all scrapers registered
+- [ ] 06-04-PLAN.md -- Health status page, feed card thumbnails, broken image handling, verification
 
 ### Phase 7: LLM Moderation Pipeline
 **Goal**: Scraped content is automatically filtered for relevance, moderated for safety, and classified by type -- with configurable LLM provider and cost controls
