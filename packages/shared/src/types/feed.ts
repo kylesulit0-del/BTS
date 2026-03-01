@@ -24,6 +24,8 @@ export interface FeedItem {
   commentCount: number;
   flair: string | null;
   contentType: ContentType;
+  thumbnailUrl: string | null;
+  engagementStats: Record<string, number> | null;
   publishedAt: string;      // ISO 8601
   scrapedAt: string;        // ISO 8601
 }

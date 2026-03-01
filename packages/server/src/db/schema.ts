@@ -12,6 +12,9 @@ export const contentItems = sqliteTable('content_items', {
   flair: text('flair'),                                      // Reddit post flair
   contentType: text('content_type'),                         // Phase 7 LLM classification
   externalId: text('external_id').notNull(),                 // Reddit post ID for dedup/update
+  thumbnailUrl: text('thumbnail_url'),                       // Hotlinked image URL
+  engagementStats: text('engagement_stats'),                 // JSON string, e.g., {"upvotes":42,"comments":5}
+  deletedAt: integer('deleted_at', { mode: 'timestamp' }),   // Soft delete timestamp
   publishedAt: integer('published_at', { mode: 'timestamp' }).notNull(),
   scrapedAt: integer('scraped_at', { mode: 'timestamp' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
@@ -20,6 +23,7 @@ export const contentItems = sqliteTable('content_items', {
   index('idx_scraped_at').on(table.scrapedAt),
   index('idx_published_at').on(table.publishedAt),
   index('idx_source_detail').on(table.sourceDetail),
+  index('idx_deleted_at').on(table.deletedAt),
 ]);
 
 export const scrapeRuns = sqliteTable('scrape_runs', {
@@ -31,6 +35,8 @@ export const scrapeRuns = sqliteTable('scrape_runs', {
   itemsFound: integer('items_found').default(0),
   itemsNew: integer('items_new').default(0),
   itemsUpdated: integer('items_updated').default(0),
-  status: text('status').notNull().default('running'),       // 'running' | 'success' | 'error'
+  status: text('status').notNull().default('running'),       // 'running' | 'success' | 'empty' | 'error'
   error: text('error'),
+  duration: integer('duration'),                             // Milliseconds
+  errorStack: text('error_stack'),                           // Full stack trace on failure
 });

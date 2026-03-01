@@ -23,6 +23,8 @@ export interface ScrapedItem {
   commentCount: number;
   flair: string | null;     // Reddit post flair
   contentType: string | null; // null for now, Phase 7 fills this
+  thumbnailUrl: string | null; // Hotlinked image URL, set by each scraper
+  engagementStats: Record<string, number> | null; // Per-source typed JSON (e.g., {upvotes: 42, comments: 5})
   publishedAt: Date;
   scrapedAt: Date;
 }

@@ -97,6 +97,8 @@ export class RedditScraper implements Scraper {
           commentCount: post.num_comments,
           flair: post.link_flair_text,
           contentType: null,
+          thumbnailUrl: null,
+          engagementStats: { upvotes: post.score, comments: post.num_comments },
           publishedAt: new Date(post.created_utc * 1000),
           scrapedAt: new Date(),
         }));
