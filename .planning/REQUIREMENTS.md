@@ -14,7 +14,7 @@ Requirements for the Content Scraping Engine milestone. Each maps to roadmap pha
 - [x] **INFRA-03**: Scraping engine framework with abstract scraper interface, error handling, rate limiting, and retry logic
 - [x] **INFRA-04**: Scheduled scraping via node-cron at configurable 15-30 minute intervals
 - [x] **INFRA-05**: URL-based deduplication with normalized canonical URLs as unique constraint
-- [ ] **INFRA-06**: Content age windowing with configurable max age and periodic cleanup
+- [x] **INFRA-06**: Content age windowing with configurable max age and periodic cleanup
 - [x] **INFRA-07**: Config-driven group targeting -- all scrape targets, keywords, and member names in swappable config
 
 ### Source Scrapers
@@ -46,7 +46,7 @@ Requirements for the Content Scraping Engine milestone. Each maps to roadmap pha
 
 - [x] **API-01**: REST API server (Fastify) with paginated feed endpoint, single-item endpoint, and source health endpoint
 - [ ] **API-02**: Dual-mode frontend -- API mode when `VITE_API_URL` is set, client-side fallback otherwise
-- [ ] **API-03**: Engagement data collection and storage with per-source stat extraction
+- [x] **API-03**: Engagement data collection and storage with per-source stat extraction
 
 ## v2.1+ Requirements
 
@@ -86,7 +86,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | INFRA-03 | Phase 5 | Complete |
 | INFRA-04 | Phase 5 | Complete |
 | INFRA-05 | Phase 5 | Complete |
-| INFRA-06 | Phase 6 | Pending |
+| INFRA-06 | Phase 6 | Complete |
 | INFRA-07 | Phase 5 | Complete |
 | SCRAPE-01 | Phase 5 | Complete |
 | SCRAPE-02 | Phase 6 | Pending |
@@ -106,7 +106,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | RANK-03 | Phase 8 | Pending |
 | API-01 | Phase 5 | Complete |
 | API-02 | Phase 8 | Pending |
-| API-03 | Phase 6 | Pending |
+| API-03 | Phase 6 | Complete |
 
 **Coverage:**
 - v2.0 requirements: 26 total

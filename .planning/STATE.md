@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-03-01)
 ## Current Position
 
 Phase: 6 of 8 (Scraper Expansion)
-Plan: 0 of ? complete
-Status: Phase 5 fully verified, ready for Phase 6 planning
-Last activity: 2026-03-01 -- Completed 05-04-PLAN.md (Verification gap closure: configurable cron + single-item endpoint)
+Plan: 1 of 4 complete
+Status: Executing Phase 6 plans
+Last activity: 2026-03-01 -- Completed 06-01-PLAN.md (Schema evolution for multi-source scraping)
 
-Progress: [===============...........] 63% (5/8 phases complete -- v1.0 shipped, Phase 5 complete)
+Progress: [===============...........] 63% (5/8 phases complete -- v1.0 shipped, Phase 5 complete, Phase 6 in progress)
 
 ## Performance Metrics
 
@@ -37,6 +37,7 @@ Progress: [===============...........] 63% (5/8 phases complete -- v1.0 shipped,
 | Phase | Plans | Status |
 |-------|-------|--------|
 | 5. Foundation | 4 | Complete (verified) |
+| 6. Scraper Expansion | 1/4 | In progress |
 
 ## Accumulated Context
 
@@ -60,6 +61,9 @@ Recent decisions affecting current work:
 - 05-03: Server init order: DB first, then routes, then scheduler, then listen
 - 05-04: Default cron interval set to 20 minutes (midpoint of INFRA-04's 15-30 min range)
 - 05-04: Invalid CRON_SCHEDULE values log warning and fall back to default rather than crashing
+- 06-01: Soft delete uses publishedAt (not scrapedAt) to catch content published long ago but scraped recently
+- 06-01: Reddit engagement_stats migration is idempotent -- runs every scrape, only affects rows without engagement_stats
+- 06-01: Existing score/commentCount fields kept for backward compatibility
 
 ### Pending Todos
 
@@ -74,6 +78,6 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-01
-Stopped at: Completed 05-04-PLAN.md (Phase 5 verification gaps closed)
-Resume with: `/gsd:plan-phase` (Phase 6 planning)
-Resume file: N/A -- Phase 6 needs planning
+Stopped at: Completed 06-01-PLAN.md (Schema evolution for multi-source scraping)
+Resume with: `/gsd:execute-phase` (Plan 06-02)
+Resume file: .planning/phases/06-scraper-expansion/06-02-PLAN.md

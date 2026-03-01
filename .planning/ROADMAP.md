@@ -101,6 +101,6 @@ Plans:
 | 3. Short-Form Video | v1.0 | 2/2 | Complete | 2026-02-26 |
 | 4. Config-Driven UI | v1.0 | 2/2 | Complete | 2026-02-26 |
 | 5. Foundation | v2.0 | 4/4 | Complete | 2026-03-01 |
-| 6. Scraper Expansion | v2.0 | 0/? | Not started | - |
+| 6. Scraper Expansion | v2.0 | 1/4 | In Progress | - |
 | 7. LLM Moderation Pipeline | v2.0 | 0/? | Not started | - |
 | 8. Smart Blend and Integration | v2.0 | 0/? | Not started | - |
