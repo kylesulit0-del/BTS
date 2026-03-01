@@ -64,6 +64,10 @@ Recent decisions affecting current work:
 - 06-01: Soft delete uses publishedAt (not scrapedAt) to catch content published long ago but scraped recently
 - 06-01: Reddit engagement_stats migration is idempotent -- runs every scrape, only affects rows without engagement_stats
 - 06-01: Existing score/commentCount fields kept for backward compatibility
+- 06-02: YouTube thumbnails constructed from videoId (mqdefault.jpg) instead of parsing media:thumbnail (known rss-parser bug)
+- 06-02: Seoul Space source added as enabled:false pending URL verification
+- 06-02: RSS thumbnail extraction uses progressive fallback: enclosure -> og:image -> first article image
+- 06-02: Thumbnail validation skips known CDNs (YouTube, Tumblr, Bluesky) to reduce HTTP overhead
 - 06-03: Bluesky scraper degrades gracefully when credentials missing -- logs warning, returns empty result
 - 06-03: Tumblr thumbnail extraction uses regex on HTML content -- first image only per user decision
 - 06-03: Bluesky deduplicates posts by AT URI across multiple keyword searches
