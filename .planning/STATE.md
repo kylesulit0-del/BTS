@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-03-01)
 ## Current Position
 
 Phase: 5 of 8 (Foundation)
-Plan: 1 of 3 complete
+Plan: 2 of 3 complete
 Status: Executing
-Last activity: 2026-03-01 -- Completed 05-01-PLAN.md (monorepo + shared types + database)
+Last activity: 2026-03-01 -- Completed 05-02-PLAN.md (Reddit scraper + dedup framework)
 
-Progress: [=============.............] 50% (4/8 phases complete -- v1.0 shipped, Phase 5 plan 1/3)
+Progress: [=============.............] 50% (4/8 phases complete -- v1.0 shipped, Phase 5 plan 2/3)
 
 ## Performance Metrics
 
@@ -46,6 +46,9 @@ Recent decisions affecting current work:
 - 05-01: Live TypeScript exports from @bts/shared (no build step) via package.json exports pointing at .ts files
 - 05-01: import.meta.url-based path resolution for DB and migrations to avoid CWD sensitivity
 - 05-01: fetchCount set to 50 per subreddit in scraping config (matching user decision)
+- 05-02: Pre-check SELECT before upsert to accurately track new vs updated items in scrape_runs
+- 05-02: Reddit 403s handled gracefully as empty results (Reddit blocks server IPs)
+- 05-02: 30-day content retention cleanup integrated into runAllScrapers() orchestration
 
 ### Pending Todos
 
@@ -60,6 +63,6 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-01
-Stopped at: Completed 05-01-PLAN.md
-Resume with: `/gsd:execute-phase` (plan 05-02)
-Resume file: .planning/phases/05-foundation/05-02-PLAN.md
+Stopped at: Completed 05-02-PLAN.md
+Resume with: `/gsd:execute-phase` (plan 05-03)
+Resume file: .planning/phases/05-foundation/05-03-PLAN.md
