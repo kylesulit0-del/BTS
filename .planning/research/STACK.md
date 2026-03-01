@@ -1,12 +1,12 @@
 # Stack Research
 
-**Domain:** Fan content aggregator -- feed expansion (engagement stats, short-form video embeds, new sources, config-driven architecture)
-**Researched:** 2026-02-25
-**Confidence:** HIGH (core stack) / MEDIUM (embed strategies) / LOW (Weverse feasibility)
+**Domain:** Backend scraping engine, database storage, LLM moderation, REST API, scheduled jobs
+**Researched:** 2026-03-01
+**Confidence:** HIGH (core stack, ORM, API framework) / MEDIUM (LLM SDK, monorepo) / LOW (scraping edge cases)
 
 ## Existing Stack (DO NOT CHANGE)
 
-Already validated. Listed for reference only -- these are not recommendations, they are facts.
+Already validated and deployed. Listed for reference only.
 
 | Technology | Version | Purpose |
 |------------|---------|---------|
@@ -15,287 +15,287 @@ Already validated. Listed for reference only -- these are not recommendations, t
 | Vite | ^7.3.1 | Build tool |
 | react-router-dom | ^7.13.1 | Routing |
 | vite-plugin-pwa | ^1.2.0 | PWA support |
+| dompurify | ^3.3.1 | HTML sanitization |
+| Node.js | 20.20.0 | Runtime |
 
 ## Recommended Stack Additions
 
-### Social Media Embeds
+### API Framework
 
-| Library | Version | Purpose | Why Recommended |
-|---------|---------|---------|-----------------|
-| `react-social-media-embed` | ^2.5.18 | Embed TikTok, Instagram, YouTube Shorts content inline | No API tokens required for any platform. Supports all three target platforms (TikTok, Instagram, YouTube). React 19 compatible (peer deps explicitly include ^19.0.0). Single dependency instead of three separate embed libraries. Wraps platform embed scripts (TikTok embed.js, Instagram embed.js, YouTube iframe API) in React components with proper lifecycle management. |
+| Technology | Version | Purpose | Why Recommended |
+|------------|---------|---------|-----------------|
+| Fastify | ^5.7.4 | REST API server | 3x faster than Express (70-80K vs 20-30K req/sec). Written in TypeScript with first-class type support. Built-in JSON schema validation eliminates need for separate validation middleware. Plugin architecture keeps the server modular. Targets Node.js v20+, matching the project's runtime. For a content API serving feed data, Fastify's JSON serialization speed matters -- it fast-serializes JSON responses by compiling schema-aware serializers. |
+| @fastify/cors | ^11.2.0 | CORS for frontend access | Official Fastify plugin. TypeScript types bundled. The frontend SPA will call the API from a different origin during development. |
 
-**Components used:**
-- `<TikTokEmbed url={...} />` -- renders TikTok's blockquote + embed.js player
-- `<InstagramEmbed url={...} />` -- renders Instagram blockquote + embed.js (works for Reels, no Meta API token needed for client-side blockquote approach)
-- `<YouTubeEmbed url={...} />` -- renders YouTube iframe (works with Shorts video IDs via standard `/embed/{id}` URL)
+### Database & ORM
 
-**Why this over manual embed implementation:**
-The app already has a YouTube iframe embed in `SwipeFeed.tsx`. For TikTok and Instagram, the embed lifecycle (loading platform JS, processing blockquotes, handling script re-initialization on SPA navigation) is tricky to get right. `react-social-media-embed` handles this correctly. The alternative is managing three platform embed scripts manually, which is error-prone in a React SPA where DOM nodes are created/destroyed by the virtual DOM.
+| Technology | Version | Purpose | Why Recommended |
+|------------|---------|---------|-----------------|
+| better-sqlite3 | ^12.6.2 | SQLite database driver | Synchronous API (faster than async for single-process workloads). No external database server to manage -- the database is a file. Fully supports Node.js 20. Prebuilt binaries available. The scraping engine is a single-process Node app, not a distributed system -- SQLite is the right fit. |
+| drizzle-orm | ^0.45.1 | TypeScript ORM | SQL-first design (write queries that look like SQL, not a query builder abstraction). Zero runtime dependencies (7.4KB gzipped). Full type inference from schema definitions -- no code generation step like Prisma. Supports both SQLite and PostgreSQL, so migration to Postgres later is a schema-level change, not a rewrite. Drizzle Kit handles migrations with `push` for dev and `generate`/`migrate` for production. |
+| drizzle-kit | ^0.45.1 | Schema migrations | Companion tool for drizzle-orm. Generates SQL migration files from schema changes. `drizzle-kit push` for rapid local dev, `drizzle-kit generate` + `drizzle-kit migrate` for production. |
 
-**Confidence:** MEDIUM -- Library has 311 GitHub stars and last published ~1 year ago. The underlying platform embed scripts (TikTok embed.js, Instagram embed.js) are maintained by the platforms themselves. If the library becomes unmaintained, the fallback is straightforward: manually load platform embed scripts and render blockquote HTML. The library is thin enough that this migration would be low-effort.
+**Why SQLite over PostgreSQL for v2.0:**
+- No external service to install, configure, or keep running
+- Single-file database, trivial to backup (copy the file)
+- better-sqlite3's synchronous API is faster than any async Postgres driver for single-process workloads
+- The scraping engine runs on one server (SSH-accessed from phone) -- no horizontal scaling needed
+- Drizzle's SQLite and PostgreSQL schemas are nearly identical, so migrating later if needed is low-effort
 
-### HTML Sanitization
+**Why Drizzle over Prisma:**
+- No code generation step (Prisma requires `prisma generate` after every schema change)
+- No separate query engine binary (Prisma bundles a Rust-based engine)
+- SQL-first: the queries read like SQL, which matters when debugging scraping pipeline queries
+- Smaller footprint: 7.4KB vs Prisma's multi-MB engine
+- Same SQLite + PostgreSQL dual-support
 
-| Library | Version | Purpose | Why Recommended |
-|---------|---------|---------|-----------------|
-| `dompurify` | ^3.3.1 | Sanitize HTML from RSS feeds and scraped content | The existing `stripHtml` function in `feeds.ts` uses `div.innerHTML = html` which is a known XSS vector (noted in PROJECT.md codebase audit). DOMPurify is the industry standard -- DOM-only, no dependencies, 3KB gzipped, TypeScript types bundled. Needed now because new sources (Tumblr HTML-rich RSS, Reddit selftext HTML) increase the attack surface. |
+### Web Scraping
 
-**Integration point:** Replace `stripHtml()` in `src/services/feeds.ts` and use for any new HTML content from Tumblr RSS or other sources.
+| Technology | Version | Purpose | Why Recommended |
+|------------|---------|---------|-----------------|
+| cheerio | ^1.2.0 | HTML parsing and data extraction | jQuery-like API for server-side HTML parsing. Fast (no browser instance), lightweight. Most scraping targets (Reddit pages, Tumblr, news sites, Nitter) serve static HTML that Cheerio handles. The project constraint is "scraping-first: public pages/RSS preferred" -- Cheerio excels at this. |
+| playwright | ^1.52.0 | Headless browser for JS-rendered pages | Required for sources that need JavaScript execution (TikTok, Instagram, some Twitter alternatives). Use ONLY as fallback when Cheerio fails -- Playwright consumes ~800MB RAM per browser instance. Install with `--with-deps` flag on Linux for system dependencies. |
 
-**Confidence:** HIGH -- DOMPurify is the standard. 14K+ GitHub stars, actively maintained by cure53 (a security audit firm), bundled TypeScript types.
+**Scraping architecture -- tiered approach:**
 
-### No Other New Dependencies Required
+1. **RSS/Atom feeds** (cheapest): YouTube channels, Tumblr blogs, news sites. Use native `fetch` + existing XML parser logic, moved server-side.
+2. **JSON endpoints** (cheap): Reddit `.json` API. Use native `fetch` + `JSON.parse()`.
+3. **Static HTML scraping** (moderate): Nitter (Twitter proxy), fan blogs, news sites without RSS. Use `fetch` + Cheerio.
+4. **Headless browser** (expensive): TikTok trending, Instagram public pages. Use Playwright sparingly. Pool a single browser instance, reuse across scraping runs.
 
-Everything else the milestone needs can be built with the existing stack plus browser APIs. See "What NOT to Add" below for rationale.
+**Why not Puppeteer:** Playwright supports Chromium, Firefox, and WebKit from one API. Better auto-wait mechanisms. Microsoft-backed with active development. Playwright's browser context isolation is more memory-efficient than Puppeteer's page-per-tab model.
+
+### LLM Integration
+
+| Technology | Version | Purpose | Why Recommended |
+|------------|---------|---------|-----------------|
+| ai (Vercel AI SDK) | ^6.0.105 | Provider-agnostic LLM calls | Unified API across OpenAI, Anthropic, Google, Mistral, and others. The project requires "configurable LLM provider" -- this is exactly what AI SDK solves. `generateText()` and `generateObject()` work identically regardless of provider. Swap providers by changing one import. TypeScript-first with full type inference on structured outputs. Works in Node.js (not Next.js-only despite the Vercel branding). |
+| @ai-sdk/anthropic | ^3.0.48 | Claude provider for AI SDK | First-class Claude support (Claude 4 Sonnet for cost-effective moderation, Claude 4 Opus for nuanced decisions). Structured output via `generateObject()` with Zod schemas for consistent moderation verdicts. |
+| @ai-sdk/openai | ^1.3.22 | OpenAI provider for AI SDK | GPT-4o-mini for cheap high-volume moderation. Fallback provider if Anthropic is down. |
+
+**Why AI SDK over direct SDKs (@anthropic-ai/sdk, openai):**
+- Direct SDKs lock you to one provider. AI SDK's `generateText()` works with any provider.
+- Swapping providers is a config change: `import { anthropic } from '@ai-sdk/anthropic'` vs `import { openai } from '@ai-sdk/openai'`.
+- Structured output via `generateObject()` with Zod schemas returns typed moderation results, not raw text to parse.
+- The project explicitly requires "configurable LLM provider" -- AI SDK is built for this.
+
+**Why NOT a custom abstraction layer:**
+- AI SDK already IS the abstraction layer. Building another one on top wastes effort.
+- It handles retries, streaming, token counting, and structured output across providers.
+
+### Job Scheduling
+
+| Technology | Version | Purpose | Why Recommended |
+|------------|---------|---------|-----------------|
+| node-cron | ^4.2.1 | Scheduled scraping every 15-30 min | In-process cron scheduler. Zero external dependencies (no Redis). Cron expressions for scheduling (`*/15 * * * *` for every 15 min). For a single-server scraping engine, this is all you need. The scraping jobs are idempotent (re-scraping the same content deduplicates on insert), so missed executions during restarts are harmless -- the next run catches up. |
+
+**Why node-cron over BullMQ:**
+- BullMQ requires Redis. This project runs on a single server accessed via SSH. Adding Redis doubles the infrastructure.
+- BullMQ's value is distributed job processing, retry queues, and worker scaling. None of these are needed for "scrape 9 sources every 15 minutes on one server."
+- If a scraping run fails, the next scheduled run retries naturally. Content sources don't change fast enough for missed runs to matter.
+- node-cron is 50 lines of scheduling logic. BullMQ + Redis is an architectural commitment.
+
+**When to migrate to BullMQ:** If the app needs to run scrapers across multiple servers, or if individual scraping jobs need retry logic with backoff, or if job history/monitoring becomes important. Not for v2.0.
+
+### Schema Validation
+
+| Technology | Version | Purpose | Why Recommended |
+|------------|---------|---------|-----------------|
+| zod | ^4.3.6 | Runtime validation for API responses, LLM outputs, config | Already a transitive dependency (Vite's config validation uses it). TypeScript-first schema validation with static type inference. Three critical uses: (1) Validate LLM moderation output structure via AI SDK's `generateObject()`. (2) Validate API request parameters. (3) Validate scraped data before database insertion. In v1.0 the config was validated at compile time only -- with a backend processing external data, runtime validation is essential. |
+
+### Development & Runtime Tools
+
+| Technology | Version | Purpose | Why Recommended |
+|------------|---------|---------|-----------------|
+| tsx | ^4.21.0 | Run TypeScript directly in Node.js | Powered by esbuild for fast TypeScript compilation. Replaces ts-node (which has ESM compatibility issues on Node 20). Use for running the backend server in development (`tsx watch src/server/index.ts`). Supports ESM natively, matching the project's `"type": "module"` configuration. |
+
+### Monorepo Structure
+
+| Technology | Version | Purpose | Why Recommended |
+|------------|---------|---------|-----------------|
+| npm workspaces | (built-in) | Monorepo package management | Already available in the project's npm installation. Zero new tooling. Symlinks workspace packages to node_modules for cross-package imports. Shared `node_modules` at root reduces duplication. |
+
+**Why npm workspaces over Turborepo/Nx:**
+- The project has TWO packages (frontend + backend) plus a shared types package. Turborepo/Nx add value at 5+ packages with complex dependency graphs.
+- npm workspaces handle the core need: shared `node_modules`, cross-package imports, workspace-scoped scripts.
+- Zero configuration beyond `workspaces` field in root `package.json`.
+- No new CLI tools, no build orchestration config files.
+
+**Proposed workspace structure:**
+
+```
+bts/
+  package.json              # workspaces: ["packages/*"]
+  packages/
+    shared/                 # Shared TypeScript types, GroupConfig, content schemas
+      package.json          # name: "@bts/shared"
+      src/
+        types/              # ContentItem, ModerationResult, GroupConfig
+        schemas/            # Zod schemas for validation
+    server/                 # Backend: scraping, DB, LLM, API
+      package.json          # name: "@bts/server", depends on @bts/shared
+      src/
+        scrapers/           # Per-source scraper modules
+        db/                 # Drizzle schema, migrations, queries
+        moderation/         # LLM moderation pipeline
+        api/                # Fastify routes
+        scheduler/          # node-cron job definitions
+        index.ts            # Server entry point
+    web/                    # Existing frontend (moved from root src/)
+      package.json          # name: "@bts/web", depends on @bts/shared
+      src/                  # Existing React app
+      vite.config.ts
+```
+
+## Supporting Libraries
+
+| Library | Version | Purpose | When to Use |
+|---------|---------|---------|-------------|
+| @types/better-sqlite3 | ^7.6.14 | TypeScript types for better-sqlite3 | Always (better-sqlite3 doesn't bundle its own types) |
+| dotenv | ^16.5.0 | Load environment variables from .env files | Store LLM API keys, database path, scraping config. Never commit .env files. |
+| pino | ^9.6.0 | Structured JSON logging | Fastify uses Pino by default. Structured logs are searchable. Use for scraping run logs, moderation decisions, API request logs. |
+| rss-parser | ^3.13.0 | Parse RSS/Atom feeds server-side | Replace the client-side XML parsing for RSS sources. Handles RSS 2.0, Atom, and edge cases (CDATA, namespaces) that manual DOMParser parsing misses. |
 
 ## Installation
 
 ```bash
-# New dependencies
-npm install react-social-media-embed dompurify
+# Initialize workspaces (run from project root)
+# After restructuring into packages/web, packages/server, packages/shared
 
-# TypeScript types (DOMPurify bundles its own; react-social-media-embed has types)
-# No @types packages needed
+# Core server dependencies (from packages/server/)
+npm install fastify @fastify/cors better-sqlite3 drizzle-orm cheerio node-cron ai @ai-sdk/anthropic @ai-sdk/openai zod dotenv rss-parser
+
+# Server dev dependencies
+npm install -D drizzle-kit @types/better-sqlite3 tsx
+
+# Optional: Playwright (install only when needed for JS-rendered sources)
+npm install playwright
+npx playwright install chromium --with-deps
+
+# Shared package (from packages/shared/)
+npm install zod
+
+# No changes to packages/web/ dependencies
 ```
-
-Total addition: 2 packages. Keeps the dependency footprint minimal.
-
-## Platform-Specific Technical Details
-
-### Engagement Stats Extraction (No New Dependencies)
-
-Engagement stats come from the data sources themselves. No new libraries needed.
-
-| Source | How Stats Are Available | Fields | Implementation |
-|--------|------------------------|--------|----------------|
-| **Reddit** | Already in `.json` response | `score`, `upvote_ratio`, `num_comments` | Add fields to `fetchSubreddit()` -- data is in `post.data` already being parsed. Zero additional fetches. |
-| **YouTube (Atom feed)** | NOT in Atom feed | None in feed | YouTube Atom feeds (`/feeds/videos.xml`) do not include view/like counts. Two options below. |
-| **YouTube (oEmbed)** | `https://www.youtube.com/oembed?url={videoUrl}` | `title`, `author_name`, `thumbnail_url` | No auth required. No engagement stats in response either. Useful for metadata but NOT for view counts. |
-| **YouTube (Data API v3)** | `videos.list?part=statistics&id={videoId}` | `viewCount`, `likeCount`, `commentCount` | Requires free API key from Google Cloud Console. 10,000 units/day quota (1 unit per read). Key is safe to expose client-side (restricted by HTTP referrer). |
-| **Soompi/AllKPop RSS** | Not available | None | News RSS feeds don't include engagement metrics. Skip -- news articles don't benefit from view counts. |
-| **Tumblr RSS** | `note_count` in some feeds | Notes count | Available in some Tumblr RSS feeds as a custom element. Parse if present, treat as optional. |
-| **Twitter/Nitter** | Not reliably available | None | Nitter HTML scraping is already fragile. Adding engagement stat scraping would increase fragility. Skip. |
-
-**YouTube Stats Decision:**
-Use the YouTube Data API v3 for view/like counts. This is the only reliable path. The API key is free, the quota (10,000 units/day) is more than sufficient for a fan app fetching stats on ~15-30 videos per refresh. The key can be restricted to the app's domain via Google Cloud Console referrer restrictions, making it safe for client-side use.
-
-This is the ONE case where an API key is needed. Store it in the config object (see Config-Driven Architecture below) so it can be swapped per clone. Do NOT hardcode it.
-
-**Confidence:** HIGH for Reddit (verified -- the fields exist in the JSON response the app already parses). MEDIUM for YouTube Data API (well-documented, but adds API key management complexity). HIGH for "skip news/Twitter" (no viable path).
-
-### TikTok Embed (via react-social-media-embed)
-
-**How it works:** TikTok provides a free, unauthenticated oEmbed endpoint at `https://www.tiktok.com/oembed?url={videoUrl}`. The response includes HTML with a `<blockquote class="tiktok-embed">` element. The platform's `embed.js` script processes this into an interactive player. `react-social-media-embed` handles the script loading and lifecycle.
-
-**Feed item source:** TikTok content will come from manually curated URLs in the config (fan-discovered viral BTS TikToks) or from fan translation Twitter accounts that share TikTok links. There is no TikTok RSS feed or public API for searching. This is an embed-only feature -- the app renders TikTok embeds for items that have a TikTok URL, not a TikTok feed fetcher.
-
-**No authentication required.** No API keys. No rate limits documented for the oEmbed endpoint.
-
-**Confidence:** HIGH -- TikTok oEmbed is well-documented and unauthenticated.
-
-### Instagram Reels Embed (via react-social-media-embed)
-
-**Critical finding:** Meta retired unauthenticated oEmbed in April 2025. The official Meta oEmbed Read API now requires a Facebook Developer app, app review, and access tokens.
-
-**However:** The client-side blockquote approach still works. By rendering a `<blockquote class="instagram-media" data-instgrm-permalink="{url}">` element and loading Instagram's `embed.js` script, public posts (including Reels) render without any API token. This is what `react-social-media-embed`'s `<InstagramEmbed>` component does internally.
-
-**Risk:** Meta could break the client-side blockquote approach at any time, since it's the embed script (not a sanctioned API) doing the work. The oEmbed API change in 2025 signals Meta is tightening control. Treat Instagram embeds as a "nice to have" that may degrade.
-
-**Feed item source:** Same as TikTok -- curated URLs in config or discovered via fan accounts. No Instagram feed scraping (blocked by Meta, and explicitly out of scope per PROJECT.md).
-
-**Confidence:** MEDIUM -- Works today via blockquote approach, but Meta's track record suggests potential future breakage.
-
-### YouTube Shorts Embed (via existing iframe pattern)
-
-**How it works:** YouTube Shorts use the same video ID system as regular YouTube videos. The existing `SwipeFeed.tsx` already embeds YouTube videos via `https://www.youtube.com/embed/{videoId}`. Shorts work with the exact same URL pattern. The only difference is aspect ratio: Shorts are 9:16 (315x560px optimal) vs regular videos at 16:9.
-
-**No new library needed for embedding.** The existing iframe approach works. `react-social-media-embed` provides a `<YouTubeEmbed>` but it's optional -- the existing code already handles this.
-
-**What's needed:** Detection of whether a YouTube URL is a Short (URL contains `/shorts/`), and if so, render with vertical aspect ratio instead of horizontal.
-
-**Confidence:** HIGH -- YouTube's embed system is stable and well-documented.
-
-### Tumblr Integration (No New Dependencies)
-
-**How it works:** Every public Tumblr blog exposes an RSS feed at `https://{blogname}.tumblr.com/rss`. Tagged feeds are available at `https://{blogname}.tumblr.com/tagged/{tag}/rss`. The feed format is standard RSS 2.0 XML with full HTML content in `<description>` elements.
-
-**Integration point:** The existing `parseRSS()` function in `src/utils/xmlParser.ts` already handles RSS 2.0 XML. Tumblr feeds can be fetched and parsed identically to Soompi/AllKPop feeds. Use DOMPurify on the HTML content (Tumblr descriptions are rich HTML with images, embeds, and formatting).
-
-**No new dependencies.** The existing CORS proxy chain + RSS parser handles this.
-
-**Confidence:** HIGH -- Tumblr RSS is a long-standing, stable feature. Standard RSS format.
-
-### Weverse Content (INFEASIBLE for Client-Side)
-
-**Critical finding:** Weverse requires authentication for ALL content. There is no public RSS feed, no public API, and no anonymous web access. The internal API uses HMAC-SHA1 authentication with dynamically extracted secret keys from their JavaScript bundles. This is fundamentally server-side work requiring:
-1. A Weverse account
-2. Bearer token authentication
-3. Dynamic secret extraction from JS bundles
-4. HMAC-SHA1 signature generation per request
-
-**This cannot be done client-side.** CORS would block the API calls, and the auth flow requires server-side secret management.
-
-**Recommended alternative:** Instead of direct Weverse integration, aggregate Weverse content indirectly through:
-1. **Fan translation Twitter/X accounts** (e.g., @BTSWeverseTrans, @BTS_Trans) -- these accounts post Weverse content translations in near-real-time
-2. **Fan blogs on Tumblr/WordPress** (e.g., doyoubangtan.wordpress.com) that archive Weverse translations
-3. Mark these as "Weverse (via fan translation)" in the source attribution
-
-This is the pragmatic approach given the no-backend constraint. These fan accounts are a core part of BTS fandom infrastructure and have been reliably active for years.
-
-**Confidence:** HIGH that direct Weverse integration is infeasible client-side. MEDIUM that fan translation accounts are a viable alternative (they're community-maintained, not guaranteed).
-
-### Fan YouTube Channels (No New Dependencies)
-
-**How it works:** The existing `fetchYouTubeChannel()` function in `feeds.ts` already supports fetching any channel's Atom feed via `https://www.youtube.com/feeds/videos.xml?channel_id={id}`. Adding fan channels is purely a configuration change -- add channel IDs to the config, set `needsFilter: false` (fan channels are already BTS-focused).
-
-**No new dependencies.** No code changes needed beyond config-driven refactoring.
-
-**Confidence:** HIGH -- this is existing proven functionality.
-
-### Expanded Reddit Sources (No New Dependencies)
-
-**How it works:** The existing `fetchSubreddit()` function already supports any subreddit with optional keyword filtering. Adding meme subreddits (e.g., r/btsmemes, r/heungtan) or fan discussion subreddits is purely a configuration change.
-
-**No new dependencies.** No code changes needed beyond config-driven refactoring.
-
-**Confidence:** HIGH -- this is existing proven functionality.
-
-### Config-Driven Architecture (No New Dependencies)
-
-**Pattern:** Create a single TypeScript config object that contains ALL group-specific data. No JSON file needed -- TypeScript gives you type checking, autocomplete, and compile-time validation.
-
-**Config structure (recommended):**
-
-```typescript
-// src/config/group.ts
-export interface GroupConfig {
-  name: string;
-  hashtag: string;
-  keywords: RegExp;
-  members: MemberConfig[];
-  sources: {
-    reddit: SubredditConfig[];
-    youtube: YouTubeChannelConfig[];
-    news: RSSSourceConfig[];
-    tumblr: TumblrBlogConfig[];
-    twitter: TwitterSearchConfig[];
-    embeds: EmbedConfig[];  // curated TikTok/Instagram URLs
-  };
-  apiKeys?: {
-    youtubeDataApi?: string;  // optional, for engagement stats
-  };
-  theme?: {
-    primaryColor: string;
-    accentColor: string;
-  };
-}
-```
-
-**What gets extracted from current hardcoded values:**
-- `BTS_KEYWORDS` regex in `feeds.ts` --> `config.keywords`
-- Subreddit array in `fetchReddit()` --> `config.sources.reddit`
-- Channel IDs in `fetchYouTube()` --> `config.sources.youtube`
-- News RSS URLs in `fetchNews()`/`fetchAllKPop()` --> `config.sources.news`
-- `MEMBER_KEYWORDS` in `feed.ts` --> `config.members[].keywords`
-- Member data in `members.ts` --> `config.members[]`
-- `BiasId` type --> derived from config members
-
-**Implementation approach:**
-1. Define `GroupConfig` interface with full typing
-2. Create `src/config/bts.ts` that exports the BTS-specific config
-3. Create `src/config/index.ts` that re-exports the active config
-4. Refactor `feeds.ts` to accept config as parameter instead of using hardcoded values
-5. Refactor `feed.ts` types to be derived from config
-6. Refactor `members.ts` to use config data
-
-**Why TypeScript over JSON:** The config contains RegExp patterns, which can't be represented in JSON. TypeScript also gives you type checking at build time -- if a config is missing a required field, the build fails. JSON would require runtime validation.
-
-**No new dependencies.** TypeScript is already in the stack.
-
-**Confidence:** HIGH -- this is a well-understood refactoring pattern.
 
 ## Alternatives Considered
 
-| Recommended | Alternative | Why Not |
-|-------------|-------------|---------|
-| `react-social-media-embed` | Manual embed script management | Manual approach requires handling script loading, DOM mutations, and SPA lifecycle for 3 platforms. Library is thin and handles this correctly. |
-| `react-social-media-embed` | `react-lite-youtube-embed` + separate TikTok/IG libs | Would need 3 separate libraries. `react-social-media-embed` covers all three with one dependency. |
-| `dompurify` | `sanitize-html` | `sanitize-html` is 10x larger (it bundles a full HTML parser for Node). DOMPurify uses the browser's native DOMParser -- smaller, faster, browser-native. |
-| `dompurify` | Built-in browser Sanitizer API | The Sanitizer API is still experimental and not available in all browsers (no Safari support). DOMPurify is the safe choice until Sanitizer API stabilizes. |
-| YouTube Data API v3 (for stats) | Scraping YouTube pages for view counts | YouTube aggressively blocks scraping. The Data API is free, has generous quotas, and is the sanctioned approach. |
-| YouTube Data API v3 | YouTube oEmbed for stats | YouTube oEmbed does NOT return engagement stats (views, likes). It only returns embed HTML and basic metadata. |
-| TypeScript config file | JSON config file | Config contains RegExp patterns, which JSON cannot represent. TypeScript gives compile-time type checking. |
-| Fan translation accounts for Weverse | Direct Weverse scraping | Weverse requires auth, HMAC signatures, and server-side access. Impossible client-side. Fan accounts are the established fandom pattern. |
-| Skip Instagram oEmbed API | Use Meta oEmbed Read API | Requires Facebook Developer app, app review, and access tokens. Impossible for a client-side-only app without a backend to proxy tokens. The blockquote approach works without tokens. |
+| Recommended | Alternative | Why Not Alternative |
+|-------------|-------------|---------------------|
+| Fastify | Express | Express lacks built-in TypeScript support, JSON schema validation, and structured logging. 3x slower JSON serialization. Express 5 has been in beta for years. For a new project in 2026, Fastify is the modern choice. |
+| Fastify | Hono | Hono is optimized for edge/serverless runtimes (Cloudflare Workers, Bun). This project runs on a traditional Node.js server. Fastify has a deeper plugin ecosystem for Node.js-specific needs (CORS, rate limiting, auth). |
+| Drizzle ORM | Prisma | Prisma requires a code generation step, bundles a Rust query engine binary (~15MB), and has slower cold starts. Drizzle is SQL-first with zero dependencies. For a scraping engine writing thousands of rows, Drizzle's lightweight approach wins. |
+| Drizzle ORM | Knex.js | Knex is a query builder, not an ORM -- no schema definition, no type inference from tables. Drizzle gives you Knex-level SQL control PLUS full TypeScript type inference from schema definitions. |
+| SQLite (better-sqlite3) | PostgreSQL | PostgreSQL requires running a separate database server. SQLite is a file. The scraping engine is single-process, single-server. Postgres advantages (concurrent writes, full-text search, JSONB) aren't needed at this scale. Drizzle makes migrating to Postgres later straightforward if needed. |
+| AI SDK (Vercel) | Direct @anthropic-ai/sdk | Direct SDK locks you to one provider. The project requires provider-agnostic moderation. AI SDK's unified API makes swapping providers a one-line change. |
+| AI SDK (Vercel) | LangChain | LangChain is massive (100+ dependencies), designed for RAG pipelines and agent chains. This project needs one thing: send content to LLM, get moderation verdict back. AI SDK's `generateObject()` does this in 5 lines. LangChain is overkill. |
+| node-cron | BullMQ | BullMQ requires Redis. Adds infrastructure complexity for a single-server app. The scraping use case (run jobs on a timer) doesn't need distributed queuing, retry policies, or job persistence across restarts. |
+| node-cron | Agenda | Agenda requires MongoDB. Same objection as BullMQ -- unnecessary infrastructure for a cron schedule. |
+| Cheerio + Playwright | Puppeteer | Playwright supersedes Puppeteer with multi-browser support, better auto-wait, and more efficient browser contexts. Puppeteer is Chrome-only. |
+| npm workspaces | Turborepo | Two packages don't justify Turborepo's configuration overhead. npm workspaces solve cross-package imports and shared node_modules with zero config. |
+| npm workspaces | pnpm workspaces | Would require switching package managers. npm workspaces work with the existing npm setup. pnpm's strict node_modules isolation is valuable for large monorepos, not for 2-3 packages. |
+| tsx | ts-node | ts-node has known ESM compatibility issues with Node.js 20+. tsx uses esbuild for fast compilation and handles ESM/CJS interop transparently. |
+| Pino | Winston | Fastify bundles Pino by default. Using Winston would mean running two loggers. Pino's JSON output is faster and more structured. |
 
 ## What NOT to Add
 
 | Avoid | Why | Use Instead |
 |-------|-----|-------------|
-| `axios` | The app uses native `fetch` via `fetchWithProxy()`. Adding axios would create two HTTP patterns. | Native `fetch` (already working) |
-| `@tanstack/react-query` | The `useFeed` hook already handles caching, loading states, and error handling adequately. Adding a query library for this milestone adds complexity without proportional benefit. Consider for a future milestone if feed source count exceeds 10+. | Existing `useFeed` hook pattern |
-| `cheerio` / HTML parsing libraries | Runs in Node, not the browser. The app uses `DOMParser` (browser-native) for XML/HTML parsing. | Browser-native `DOMParser` (already in use) |
-| `weverse` npm package | Requires server-side execution, authentication tokens, and HMAC secret management. Not viable client-side. | Fan translation accounts via existing Twitter/RSS scraping |
-| `tiktok-api` npm package | Server-side only, requires authentication. The oEmbed approach is client-side friendly and sufficient for embeds. | TikTok oEmbed via `react-social-media-embed` |
-| Any state management library (Redux, Zustand, Jotai) | Current app state is simple: feed items, loading, error, filter. React's built-in useState/useEffect handles this fine. Config is static -- no need for global state management. | React built-in state |
-| `zod` or `joi` for config validation | Config is a TypeScript file with typed interface. The compiler validates it at build time. Runtime validation is unnecessary for a static config. | TypeScript interface + compiler |
+| Express | Legacy framework. Fastify is faster, has better TypeScript support, and built-in validation. | Fastify |
+| Prisma | Code generation step, Rust engine binary, slower for high-write workloads. | Drizzle ORM |
+| Redis | No distributed job processing needed. Adds infrastructure to manage. | node-cron (in-process) |
+| LangChain | Massive dependency tree. The moderation use case is a single LLM call, not a chain. | Vercel AI SDK |
+| MongoDB / Mongoose | Document databases are wrong for structured content with relational queries (content belongs to sources, has engagement metrics, has moderation status). | SQLite via Drizzle |
+| Puppeteer | Chrome-only, less efficient than Playwright. | Playwright (when headless browser needed) |
+| axios | Native `fetch` is available in Node.js 20. No reason to add an HTTP client library. | Native `fetch` |
+| NestJS | Full framework with decorators, dependency injection, module system. Massive overkill for a REST API serving scraped content. | Fastify (standalone) |
+| @tanstack/react-query | Frontend concern, not backend. The frontend will call the REST API with native `fetch`. React Query can be considered later if the frontend needs caching/refetching logic. | Native `fetch` on frontend (for now) |
+| nodemon | tsx has built-in watch mode (`tsx watch`). No need for a separate file watcher. | `tsx watch` |
 
 ## Stack Patterns by Feature
 
-**If adding a new RSS-based source (Tumblr, fan blogs):**
-- Use existing `parseRSS()` from `xmlParser.ts`
-- Fetch via existing `fetchWithProxy()` from `corsProxy.ts`
-- Sanitize HTML content with `DOMPurify.sanitize()`
-- Add source config to `GroupConfig.sources`
+**Adding a new scraper (e.g., Instagram, new subreddit):**
+1. Create `packages/server/src/scrapers/{source}.ts`
+2. Implement the `Scraper` interface (fetch, parse, normalize to `ContentItem`)
+3. Register in scraper registry with schedule config
+4. Add source config to `GroupConfig.sources` in `@bts/shared`
 
-**If adding a new embed type (future platforms):**
-- Check if `react-social-media-embed` supports it (currently: Facebook, Instagram, LinkedIn, Pinterest, TikTok, X, YouTube)
-- If supported, add a new embed component following the existing pattern
-- If not, implement the platform's embed script manually (load script, render blockquote, call process)
+**Running LLM moderation on scraped content:**
+1. Query unmoderated content from SQLite: `db.select().from(content).where(eq(content.moderationStatus, 'pending'))`
+2. Batch content into LLM calls (send 10-20 items per call for cost efficiency)
+3. Use `generateObject()` with Zod schema: `{ relevant: boolean, reason: string, category: string }`
+4. Update moderation status in database
+5. Provider is read from config/env: `process.env.LLM_PROVIDER` selects `@ai-sdk/anthropic` or `@ai-sdk/openai`
 
-**If adding a new JSON API source (like Reddit):**
-- Fetch via `fetchWithProxy()`, parse with `JSON.parse()`
-- Extract engagement stats from response
-- Add source config to `GroupConfig.sources`
+**Serving content via REST API:**
+1. Fastify route queries SQLite for moderated content
+2. JSON schema validates response shape (Fastify built-in)
+3. Frontend calls `/api/feed?group=bts&limit=50&offset=0`
+4. Response includes engagement metrics, source attribution, media URLs
 
-**If YouTube stats quota becomes a concern (unlikely for fan app scale):**
-- Batch video IDs into single API calls (`videos.list` accepts comma-separated IDs, up to 50)
-- Cache stats with longer TTL than feed items (stats don't change as fast)
-- 10,000 units/day = 10,000 video stat lookups/day -- more than enough
+**Migrating from SQLite to PostgreSQL (future):**
+1. Change Drizzle schema imports: `sqliteTable` to `pgTable`, `integer` to `serial`
+2. Change driver: `better-sqlite3` to `postgres` or `pg`
+3. Run `drizzle-kit generate` + `drizzle-kit migrate`
+4. Update connection string in `.env`
+5. Query code stays identical (Drizzle's query API is database-agnostic)
 
 ## Version Compatibility
 
 | Package | Compatible With | Notes |
 |---------|-----------------|-------|
-| `react-social-media-embed@^2.5.18` | `react@^19.2.0` | Explicit React 19 support in peer deps |
-| `dompurify@^3.3.1` | Any (no framework deps) | Zero dependencies, browser-native DOMParser |
-| YouTube Data API v3 | Browser `fetch` | REST API, no SDK needed. Direct fetch calls with API key as query param |
-| TikTok oEmbed | Browser `fetch` | REST endpoint, no auth, CORS-friendly |
-| YouTube oEmbed | Browser `fetch` | REST endpoint, no auth, CORS-friendly |
+| fastify@^5.7.4 | Node.js >= 20 | Fastify 5 dropped Node 18 support |
+| better-sqlite3@^12.6.2 | Node.js 14-24 | Prebuilt binaries for LTS versions. Native addon -- needs build tools (build-essential on Ubuntu). |
+| drizzle-orm@^0.45.1 | better-sqlite3, pg, postgres.js | Same ORM API, different drivers. Schema syntax differs slightly (sqliteTable vs pgTable). |
+| ai@^6.0.105 | @ai-sdk/anthropic@^3.x, @ai-sdk/openai@^1.x | Provider packages must match AI SDK major version. |
+| cheerio@^1.2.0 | Node.js >= 18 | v1.0 was a major rewrite. ESM-native. |
+| playwright@^1.52.0 | Node.js >= 18 | Requires system dependencies on Linux (`npx playwright install --with-deps chromium`). ~400MB disk for Chromium. |
+| tsx@^4.21.0 | Node.js >= 18, TypeScript 5.x | Dev-only. Uses esbuild internally. |
+| zod@^4.3.6 | TypeScript >= 5.0 | Major version bump from Zod 3. New API for union types (`z.xor()`). |
+| node-cron@^4.2.1 | Node.js >= 14 | Pure JS, no native dependencies. |
 
-## New API Keys Required
+## Environment Variables
 
-| Key | Source | Cost | Client-Safe? | How to Restrict |
-|-----|--------|------|--------------|-----------------|
-| YouTube Data API v3 | Google Cloud Console | Free (10K units/day) | Yes | HTTP referrer restriction in Google Cloud Console. Restrict to your deployed domain. |
+```bash
+# .env (DO NOT COMMIT)
 
-No other API keys needed. TikTok oEmbed and YouTube oEmbed are unauthenticated. Instagram embed uses client-side blockquote approach (no token). Reddit `.json` endpoint is unauthenticated.
+# LLM Provider
+LLM_PROVIDER=anthropic              # or "openai"
+ANTHROPIC_API_KEY=sk-ant-...
+OPENAI_API_KEY=sk-...
+
+# Database
+DATABASE_PATH=./data/bts.db          # SQLite file path
+
+# YouTube (carried over from v1.0)
+YOUTUBE_API_KEY=AIza...
+
+# Server
+PORT=3001                            # API server port (frontend dev server uses 5173)
+NODE_ENV=development
+
+# Scraping
+SCRAPE_INTERVAL_MINUTES=15           # Cron interval
+```
 
 ## Sources
 
-- [TikTok oEmbed Documentation](https://developers.tiktok.com/doc/embed-videos/) -- oEmbed endpoint, no auth required (HIGH confidence)
-- [YouTube oEmbed](https://queen.raae.codes/2022-01-21-yt-oembed/) -- Endpoint format, no auth, no engagement stats in response (HIGH confidence)
-- [YouTube Data API v3 - videos.list](https://developers.google.com/youtube/v3/docs/videos/list) -- Statistics part, quota costs (HIGH confidence)
-- [YouTube Data API Quota System](https://docs.expertflow.com/cx/4.9/understanding-the-youtube-data-api-v3-quota-system) -- 10K units/day default, 1 unit per read (HIGH confidence)
-- [Meta oEmbed Read changes](https://www.bluehost.com/blog/meta-oembed-read-explained/) -- Retired unauthenticated oEmbed April 2025 (HIGH confidence)
-- [Instagram client-side embed approach](https://dev.to/ljcdev/embedding-an-instagram-post-in-your-website-3666) -- Blockquote + embed.js still works for public posts including Reels (MEDIUM confidence)
-- [react-social-media-embed](https://github.com/justinmahar/react-social-media-embed) -- v2.5.18, React 19 compatible, no API tokens (MEDIUM confidence, library age)
-- [DOMPurify](https://github.com/cure53/DOMPurify) -- v3.3.1, bundled TypeScript types, zero deps (HIGH confidence)
-- [Weverse scraping via HMAC](https://gist.github.com/Xetera/d50af9c42615d66d55755b3708c2a70e) -- Requires server-side, auth tokens, HMAC signatures (HIGH confidence it's infeasible client-side)
-- [Reddit JSON API fields](https://www.jcchouinard.com/documentation-on-reddit-apis-json/) -- score, num_comments, upvote_ratio available (HIGH confidence)
-- [Tumblr RSS format](https://rss.feedspot.com/tumblr_rss_feeds/) -- Standard RSS at `{blog}.tumblr.com/rss` (HIGH confidence)
-- [YouTube Shorts embedding](https://docs.document360.com/docs/embed-youtube-shorts) -- Same `/embed/{id}` pattern, 9:16 aspect ratio (HIGH confidence)
+- [Fastify npm](https://www.npmjs.com/package/fastify) -- v5.7.4, Node.js 20+ required (HIGH confidence)
+- [Express vs Fastify comparison](https://betterstack.com/community/guides/scaling-nodejs/fastify-express/) -- 3x performance gap, TypeScript-first (HIGH confidence)
+- [Drizzle ORM docs](https://orm.drizzle.team/docs/get-started-sqlite) -- SQLite + better-sqlite3 setup, migration workflow (HIGH confidence)
+- [Drizzle vs Prisma 2026](https://www.bytebase.com/blog/drizzle-vs-prisma/) -- Zero deps, no codegen, SQL-first (MEDIUM confidence)
+- [better-sqlite3 npm](https://www.npmjs.com/package/better-sqlite3) -- v12.6.2, Node 20 support confirmed (HIGH confidence)
+- [Cheerio npm](https://www.npmjs.com/package/cheerio) -- v1.2.0, ESM-native (HIGH confidence)
+- [Scraping libraries comparison](https://www.scrapingbee.com/blog/best-javascript-web-scraping-libraries/) -- Cheerio for static, Playwright for dynamic (HIGH confidence)
+- [AI SDK docs](https://ai-sdk.dev/docs/introduction) -- Multi-provider unified API, generateText/generateObject (HIGH confidence)
+- [AI SDK Anthropic provider](https://ai-sdk.dev/providers/ai-sdk-providers/anthropic) -- @ai-sdk/anthropic for Claude integration (HIGH confidence)
+- [node-cron npm](https://www.npmjs.com/package/node-cron) -- v4.2.1, in-process scheduling (HIGH confidence)
+- [BullMQ vs node-cron](https://betterstack.com/community/guides/scaling-nodejs/best-nodejs-schedulers/) -- BullMQ needs Redis, overkill for single-server (HIGH confidence)
+- [tsx npm](https://www.npmjs.com/package/tsx) -- v4.21.0, ESM-native TypeScript runner (HIGH confidence)
+- [npm workspaces guide](https://johnh.co/blog/setting-up-npm-workspaces-for-a-monorepo) -- Setup for TypeScript monorepos (MEDIUM confidence)
+- [Zod npm](https://www.npmjs.com/package/zod) -- v4.3.6, TypeScript-first validation (HIGH confidence)
+- [Playwright memory usage](https://datawookie.dev/blog/2025/06/playwright-browser-footprint/) -- ~800MB per browser instance (MEDIUM confidence)
 
 ---
-*Stack research for: BTS Army Feed Expansion v1.0*
-*Researched: 2026-02-25*
+*Stack research for: BTS Army Feed v2.0 -- Backend Scraping Engine*
+*Researched: 2026-03-01*
