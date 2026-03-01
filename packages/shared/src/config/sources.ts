@@ -122,6 +122,31 @@ export function getBtsScrapingConfig(): GroupScrapingConfig {
         priority: 7,
         enabled: true,
       },
+
+      // ── YouTube sources ────────────────────────────────────────────────
+      { id: 'yt-bangtantv', type: 'youtube', label: 'BANGTANTV', url: 'UCLkAepWjdylmXSltofFvsYQ', needsFilter: false, fetchCount: 15, priority: 10, enabled: true },
+      { id: 'yt-hybe', type: 'youtube', label: 'HYBE LABELS', url: 'UC3IZKseVpdzPSBaWxBxundA', needsFilter: true, fetchCount: 15, priority: 11, enabled: true },
+
+      // ── RSS/news sources ───────────────────────────────────────────────
+      { id: 'rss-soompi', type: 'rss', label: 'Soompi', url: 'https://www.soompi.com/feed', needsFilter: true, fetchCount: 20, priority: 20, enabled: true },
+      { id: 'rss-allkpop', type: 'rss', label: 'AllKPop', url: 'https://www.allkpop.com/feed', needsFilter: true, fetchCount: 20, priority: 21, enabled: true },
+      { id: 'rss-koreaboo', type: 'rss', label: 'Koreaboo', url: 'https://www.koreaboo.com/feed/', needsFilter: true, fetchCount: 20, priority: 22, enabled: true },
+      { id: 'rss-hellokpop', type: 'rss', label: 'HELLOKPOP', url: 'https://www.hellokpop.com/feed/', needsFilter: true, fetchCount: 20, priority: 23, enabled: true },
+      { id: 'rss-kpopstarz', type: 'rss', label: 'KpopStarz', url: 'https://www.kpopstarz.com/rss', needsFilter: true, fetchCount: 20, priority: 24, enabled: true },
+      { id: 'rss-seoulbeats', type: 'rss', label: 'Seoulbeats', url: 'https://seoulbeats.com/feed/', needsFilter: true, fetchCount: 20, priority: 25, enabled: true },
+      { id: 'rss-asianjunkie', type: 'rss', label: 'Asian Junkie', url: 'https://www.asianjunkie.com/feed/', needsFilter: true, fetchCount: 20, priority: 26, enabled: true },
+      // Seoul Space: pending URL verification, disabled until confirmed
+      { id: 'rss-seoulspace', type: 'rss', label: 'Seoul Space', url: 'PENDING_URL', needsFilter: true, fetchCount: 20, priority: 27, enabled: false },
+
+      // ── Tumblr sources (for plan 03) ───────────────────────────────────
+      { id: 'tumblr-bts-trans', type: 'tumblr', label: 'bts-trans', url: 'https://bts-trans.tumblr.com/rss', needsFilter: false, fetchCount: 10, priority: 30, enabled: true },
+      { id: 'tumblr-kimtaegis', type: 'tumblr', label: 'kimtaegis', url: 'https://kimtaegis.tumblr.com/rss', needsFilter: true, fetchCount: 10, priority: 31, enabled: true },
+      { id: 'tumblr-userparkjimin', type: 'tumblr', label: 'userparkjimin', url: 'https://userparkjimin.tumblr.com/rss', needsFilter: true, fetchCount: 10, priority: 32, enabled: true },
+      { id: 'tumblr-namjin', type: 'tumblr', label: 'namjin', url: 'https://namjin.tumblr.com/rss', needsFilter: true, fetchCount: 10, priority: 33, enabled: true },
+      { id: 'tumblr-jikook', type: 'tumblr', label: 'jikook', url: 'https://jikook.tumblr.com/rss', needsFilter: true, fetchCount: 10, priority: 34, enabled: true },
+
+      // ── Bluesky source (for plan 03) ───────────────────────────────────
+      { id: 'bluesky-bts', type: 'bluesky', label: 'Bluesky BTS', url: 'BTS', needsFilter: false, fetchCount: 25, priority: 40, enabled: true },
     ],
   };
 }
