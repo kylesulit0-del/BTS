@@ -203,6 +203,15 @@ export async function runAllScrapers(db: Db, scrapers: Scraper[]): Promise<RunSt
     console.log(`[scraper] Soft-deleted ${softDeleted.changes} items older than 14 days`);
   }
 
+  // Clean up scrape_runs older than 7 days (hard delete — operational metadata, not user content)
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const deletedRuns = db.delete(scrapeRuns)
+    .where(lt(scrapeRuns.startedAt, sevenDaysAgo))
+    .run();
+  if (deletedRuns.changes > 0) {
+    console.log(`[scraper] Cleaned up ${deletedRuns.changes} scrape_runs older than 7 days`);
+  }
+
   stats.duration = Date.now() - overallStart;
   console.log(`[scraper] Complete: found=${stats.totalFound} new=${stats.totalNew} updated=${stats.totalUpdated} duration=${stats.duration}ms`);
 
