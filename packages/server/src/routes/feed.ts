@@ -87,4 +87,42 @@ export function registerFeedRoutes(server: FastifyInstance, db: Db) {
 
     return reply.send(response);
   });
+
+  // Single-item endpoint: GET /feed/:id
+  server.get<{ Params: { id: string } }>('/feed/:id', async (request, reply) => {
+    const parsed = parseInt(request.params.id, 10);
+    if (isNaN(parsed)) {
+      return reply.status(400).send({ error: 'Invalid item ID' });
+    }
+
+    const row = db
+      .select()
+      .from(contentItems)
+      .where(eq(contentItems.id, parsed))
+      .get();
+
+    if (!row) {
+      return reply.status(404).send({ error: 'Item not found' });
+    }
+
+    const item: FeedItem = {
+      id: row.id,
+      title: row.title,
+      url: row.url,
+      source: row.source,
+      sourceDetail: row.sourceDetail,
+      score: row.score,
+      commentCount: row.commentCount,
+      flair: row.flair,
+      contentType: row.contentType as FeedItem['contentType'],
+      publishedAt: row.publishedAt instanceof Date
+        ? row.publishedAt.toISOString()
+        : new Date(row.publishedAt as unknown as number * 1000).toISOString(),
+      scrapedAt: row.scrapedAt instanceof Date
+        ? row.scrapedAt.toISOString()
+        : new Date(row.scrapedAt as unknown as number * 1000).toISOString(),
+    };
+
+    return reply.send(item);
+  });
 }
