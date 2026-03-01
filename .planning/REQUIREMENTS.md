@@ -44,7 +44,7 @@ Requirements for the Content Scraping Engine milestone. Each maps to roadmap pha
 
 ### API & Integration
 
-- [ ] **API-01**: REST API server (Fastify) with paginated feed endpoint, single-item endpoint, and source health endpoint
+- [x] **API-01**: REST API server (Fastify) with paginated feed endpoint, single-item endpoint, and source health endpoint
 - [ ] **API-02**: Dual-mode frontend -- API mode when `VITE_API_URL` is set, client-side fallback otherwise
 - [ ] **API-03**: Engagement data collection and storage with per-source stat extraction
 
@@ -104,7 +104,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | RANK-01 | Phase 8 | Pending |
 | RANK-02 | Phase 8 | Pending |
 | RANK-03 | Phase 8 | Pending |
-| API-01 | Phase 5 | Pending |
+| API-01 | Phase 5 | Complete |
 | API-02 | Phase 8 | Pending |
 | API-03 | Phase 6 | Pending |
 

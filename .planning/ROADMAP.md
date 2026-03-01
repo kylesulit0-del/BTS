@@ -19,7 +19,7 @@
 
 ### v2.0 Content Scraping Engine
 
-- [ ] **Phase 5: Foundation** -- Monorepo, database, scraper framework, Reddit scraper, minimal API, frontend feature flag
+- [x] **Phase 5: Foundation** -- Monorepo, database, scraper framework, Reddit scraper, minimal API, frontend feature flag
 - [ ] **Phase 6: Scraper Expansion** -- All remaining source scrapers, engagement collection, thumbnails, scheduling
 - [ ] **Phase 7: LLM Moderation Pipeline** -- Provider abstraction, relevance filtering, moderation, classification, batched processing
 - [ ] **Phase 8: Smart Blend and Integration** -- Cross-source ranking, engagement normalization, API polish, frontend dual-mode
@@ -38,9 +38,9 @@
 **Plans:** 3 plans
 
 Plans:
-- [ ] 05-01-PLAN.md -- Monorepo restructure, shared types, and database schema
-- [ ] 05-02-PLAN.md -- Scraper framework, Reddit scraper, and scheduling
-- [ ] 05-03-PLAN.md -- Fastify API server, routes, and end-to-end verification
+- [x] 05-01-PLAN.md -- Monorepo restructure, shared types, and database schema
+- [x] 05-02-PLAN.md -- Scraper framework, Reddit scraper, and scheduling
+- [x] 05-03-PLAN.md -- Fastify API server, routes, and end-to-end verification
 
 ### Phase 6: Scraper Expansion
 **Goal**: Full source coverage -- all configured sources scraped on schedule with engagement stats, thumbnails extracted, and stale content cleaned up
@@ -98,7 +98,7 @@ Plans:
 | 2. Feed Expansion | v1.0 | 5/5 | Complete | 2026-02-25 |
 | 3. Short-Form Video | v1.0 | 2/2 | Complete | 2026-02-26 |
 | 4. Config-Driven UI | v1.0 | 2/2 | Complete | 2026-02-26 |
-| 5. Foundation | v2.0 | 0/3 | Not started | - |
+| 5. Foundation | v2.0 | 3/3 | Complete | 2026-03-01 |
 | 6. Scraper Expansion | v2.0 | 0/? | Not started | - |
 | 7. LLM Moderation Pipeline | v2.0 | 0/? | Not started | - |
 | 8. Smart Blend and Integration | v2.0 | 0/? | Not started | - |
