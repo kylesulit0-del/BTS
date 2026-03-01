@@ -11,8 +11,8 @@ See: .planning/PROJECT.md (updated 2026-03-01)
 
 Phase: 6 of 8 (Scraper Expansion)
 Plan: 0 of ? complete
-Status: Phase 5 complete, ready for Phase 6 planning
-Last activity: 2026-03-01 -- Completed 05-03-PLAN.md (Fastify API server + end-to-end verification)
+Status: Phase 5 fully verified, ready for Phase 6 planning
+Last activity: 2026-03-01 -- Completed 05-04-PLAN.md (Verification gap closure: configurable cron + single-item endpoint)
 
 Progress: [===============...........] 63% (5/8 phases complete -- v1.0 shipped, Phase 5 complete)
 
@@ -36,7 +36,7 @@ Progress: [===============...........] 63% (5/8 phases complete -- v1.0 shipped,
 
 | Phase | Plans | Status |
 |-------|-------|--------|
-| 5. Foundation | 3 | Complete |
+| 5. Foundation | 4 | Complete (verified) |
 
 ## Accumulated Context
 
@@ -58,6 +58,8 @@ Recent decisions affecting current work:
 - 05-03: Cursor pagination uses descending item ID for stable page traversal
 - 05-03: Flag-based concurrent-run guard on scrape endpoint to prevent overlapping scrapes
 - 05-03: Server init order: DB first, then routes, then scheduler, then listen
+- 05-04: Default cron interval set to 20 minutes (midpoint of INFRA-04's 15-30 min range)
+- 05-04: Invalid CRON_SCHEDULE values log warning and fall back to default rather than crashing
 
 ### Pending Todos
 
@@ -72,6 +74,6 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-01
-Stopped at: Completed 05-03-PLAN.md (Phase 5 complete)
+Stopped at: Completed 05-04-PLAN.md (Phase 5 verification gaps closed)
 Resume with: `/gsd:plan-phase` (Phase 6 planning)
 Resume file: N/A -- Phase 6 needs planning
