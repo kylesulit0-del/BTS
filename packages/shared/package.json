@@ -1,0 +1,10 @@
+{
+  "name": "@bts/shared",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "exports": {
+    "./types/*": "./src/types/*.ts",
+    "./config/*": "./src/config/*.ts"
+  }
+}
