@@ -22,8 +22,8 @@ Requirements for the Content Scraping Engine milestone. Each maps to roadmap pha
 - [x] **SCRAPE-01**: Reddit scraper via JSON endpoints (6+ subreddits from config, engagement stats)
 - [ ] **SCRAPE-02**: YouTube scraper via RSS feeds with optional Data API for view counts
 - [ ] **SCRAPE-03**: RSS/news site scrapers (Soompi, AllKPop, Koreaboo, HELLOKPOP, KpopStarz, and more)
-- [ ] **SCRAPE-04**: Tumblr scraper via RSS feeds (5+ blogs from config)
-- [ ] **SCRAPE-05**: Bluesky scraper via AT Protocol public API (keyword-based post search)
+- [x] **SCRAPE-04**: Tumblr scraper via RSS feeds (5+ blogs from config)
+- [x] **SCRAPE-05**: Bluesky scraper via AT Protocol public API (keyword-based post search)
 - [ ] **SCRAPE-06**: Expanded K-pop news sources via RSS (Seoulbeats, Asian Junkie, Korea Herald entertainment, Seoul Space)
 - [ ] **SCRAPE-07**: Thumbnail and media URL extraction per source for feed card display
 
@@ -91,8 +91,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SCRAPE-01 | Phase 5 | Complete |
 | SCRAPE-02 | Phase 6 | Pending |
 | SCRAPE-03 | Phase 6 | Pending |
-| SCRAPE-04 | Phase 6 | Pending |
-| SCRAPE-05 | Phase 6 | Pending |
+| SCRAPE-04 | Phase 6 | Complete |
+| SCRAPE-05 | Phase 6 | Complete |
 | SCRAPE-06 | Phase 6 | Pending |
 | SCRAPE-07 | Phase 6 | Pending |
 | PIPE-01 | Phase 7 | Pending |
