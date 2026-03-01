@@ -5,13 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-03-01)
 
 **Core value:** Fans see a rich, diverse stream of content from everywhere with engagement stats that help surface the best content, all without leaving the app.
-**Current focus:** Planning next milestone
+**Current focus:** v2.0 Content Scraping Engine
 
 ## Current Position
 
-Phase: — (between milestones)
-Status: v1.0 shipped, preparing next milestone
-Last activity: 2026-03-01 -- Milestone v1.0 archived
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-03-01 — Milestone v2.0 started
 
 ## Accumulated Context
 
@@ -31,6 +32,6 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-01
-Stopped at: Milestone v1.0 completed and archived
-Resume with: `/gsd:new-milestone`
+Stopped at: Defining v2.0 milestone requirements
+Resume with: `/gsd:new-milestone` (in progress)
 Resume file: None
