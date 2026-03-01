@@ -1,96 +1,26 @@
-# Roadmap: BTS Army Feed Expansion
+# Roadmap: BTS Army Feed
 
-## Overview
+## Milestones
 
-Expand the Army Feed from 5 sources to 8+ with engagement stats, short-form video embeds, and config-driven architecture that enables clone-and-swap for any fandom. The work flows from security and infrastructure hardening, through config extraction, into new content sources with engagement stats, then short-form video embeds, and finally config-driven UI completion. Each phase delivers a coherent, verifiable capability on top of the previous one.
+- ✅ **v1.0 Army Feed Expansion** — Phases 1-4 (shipped 2026-03-01)
 
 ## Phases
 
-**Phase Numbering:**
-- Integer phases (1, 2, 3): Planned milestone work
-- Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
+<details>
+<summary>✅ v1.0 Army Feed Expansion (Phases 1-4) — SHIPPED 2026-03-01</summary>
 
-Decimal phases appear between their surrounding integers in numeric order.
+- [x] Phase 1: Foundation (4/4 plans) — completed 2026-02-25
+- [x] Phase 2: Feed Expansion (5/5 plans) — completed 2026-02-25
+- [x] Phase 3: Short-Form Video (2/2 plans) — completed 2026-02-26
+- [x] Phase 4: Config-Driven UI (2/2 plans) — completed 2026-02-26
 
-- [x] **Phase 1: Foundation** - Security patches, infrastructure hardening, config extraction, and source registry (completed 2026-02-25)
-- [x] **Phase 2: Feed Expansion** - New content sources (Tumblr, expanded Reddit, fan YouTube) with engagement stats (completed 2026-02-25)
-- [x] **Phase 3: Short-Form Video** - YouTube Shorts and TikTok embeds with autoplay-on-scroll (completed 2026-02-26)
-- [x] **Phase 4: Config-Driven UI** - Dynamic filter/chip generation from config and clone-and-swap validation (completed 2026-02-26)
-
-## Phase Details
-
-### Phase 1: Foundation
-**Goal**: The app is secure against XSS, resilient to CORS proxy failure, and all group-specific data lives in a single typed config object with a modular source registry
-**Depends on**: Nothing (first phase)
-**Requirements**: SEC-01, SEC-02, INFRA-01, INFRA-02, CONFIG-01, CONFIG-02
-**Success Criteria** (what must be TRUE):
-  1. All RSS/HTML content is sanitized through DOMPurify before rendering -- no innerHTML on untrusted content anywhere in the codebase
-  2. CORS proxy attempts run in parallel and the feed loads noticeably faster when the first proxy in the chain is down
-  3. Every BTS-specific keyword, subreddit name, channel ID, and member data value comes from a single typed GroupConfig object -- grep for hardcoded BTS references in service/component code returns zero matches
-  4. Feed source fetchers are split into per-source modules with a registry that maps source type to fetcher function
-  5. The app produces identical feed results as before the refactor (no regressions in existing functionality)
-**Plans**: 4 plans
-
-Plans:
-- [x] 01-01-PLAN.md — DOMPurify sanitization utility and parallel CORS proxy (SEC-01, SEC-02, INFRA-01)
-- [x] 01-02-PLAN.md — GroupConfig type system and BTS config data extraction (CONFIG-01)
-- [x] 01-03-PLAN.md — Source registry and per-source fetcher modules (INFRA-02)
-- [x] 01-04-PLAN.md — Wire config throughout app, eliminate hardcoded BTS references (CONFIG-02)
-
-### Phase 2: Feed Expansion
-**Goal**: Users see content from Tumblr fan blogs, additional Reddit subreddits, and fan YouTube channels, with Reddit engagement stats visible on feed cards
-**Depends on**: Phase 1
-**Requirements**: SRC-01, SRC-02, SRC-03, SRC-04, STAT-01, STAT-02, STAT-03
-**Success Criteria** (what must be TRUE):
-  1. User can see posts from meme and fan discussion subreddits (beyond the existing BTS subreddit) in the feed
-  2. User can see content from fan YouTube channels (not just official BANGTANTV/HYBE) in the feed
-  3. User can see Tumblr fan blog posts in the feed with properly sanitized HTML content
-  4. User can filter the feed by Tumblr as a source type using the filter UI
-  5. Reddit feed cards display upvote count and comment count when available, and show no empty/zero stats when data is missing
-**Plans**: 5 plans
-
-Plans:
-- [x] 02-01-PLAN.md — Data layer: types, engagement stats extraction, Tumblr fetcher, expanded source config (SRC-01, SRC-02, SRC-03, STAT-01, STAT-02)
-- [x] 02-02-PLAN.md — UI + feed logic: stats display on cards, Tumblr filter chip, engagement-weighted ordering, deduplication (SRC-04, STAT-03)
-- [x] 02-03-PLAN.md — Gap closure: replace placeholder fan YouTube channel IDs with verified IDs (SRC-02)
-- [x] 02-04-PLAN.md — Gap closure: increase MAX_AGE_MS to 30 days and fix HYBE channel ID (SRC-02, STAT-01, STAT-02, STAT-03)
-- [x] 02-05-PLAN.md — Gap closure: replace inactive Tumblr blogs and BangtanSubs with active sources (SRC-02, SRC-03, SRC-04)
-
-### Phase 3: Short-Form Video
-**Goal**: Users encounter short-form video content (YouTube Shorts, TikTok) rendered as embedded players directly in the feed with autoplay-on-scroll
-**Depends on**: Phase 2
-**Requirements**: EMBED-01, EMBED-02, EMBED-03
-**Success Criteria** (what must be TRUE):
-  1. YouTube Shorts URLs render as vertical (9:16 aspect ratio) embedded video players in the feed
-  2. TikTok URLs found in Reddit posts render as lazy-loaded embed players in the feed
-  3. Video embeds autoplay on scroll into view (muted initially), with one-at-a-time playback, looping, and pause on scroll away
-**Plans**: 2 plans
-
-Plans:
-- [x] 03-01-PLAN.md — Data layer: video URL detection utility, FeedItem type extension, Reddit fetcher enrichment, TikTok compilation channels (EMBED-01, EMBED-02)
-- [x] 03-02-PLAN.md — UI layer: VideoEmbed component, autoplay hook, FeedCard/SwipeFeed integration, CSS styling (EMBED-01, EMBED-02, EMBED-03)
-
-### Phase 4: Config-Driven UI
-**Goal**: All UI elements that display group-specific data are generated from config, completing the clone-and-swap architecture
-**Depends on**: Phase 1
-**Requirements**: CONFIG-03, CONFIG-04
-**Success Criteria** (what must be TRUE):
-  1. FeedFilter tabs and BiasFilter member chips are generated dynamically from the GroupConfig -- no hardcoded filter arrays in component code
-  2. Changing the config import in config/index.ts to a different group's config file swaps the entire app (members, sources, filters, keywords) with zero code changes
-**Plans**: 2 plans
-
-Plans:
-- [x] 04-01-PLAN.md — Config type expansion: GroupLabels, events/news in GroupConfig, FeedSource/BiasId as string types (CONFIG-03, CONFIG-04)
-- [x] 04-02-PLAN.md — UI wiring, build-time injection, example group config, hardcoded-reference audit (CONFIG-03, CONFIG-04)
+</details>
 
 ## Progress
 
-**Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 4
-
-| Phase | Plans Complete | Status | Completed |
-|-------|----------------|--------|-----------|
-| 1. Foundation | 4/4 | Complete    | 2026-02-25 |
-| 2. Feed Expansion | 5/5 | Complete | 2026-02-25 |
-| 3. Short-Form Video | 2/2 | Complete | 2026-02-26 |
-| 4. Config-Driven UI | 2/2 | Complete | 2026-02-26 |
+| Phase | Milestone | Plans Complete | Status | Completed |
+|-------|-----------|----------------|--------|-----------|
+| 1. Foundation | v1.0 | 4/4 | Complete | 2026-02-25 |
+| 2. Feed Expansion | v1.0 | 5/5 | Complete | 2026-02-25 |
+| 3. Short-Form Video | v1.0 | 2/2 | Complete | 2026-02-26 |
+| 4. Config-Driven UI | v1.0 | 2/2 | Complete | 2026-02-26 |
