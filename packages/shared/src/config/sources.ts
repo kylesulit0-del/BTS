@@ -16,6 +16,7 @@ export interface ScrapingSource {
   fetchCount: number;       // Max items to fetch per scrape
   priority: number;         // Scrape order priority (lower = first)
   enabled: boolean;
+  boost?: number;           // Ranking boost multiplier (default 1.0). Fan translation accounts: 1.5-2.0
 }
 
 /** Group-level scraping configuration. */
@@ -139,7 +140,7 @@ export function getBtsScrapingConfig(): GroupScrapingConfig {
       { id: 'rss-seoulspace', type: 'rss', label: 'Seoul Space', url: 'PENDING_URL', needsFilter: true, fetchCount: 20, priority: 27, enabled: false },
 
       // ── Tumblr sources (for plan 03) ───────────────────────────────────
-      { id: 'tumblr-bts-trans', type: 'tumblr', label: 'bts-trans', url: 'https://bts-trans.tumblr.com/rss', needsFilter: false, fetchCount: 10, priority: 30, enabled: true },
+      { id: 'tumblr-bts-trans', type: 'tumblr', label: 'bts-trans', url: 'https://bts-trans.tumblr.com/rss', needsFilter: false, fetchCount: 10, priority: 30, enabled: true, boost: 1.5 },
       { id: 'tumblr-kimtaegis', type: 'tumblr', label: 'kimtaegis', url: 'https://kimtaegis.tumblr.com/rss', needsFilter: true, fetchCount: 10, priority: 31, enabled: true },
       { id: 'tumblr-userparkjimin', type: 'tumblr', label: 'userparkjimin', url: 'https://userparkjimin.tumblr.com/rss', needsFilter: true, fetchCount: 10, priority: 32, enabled: true },
       { id: 'tumblr-namjin', type: 'tumblr', label: 'namjin', url: 'https://namjin.tumblr.com/rss', needsFilter: true, fetchCount: 10, priority: 33, enabled: true },
