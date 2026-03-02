@@ -21,3 +21,25 @@
 
 ---
 
+
+## v2.0 Content Scraping Engine (Shipped: 2026-03-02)
+
+**Phases completed:** 4 phases, 13 plans, 26 feat commits
+**Timeline:** 6 days (2026-02-24 → 2026-03-02)
+**Codebase:** 5,707 LOC TypeScript (136 files modified, +9,943 insertions)
+
+**Key accomplishments:**
+- Monorepo architecture with shared TypeScript types, SQLite + Drizzle ORM, and Fastify API server
+- 6-source scraping engine (Reddit, YouTube, RSS/news, Tumblr, Bluesky) with engagement stats and thumbnails
+- LLM moderation pipeline with provider abstraction, relevance filtering, content type classification, and auto-approve fallback
+- Multi-signal feed ranking with per-source percentile normalization, exponential time decay, and source diversity interleaving
+- Dual-mode frontend consuming server API with silent client-side fallback
+- Fan translation priority boost (bts-trans at 1.5x via configurable source boost)
+
+**Known gaps:**
+- UAT: 7/7 tests skipped (all require live deployment to verify)
+- Reddit/Bluesky/Tumblr scrapers returning empty results (server IP blocks or missing credentials)
+- Seoul Space RSS source disabled pending URL verification
+
+---
+

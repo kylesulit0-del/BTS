@@ -2,7 +2,7 @@
 
 ## What This Is
 
-A fan community web app that aggregates content from across the internet into a unified feed. Pulls in news, videos, memes, fan discussions, and short-form content from 8+ sources (Reddit, YouTube, Tumblr, Soompi, AllKPop, Twitter). Built as a config-driven React SPA — clone the repo, swap the config file, and it becomes a feed for any fandom.
+A fan community web app that aggregates content from across the internet into a unified, ranked feed. A server-side scraping engine collects content from 6+ sources (Reddit, YouTube, Tumblr, Bluesky, RSS/news sites) on a schedule, stores it in SQLite, filters it through LLM-based moderation, ranks it with a multi-signal blend algorithm, and serves it via REST API. The frontend consumes the API with silent client-side fallback. Built as a config-driven monorepo — clone, swap the config, and it becomes a feed for any fandom.
 
 ## Core Value
 
@@ -33,83 +33,81 @@ Fans see a rich, diverse stream of content from everywhere — official and fan-
 - ✓ Engagement-weighted feed ordering (50% recency, 50% engagement) — v1.0
 - ✓ Dynamic filter tabs and member chips from config — v1.0
 - ✓ PWA manifest generated from config at build time — v1.0
+- ✓ Monorepo with shared types between frontend and backend — v2.0
+- ✓ SQLite database with Drizzle ORM for content, engagement, moderation — v2.0
+- ✓ Scraper framework with abstract interface, error handling, rate limiting — v2.0
+- ✓ Scheduled scraping via node-cron at configurable intervals — v2.0
+- ✓ URL-based deduplication with normalized canonical URLs — v2.0
+- ✓ Config-driven group targeting for scrape targets — v2.0
+- ✓ Reddit, YouTube, RSS/news, Tumblr, Bluesky scrapers with engagement stats — v2.0
+- ✓ Thumbnail/media URL extraction per source — v2.0
+- ✓ Content age windowing with periodic cleanup — v2.0
+- ✓ LLM provider abstraction (Claude, OpenAI, mock) — v2.0
+- ✓ LLM relevance filtering, moderation, and content type classification — v2.0
+- ✓ Batched LLM processing with auto-approve fallback — v2.0
+- ✓ Three-stage content pipeline (raw → pending → approved/rejected) — v2.0
+- ✓ Cross-source engagement normalization via percentile ranking — v2.0
+- ✓ Multi-signal blend scoring (recency, engagement, diversity, variety) — v2.0
+- ✓ Fan translation priority boost via configurable source boost — v2.0
+- ✓ Dual-mode frontend (API mode with client-side fallback) — v2.0
+- ✓ REST API with paginated feed, single-item, and health endpoints — v2.0
 
 ### Active
 
-- [ ] Backend scraping engine with configurable per-source scrapers
-- [ ] Database storage (SQLite/Postgres) for aggregated content
-- [ ] LLM-based content moderation and relevance filtering (configurable provider)
-- [ ] REST API server to serve finalized content to the frontend
-- [ ] Smart blend recommendation engine (recency + engagement + source diversity + content type)
-- [ ] Config-driven group targeting (BTS first, swappable for any fandom)
-- [ ] Scraping-first approach: public pages/RSS preferred, APIs as fallback
-- [ ] 15-30 minute scraping cadence across all sources
-- [ ] Wide-net source coverage: Reddit, YouTube, Tumblr, TikTok, Instagram, Twitter/X, and more
-- [ ] Engagement data collection (likes, shares, comments) per content item
-- [ ] Thumbnail/media extraction for feed cards
-- [ ] YouTube view counts on feed cards (requires optional API key)
-- [ ] Cross-source engagement normalization for popularity sorting
-- [ ] YouTube inline video embed in list view
+(None — planning next milestone)
 
 ### Out of Scope
 
 - Multi-group in single instance — config is per-clone, not multi-tenant
-- User accounts or authentication
-- Real-time feed updates (WebSocket) — scheduled scraping is sufficient
-- Weverse content scraping — no public API, no RSS
-
-## Current Milestone: v2.0 Content Scraping Engine
-
-**Goal:** Build a backend scraping and content aggregation engine that collects content from 9+ sources on a schedule, stores it in a database, filters it through LLM-based moderation, and serves finalized content via REST API.
-
-**Target features:**
-- Scraping engine with per-source scrapers (Reddit, YouTube, Tumblr, TikTok, Instagram, Twitter/X, news sites, and more)
-- Database storage with engagement metrics (likes, shares, comments, views)
-- Two-step pipeline: wide-net collection → LLM moderation/relevance filter → finalized data
-- Smart blend recommendation engine (recency, engagement, source diversity, content type variety)
-- REST API server for frontend consumption
-- Config-driven group targeting — swap config to scrape for any fandom
-- Configurable LLM provider for moderation (Claude, OpenAI, etc.)
+- User accounts or authentication — member bias filtering + localStorage sufficient
+- Real-time feed updates (WebSocket) — 15-min scheduled scraping sufficient
+- Weverse content scraping — no public API, HMAC-authenticated, legal risk
+- Twitter/X scraper — HIGH complexity, $25-50/mo third-party API or 10-15 hrs/month DIY
+- TikTok scraper — HIGH complexity, Playwright + anti-bot, periodic breakage
+- Instagram scraper — HIGH complexity, GraphQL rotates every 2-4 weeks, needs proxies
 
 ## Context
 
-**Current state:** 3,401 LOC TypeScript. React 19 + Vite 7 SPA. Modular source fetchers with registry pattern. Feed pipeline: fetch → deduplicate → engagement-weight → bias-filter → render. Config-driven: all group data in `src/config/groups/bts/`.
+**Current state:** 5,707 LOC TypeScript across 3 packages (frontend, server, shared). React 19 + Vite 7 frontend, Fastify API server, SQLite + Drizzle ORM. Monorepo with npm workspaces.
 
-**v2.0 architecture shift:** Moving from client-side fetching through CORS proxies to a server-side scraping engine. The frontend will transition from direct source fetching to consuming a REST API backed by a database of curated content.
+**Architecture:** Server scrapes 6 sources on 20-min cron → stores in SQLite → LLM pipeline filters/classifies → rankFeed() scores and interleaves → API serves ranked feed → frontend consumes via dual-mode feedService.
 
 **Known tech debt:**
-- Zero test coverage for feed logic
-- Dead code: sanitizeHtml, fetchAllFeeds
-- TikTok short URL embeds degraded (CORS blocks redirect resolution)
-- CORS proxy services have no SLA (will be replaced by server-side scraping)
-- Twitter/Nitter scraping fragile (will be rebuilt server-side)
+- Zero test coverage
+- Dead code in frontend: sanitizeHtml, fetchAllFeeds (v1.0 leftovers)
+- TikTok short URL embeds degraded (CORS blocks)
+- Reddit/Bluesky/Tumblr scrapers returning empty on some server IPs
+- Seoul Space RSS source disabled pending URL verification
+- v2.0 UAT tests all skipped (need live deployment verification)
 
 ## Constraints
 
 - **Config-driven**: No group-specific logic in core code — all in config
-- **Existing frontend stack**: React 19, TypeScript, Vite 7
-- **Backend stack**: Node.js/TypeScript (monorepo, shared types)
+- **Frontend stack**: React 19, TypeScript, Vite 7
+- **Backend stack**: Node.js/TypeScript monorepo, shared types, SQLite
 - **Scraping-first**: Prefer public pages/RSS over authenticated APIs
-- **LLM provider agnostic**: Moderation layer must support provider swapping
+- **LLM provider agnostic**: Moderation layer supports provider swapping
 
 ## Key Decisions
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
 | Config-driven over multi-tenant | Simpler, each clone independent | ✓ Good — clean separation |
-| oEmbed/iframe for TikTok over scraping | Platform scraping blocked | ✓ Good — works for YouTube Shorts, TikTok partial (short URL issue) |
+| oEmbed/iframe for TikTok over scraping | Platform scraping blocked | ✓ Good — works for YouTube Shorts, TikTok partial |
 | Engagement stats from source APIs | Reddit/YouTube expose natively | ✓ Good — enriches feed cards |
-| Client-side only, no backend | Matches architecture, simple deploy | ✓ Good — limits sources but keeps simplicity |
-| Weverse/Instagram Reels descoped | Architecturally infeasible client-side | ✓ Good — avoided wasted effort |
 | DOMPurify over custom stripHtml | Security-first, handles edge cases | ✓ Good — eliminated XSS risk |
 | Promise.any for CORS proxy failover | Parallel faster than sequential | ✓ Good — resilient to proxy failures |
 | 30-day feed age window | YouTube posting cadences (2-3 weeks) | ✓ Good — captures more content |
-
-| Backend scraping engine over client-side fetching | Server-side removes CORS limitations, enables database, enables moderation pipeline | — Pending |
-| Scraping-first over API-first | Avoids API key requirements and rate limits for most sources | — Pending |
-| LLM-based moderation over keyword rules | More accurate for nuanced content relevance decisions | — Pending |
-| Configurable LLM provider | Avoid vendor lock-in, optimize cost vs quality | — Pending |
-| Monorepo over separate service | Shared TypeScript types, single config, simpler deployment | — Pending |
+| Backend scraping engine over client-side | Removes CORS limitations, enables DB + moderation | ✓ Good — 6 sources working |
+| Scraping-first over API-first | Avoids API key requirements and rate limits | ✓ Good — RSS/JSON endpoints reliable |
+| LLM moderation over keyword rules | More accurate for nuanced relevance decisions | ✓ Good — filters irrelevant content |
+| Configurable LLM provider | Avoid vendor lock-in, cost optimization | ✓ Good — GPT-4.1 Nano at $0.10/M tokens |
+| Monorepo over separate service | Shared TypeScript types, single config | ✓ Good — clean type sharing |
+| Percentile normalization per source | Makes engagement comparable across sources | ✓ Good — Reddit upvotes vs YouTube views |
+| Exponential time decay (k=8) | ~0.47 at 6h, ~0.05 at 24h per user preference | ✓ Good — fresh content surfaces |
+| Page-based pagination for ranked feeds | Cursor-based breaks with re-ranking | ✓ Good — no item overlap |
+| Silent API fallback to client-side | Graceful degradation, no user-facing errors | ✓ Good — zero-downtime experience |
+| Twitter/X, TikTok, Instagram deferred | Fragile, expensive, high maintenance | ✓ Good — avoided cost sink |
 
 ---
-*Last updated: 2026-03-01 after v2.0 milestone start*
+*Last updated: 2026-03-02 after v2.0 milestone*
