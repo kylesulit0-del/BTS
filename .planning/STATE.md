@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-03-01)
 
 **Core value:** Fans see a rich, diverse stream of content from everywhere with engagement stats that help surface the best content, all without leaving the app.
-**Current focus:** Phase 7 in progress -- LLM Moderation Pipeline
+**Current focus:** Phase 7 complete -- LLM Moderation Pipeline
 
 ## Current Position
 
 Phase: 7 of 8 (LLM Moderation Pipeline)
-Plan: 2 of 3 complete
-Status: Phase 7 in progress
-Last activity: 2026-03-02 -- Completed 07-02-PLAN.md (Pipeline orchestrator & integration)
+Plan: 3 of 3 complete
+Status: Phase 7 complete
+Last activity: 2026-03-02 -- Completed 07-03-PLAN.md (Frontend content type badges, feed filter, pipeline status)
 
-Progress: [=====================...] 81% (6/8 phases complete, Phase 7 plan 2/3)
+Progress: [=========================..] 88% (7/8 phases complete)
 
 ## Performance Metrics
 
@@ -38,7 +38,7 @@ Progress: [=====================...] 81% (6/8 phases complete, Phase 7 plan 2/3)
 |-------|-------|--------|
 | 5. Foundation | 4 | Complete (verified) |
 | 6. Scraper Expansion | 4/4 | Complete |
-| 7. LLM Moderation Pipeline | 2/3 | In progress |
+| 7. LLM Moderation Pipeline | 3/3 | Complete |
 
 ## Accumulated Context
 
@@ -84,6 +84,8 @@ Recent decisions affecting current work:
 - 07-02: Fallback source matching uses sourceDetail label against scraping config needsFilter flag
 - 07-02: Failed LLM batches auto-approve all items to prevent stuck pending state
 - 07-02: Pipeline decisions older than 30 days are hard-deleted after each run
+- 07-03: Content type labels and badge colors extracted to shared utility file (contentTypes.ts) for reuse across components
+- 07-03: Pipeline stats fetched in parallel with health data on status page using Promise.all
 
 ### Pending Todos
 
@@ -98,6 +100,6 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-02
-Stopped at: Completed 07-02-PLAN.md (Pipeline orchestrator & integration)
-Resume with: `/gsd:execute-phase` (Phase 7, Plan 03)
-Resume file: .planning/phases/07-llm-moderation-pipeline/07-03-PLAN.md
+Stopped at: Completed 07-03-PLAN.md (Frontend content type badges, feed filter, pipeline status) -- Phase 7 complete
+Resume with: `/gsd:execute-phase` (Phase 8)
+Resume file: .planning/phases/08-smart-blend-integration/ (needs planning)

@@ -21,7 +21,7 @@
 
 - [x] **Phase 5: Foundation** -- Monorepo, database, scraper framework, Reddit scraper, minimal API, frontend feature flag
 - [x] **Phase 6: Scraper Expansion** -- All remaining source scrapers, engagement collection, thumbnails, scheduling
-- [ ] **Phase 7: LLM Moderation Pipeline** -- Provider abstraction, relevance filtering, moderation, classification, batched processing
+- [x] **Phase 7: LLM Moderation Pipeline** -- Provider abstraction, relevance filtering, moderation, classification, batched processing
 - [ ] **Phase 8: Smart Blend and Integration** -- Cross-source ranking, engagement normalization, API polish, frontend dual-mode
 
 ## Phase Details
@@ -72,9 +72,9 @@ Plans:
 **Plans:** 3 plans
 
 Plans:
-- [ ] 07-01-PLAN.md -- Schema evolution, AI SDK provider factory, Zod schemas, and prompt templates
-- [ ] 07-02-PLAN.md -- Pipeline orchestrator, budget/fallback, admin API, feed integration
-- [ ] 07-03-PLAN.md -- Frontend content type badges, feed filter, pipeline status page section
+- [x] 07-01-PLAN.md -- Schema evolution, AI SDK provider factory, Zod schemas, and prompt templates
+- [x] 07-02-PLAN.md -- Pipeline orchestrator, budget/fallback, admin API, feed integration
+- [x] 07-03-PLAN.md -- Frontend content type badges, feed filter, pipeline status page section
 
 ### Phase 8: Smart Blend and Integration
 **Goal**: The feed is ranked by a multi-signal blend that surfaces the best content across sources, and the frontend consumes the API as its primary data source
@@ -103,5 +103,5 @@ Plans:
 | 4. Config-Driven UI | v1.0 | 2/2 | Complete | 2026-02-26 |
 | 5. Foundation | v2.0 | 4/4 | Complete | 2026-03-01 |
 | 6. Scraper Expansion | v2.0 | 4/4 | Complete | 2026-03-02 |
-| 7. LLM Moderation Pipeline | v2.0 | 0/3 | Planned | - |
+| 7. LLM Moderation Pipeline | v2.0 | 3/3 | Complete | 2026-03-02 |
 | 8. Smart Blend and Integration | v2.0 | 0/? | Not started | - |
