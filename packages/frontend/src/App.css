@@ -653,6 +653,44 @@ a {
   border-color: var(--theme-primary);
 }
 
+/* === Content Type Filter === */
+.content-type-filter {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding-bottom: 2px;
+}
+
+.content-type-filter::-webkit-scrollbar {
+  display: none;
+}
+
+.content-type-pill {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.content-type-pill:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.content-type-pill.active {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
 /* === Feed Follow Bar === */
 .feed-follow-bar {
   margin-bottom: 16px;

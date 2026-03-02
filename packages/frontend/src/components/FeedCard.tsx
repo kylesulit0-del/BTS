@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { FeedItem } from "../types/feed";
 import { abbreviateNumber } from "../utils/formatNumber";
+import { contentTypeBadgeColors, contentTypeLabels } from "../utils/contentTypes";
 import VideoEmbed from "./VideoEmbed";
 
 const sourceBadgeColors: Record<string, string> = {
@@ -61,6 +62,21 @@ export default function FeedCard({ item }: { item: FeedItem }) {
           {item.videoType && (
             <span className="feed-card-video-badge">
               {item.videoType === "youtube-short" ? "Shorts" : "TikTok"}
+            </span>
+          )}
+          {item.contentType && (
+            <span
+              className="feed-card-content-type-badge"
+              style={{
+                fontSize: 11,
+                padding: "2px 8px",
+                borderRadius: 10,
+                background: `${contentTypeBadgeColors[item.contentType] ?? "#6b7280"}33`,
+                color: contentTypeBadgeColors[item.contentType] ?? "#6b7280",
+                fontWeight: 500,
+              }}
+            >
+              {contentTypeLabels[item.contentType] ?? item.contentType}
             </span>
           )}
           <span className="feed-card-time">{timeAgo(item.timestamp)}</span>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { FeedSource } from "../types/feed";
+import type { FeedSource, ContentType } from "../types/feed";
 import { useFeed } from "../hooks/useFeed";
 import { useBias } from "../hooks/useBias";
 import FeedCard from "../components/FeedCard";
@@ -9,13 +9,20 @@ import SwipeFeed from "../components/SwipeFeed";
 import SkeletonCard from "../components/SkeletonCard";
 import NewsCard from "../components/NewsCard";
 import { getConfig } from "../config";
+import { contentTypeKeys, contentTypeLabels, contentTypeBadgeColors } from "../utils/contentTypes";
 
 export default function News() {
   const config = getConfig();
   const [filter, setFilter] = useState<FeedSource | "all">("all");
+  const [contentTypeFilter, setContentTypeFilter] = useState<ContentType | "all">("all");
   const [viewMode, setViewMode] = useState<"list" | "swipe">("list");
   const { biases, toggleBias, clearBiases } = useBias();
-  const { items, isLoading, isRetrying, error, refresh, hasItems } = useFeed(filter, biases);
+  const { items: rawItems, isLoading, isRetrying, error, refresh, hasItems } = useFeed(filter, biases);
+
+  // Client-side content type filtering
+  const items = contentTypeFilter === "all"
+    ? rawItems
+    : rawItems.filter((item) => item.contentType === contentTypeFilter);
 
   const biasNames = biases
     .map((id) => config.members.find((m) => m.id === id)?.stageName)
@@ -56,6 +63,29 @@ export default function News() {
       </div>
 
       <FeedFilter active={filter} onChange={setFilter} />
+
+      <div className="content-type-filter">
+        <button
+          className={`content-type-pill${contentTypeFilter === "all" ? " active" : ""}`}
+          onClick={() => setContentTypeFilter("all")}
+        >
+          All Types
+        </button>
+        {contentTypeKeys.map((type) => type && (
+          <button
+            key={type}
+            className={`content-type-pill${contentTypeFilter === type ? " active" : ""}`}
+            onClick={() => setContentTypeFilter(type)}
+            style={
+              contentTypeFilter === type
+                ? { background: `${contentTypeBadgeColors[type]}33`, color: contentTypeBadgeColors[type], borderColor: contentTypeBadgeColors[type] }
+                : undefined
+            }
+          >
+            {contentTypeLabels[type]}
+          </button>
+        ))}
+      </div>
 
       <BiasFilter biases={biases} onToggle={toggleBias} onClear={clearBiases} />
 

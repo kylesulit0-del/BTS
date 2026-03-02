@@ -4,6 +4,16 @@ export type VideoType = "youtube-short" | "tiktok";
 
 export type BiasId = string;
 
+export type ContentType =
+  | "news"
+  | "fan_art"
+  | "meme"
+  | "video"
+  | "discussion"
+  | "translation"
+  | "official"
+  | null;
+
 export interface FeedStats {
   upvotes?: number;
   comments?: number;
@@ -25,4 +35,5 @@ export interface FeedItem {
   stats?: FeedStats;
   videoType?: VideoType;
   videoId?: string;
+  contentType?: ContentType;
 }
