@@ -30,11 +30,11 @@ Requirements for the Content Scraping Engine milestone. Each maps to roadmap pha
 ### Content Pipeline
 
 - [x] **PIPE-01**: LLM provider abstraction with configurable provider (Claude, OpenAI, etc.)
-- [ ] **PIPE-02**: LLM relevance filtering -- classify scraped content as group-related or not, with confidence score
-- [ ] **PIPE-03**: LLM content moderation -- flag inappropriate or unsafe content
-- [ ] **PIPE-04**: LLM content type classification (news, fan art, meme, video, discussion, translation, official)
-- [ ] **PIPE-05**: Batched LLM processing -- combine relevance + moderation + classification in single call, 10-20 items per batch
-- [ ] **PIPE-06**: Three-stage content status pipeline (raw -> pending -> approved/rejected) with auto-approve fallback
+- [x] **PIPE-02**: LLM relevance filtering -- classify scraped content as group-related or not, with confidence score
+- [x] **PIPE-03**: LLM content moderation -- flag inappropriate or unsafe content
+- [x] **PIPE-04**: LLM content type classification (news, fan art, meme, video, discussion, translation, official)
+- [x] **PIPE-05**: Batched LLM processing -- combine relevance + moderation + classification in single call, 10-20 items per batch
+- [x] **PIPE-06**: Three-stage content status pipeline (raw -> pending -> approved/rejected) with auto-approve fallback
 
 ### Ranking
 
@@ -96,11 +96,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SCRAPE-06 | Phase 6 | Complete |
 | SCRAPE-07 | Phase 6 | Complete |
 | PIPE-01 | Phase 7 | Complete |
-| PIPE-02 | Phase 7 | Pending |
-| PIPE-03 | Phase 7 | Pending |
-| PIPE-04 | Phase 7 | Pending |
-| PIPE-05 | Phase 7 | Pending |
-| PIPE-06 | Phase 7 | Pending |
+| PIPE-02 | Phase 7 | Complete |
+| PIPE-03 | Phase 7 | Complete |
+| PIPE-04 | Phase 7 | Complete |
+| PIPE-05 | Phase 7 | Complete |
+| PIPE-06 | Phase 7 | Complete |
 | RANK-01 | Phase 8 | Pending |
 | RANK-02 | Phase 8 | Pending |
 | RANK-03 | Phase 8 | Pending |

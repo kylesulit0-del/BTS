@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-03-01)
 ## Current Position
 
 Phase: 7 of 8 (LLM Moderation Pipeline)
-Plan: 1 of 3 complete
+Plan: 2 of 3 complete
 Status: Phase 7 in progress
-Last activity: 2026-03-02 -- Completed 07-01-PLAN.md (Schema & pipeline foundation)
+Last activity: 2026-03-02 -- Completed 07-02-PLAN.md (Pipeline orchestrator & integration)
 
-Progress: [===================.....] 75% (6/8 phases complete, Phase 7 plan 1/3)
+Progress: [=====================...] 81% (6/8 phases complete, Phase 7 plan 2/3)
 
 ## Performance Metrics
 
@@ -38,7 +38,7 @@ Progress: [===================.....] 75% (6/8 phases complete, Phase 7 plan 1/3)
 |-------|-------|--------|
 | 5. Foundation | 4 | Complete (verified) |
 | 6. Scraper Expansion | 4/4 | Complete |
-| 7. LLM Moderation Pipeline | 1/3 | In progress |
+| 7. LLM Moderation Pipeline | 2/3 | In progress |
 
 ## Accumulated Context
 
@@ -80,6 +80,10 @@ Recent decisions affecting current work:
 - 07-01: GPT-4.1 Nano as default LLM model ($0.10/$0.40 per M tokens)
 - 07-01: Existing content backfilled to 'approved' in migration to prevent empty feed
 - 07-01: Mock provider uses empty cast object; Plan 02 adds MockLanguageModelV3 for testing
+- 07-02: AI SDK v6 uses result.output (not result.object) and usage.inputTokens/outputTokens (not promptTokens/completionTokens)
+- 07-02: Fallback source matching uses sourceDetail label against scraping config needsFilter flag
+- 07-02: Failed LLM batches auto-approve all items to prevent stuck pending state
+- 07-02: Pipeline decisions older than 30 days are hard-deleted after each run
 
 ### Pending Todos
 
@@ -88,12 +92,12 @@ None.
 ### Blockers/Concerns
 
 - ~~ESM/CJS module interop must be resolved in Phase 5 before any cross-package code~~ (resolved: all packages use "type": "module", tsx handles .ts imports)
-- LLM moderation costs need guardrails (batching, pre-filtering, spending limits)
+- ~~LLM moderation costs need guardrails (batching, pre-filtering, spending limits)~~ (resolved: budget.ts enforces daily/monthly limits, fallback mode auto-approves BTS sources)
 - Engagement normalization needs 7+ days of real data before percentile calculation works
 
 ## Session Continuity
 
 Last session: 2026-03-02
-Stopped at: Completed 07-01-PLAN.md (Schema & pipeline foundation)
-Resume with: `/gsd:execute-phase` (Phase 7, Plan 02)
-Resume file: .planning/phases/07-llm-moderation-pipeline/07-02-PLAN.md
+Stopped at: Completed 07-02-PLAN.md (Pipeline orchestrator & integration)
+Resume with: `/gsd:execute-phase` (Phase 7, Plan 03)
+Resume file: .planning/phases/07-llm-moderation-pipeline/07-03-PLAN.md
