@@ -15,6 +15,8 @@ import { startScheduler } from './scheduler.js';
 import { RedditScraper } from './scrapers/reddit.js';
 import { YouTubeScraper } from './scrapers/youtube.js';
 import { RssNewsScraper } from './scrapers/rss-news.js';
+import { TumblrScraper } from './scrapers/tumblr.js';
+import { BlueskyScraper } from './scrapers/bluesky.js';
 import { getBtsScrapingConfig } from '@bts/shared/config/sources.js';
 
 const server = fastify({ logger: true });
@@ -29,6 +31,8 @@ const scrapers = [
   new RedditScraper(config),
   new YouTubeScraper(config),
   new RssNewsScraper(config),
+  new TumblrScraper(config),
+  new BlueskyScraper(config),
 ];
 
 // Register API routes under /api prefix
