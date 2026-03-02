@@ -85,11 +85,11 @@ Plans:
   2. No single source dominates the feed -- engagement scores are normalized across sources so Reddit upvotes and YouTube views are comparable
   3. Fan translation accounts configured with priority boost appear higher in the feed than equivalent-engagement general content
   4. The frontend fetches from the API when `VITE_API_URL` is set, falls back to client-side fetching when it is not, and both modes produce a working feed
-**Plans**: TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 08-01: TBD
-- [ ] 08-02: TBD
+- [ ] 08-01-PLAN.md -- Server-side ranking module (normalization, blend scoring, diversity interleaving, priority boost) and feed endpoint integration
+- [ ] 08-02-PLAN.md -- Dual-mode frontend (API client, feed service, useFeed update, client-side diversity)
 
 ## Progress
 
