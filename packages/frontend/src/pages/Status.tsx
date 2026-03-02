@@ -22,6 +22,21 @@ interface HealthResponse {
   lastScrapeAt: string | null;
 }
 
+interface PipelineStats {
+  totalRuns: number;
+  todayRuns: number;
+  itemsProcessed: number;
+  itemsApproved: number;
+  itemsRejected: number;
+  totalInputTokens: number;
+  totalOutputTokens: number;
+  estimatedCostUsd: number;
+  inFallbackMode: boolean;
+  contentCounts: { raw: number; pending: number; approved: number; rejected: number };
+  lastRunAt: string | null;
+  provider: string | null;
+}
+
 const trafficColors: Record<string, string> = {
   green: "#22c55e",
   yellow: "#eab308",
@@ -52,6 +67,12 @@ function formatUptime(seconds: number): string {
   const mins = Math.floor((seconds % 3600) / 60);
   if (hours > 0) return `${hours}h ${mins}m`;
   return `${mins}m`;
+}
+
+function formatTokens(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
+  return String(n);
 }
 
 function SkeletonStatusCard() {
@@ -101,38 +122,233 @@ function SkeletonStatusCard() {
   );
 }
 
+function SkeletonPipelineCard() {
+  return (
+    <div style={styles.card}>
+      <div style={styles.cardHeader}>
+        <div
+          style={{
+            width: 16,
+            height: 16,
+            borderRadius: "50%",
+            background: "#374151",
+            animation: "pulse 1.5s ease-in-out infinite",
+          }}
+        />
+        <div
+          style={{
+            width: 120,
+            height: 16,
+            borderRadius: 4,
+            background: "#374151",
+            animation: "pulse 1.5s ease-in-out infinite",
+          }}
+        />
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 12 }}>
+        {[1, 2, 3, 4].map((i) => (
+          <div
+            key={i}
+            style={{
+              height: 48,
+              borderRadius: 8,
+              background: "#374151",
+              animation: "pulse 1.5s ease-in-out infinite",
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function PipelineSection({
+  stats,
+  loading,
+  error,
+}: {
+  stats: PipelineStats | null;
+  loading: boolean;
+  error: string | null;
+}) {
+  if (loading) {
+    return (
+      <div style={{ marginBottom: 20 }}>
+        <h2 style={{ ...styles.title, fontSize: 17, marginBottom: 10 }}>LLM Pipeline</h2>
+        <SkeletonPipelineCard />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{ marginBottom: 20 }}>
+        <h2 style={{ ...styles.title, fontSize: 17, marginBottom: 10 }}>LLM Pipeline</h2>
+        <div style={{ ...styles.card, color: "#6b7280", fontSize: 13 }}>
+          Pipeline stats unavailable
+        </div>
+      </div>
+    );
+  }
+
+  if (!stats) return null;
+
+  // Determine status
+  const hasRuns = stats.lastRunAt !== null;
+  const isFallback = stats.inFallbackMode;
+  const statusDotColor = isFallback ? "#eab308" : hasRuns ? "#22c55e" : "#6b7280";
+  const statusLabel = isFallback ? "Fallback Mode" : hasRuns ? "Active" : "No Runs";
+
+  return (
+    <div style={{ marginBottom: 20 }}>
+      <div style={styles.card}>
+        {/* Header row */}
+        <div style={styles.cardHeader}>
+          <div
+            style={{
+              ...styles.trafficDot,
+              background: statusDotColor,
+              boxShadow: `0 0 6px ${statusDotColor}`,
+            }}
+            title={statusLabel}
+          />
+          <span style={styles.sourceName}>LLM Pipeline</span>
+          <span style={styles.statusBadge}>{statusLabel}</span>
+        </div>
+
+        {/* Stats row: 2x2 grid */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: 10,
+            marginTop: 12,
+            paddingTop: 12,
+            borderTop: "1px solid #374151",
+          }}
+        >
+          <div style={pipeStyles.statBox}>
+            <span style={styles.statLabel}>Processed</span>
+            <span style={styles.statValue}>{stats.itemsProcessed}</span>
+          </div>
+          <div style={pipeStyles.statBox}>
+            <span style={styles.statLabel}>Approved</span>
+            <span style={{ ...styles.statValue, color: "#22c55e" }}>{stats.itemsApproved}</span>
+          </div>
+          <div style={pipeStyles.statBox}>
+            <span style={styles.statLabel}>Rejected</span>
+            <span style={{ ...styles.statValue, color: "#ef4444" }}>{stats.itemsRejected}</span>
+          </div>
+          <div style={pipeStyles.statBox}>
+            <span style={styles.statLabel}>Pending</span>
+            <span style={{ ...styles.statValue, color: "#eab308" }}>
+              {stats.contentCounts.pending}
+            </span>
+          </div>
+        </div>
+
+        {/* Cost row */}
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap" as const,
+            gap: 16,
+            marginTop: 10,
+            paddingTop: 10,
+            borderTop: "1px solid #374151",
+          }}
+        >
+          {stats.provider && (
+            <div style={styles.stat}>
+              <span style={styles.statLabel}>Provider</span>
+              <span style={styles.statValue}>{stats.provider}</span>
+            </div>
+          )}
+          <div style={styles.stat}>
+            <span style={styles.statLabel}>Tokens</span>
+            <span style={styles.statValue}>
+              {formatTokens(stats.totalInputTokens)} in / {formatTokens(stats.totalOutputTokens)}{" "}
+              out
+            </span>
+          </div>
+          <div style={styles.stat}>
+            <span style={styles.statLabel}>Cost</span>
+            <span style={styles.statValue}>${stats.estimatedCostUsd.toFixed(4)}</span>
+          </div>
+          <div style={styles.stat}>
+            <span style={styles.statLabel}>Today</span>
+            <span style={styles.statValue}>
+              {stats.todayRuns} run{stats.todayRuns !== 1 ? "s" : ""}
+            </span>
+          </div>
+        </div>
+
+        {/* Fallback warning banner */}
+        {isFallback && (
+          <div style={pipeStyles.fallbackBanner}>
+            Pipeline in fallback mode — LLM budget exceeded or provider unavailable. BTS-focused
+            sources auto-approved, broad sources queued.
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function Status() {
   const [data, setData] = useState<HealthResponse | null>(null);
+  const [pipelineStats, setPipelineStats] = useState<PipelineStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [pipelineLoading, setPipelineLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [pipelineError, setPipelineError] = useState<string | null>(null);
 
   const apiUrl = import.meta.env.VITE_API_URL;
 
-  const fetchHealth = useCallback(async () => {
+  const fetchAll = useCallback(async () => {
     if (!apiUrl) {
       setError("Status page requires API connection (set VITE_API_URL)");
       setLoading(false);
+      setPipelineLoading(false);
       return;
     }
 
-    try {
-      const res = await fetch(`${apiUrl}/api/health/sources`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json: HealthResponse = await res.json();
-      setData(json);
+    // Fetch health and pipeline stats in parallel
+    const [healthResult, pipelineResult] = await Promise.allSettled([
+      fetch(`${apiUrl}/api/health/sources`).then(async (res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return (await res.json()) as HealthResponse;
+      }),
+      fetch(`${apiUrl}/api/pipeline/stats`).then(async (res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return (await res.json()) as PipelineStats;
+      }),
+    ]);
+
+    if (healthResult.status === "fulfilled") {
+      setData(healthResult.value);
       setError(null);
-    } catch (err) {
-      setError(`Failed to load health data: ${err instanceof Error ? err.message : err}`);
-    } finally {
-      setLoading(false);
+    } else {
+      setError(
+        `Failed to load health data: ${healthResult.reason instanceof Error ? healthResult.reason.message : healthResult.reason}`,
+      );
     }
+    setLoading(false);
+
+    if (pipelineResult.status === "fulfilled") {
+      setPipelineStats(pipelineResult.value);
+      setPipelineError(null);
+    } else {
+      setPipelineError("unavailable");
+    }
+    setPipelineLoading(false);
   }, [apiUrl]);
 
   useEffect(() => {
-    fetchHealth();
-    const interval = setInterval(fetchHealth, 60_000);
+    fetchAll();
+    const interval = setInterval(fetchAll, 60_000);
     return () => clearInterval(interval);
-  }, [fetchHealth]);
+  }, [fetchAll]);
 
   return (
     <div style={styles.page}>
@@ -147,6 +363,9 @@ export default function Status() {
       </div>
 
       {error && <div style={styles.error}>{error}</div>}
+
+      {/* Pipeline section - above source status */}
+      <PipelineSection stats={pipelineStats} loading={pipelineLoading} error={pipelineError} />
 
       {loading && (
         <div style={styles.list}>
@@ -222,6 +441,27 @@ export default function Status() {
     </div>
   );
 }
+
+const pipeStyles: Record<string, React.CSSProperties> = {
+  statBox: {
+    display: "flex",
+    flexDirection: "column",
+    gap: 2,
+    background: "rgba(255, 255, 255, 0.03)",
+    borderRadius: 8,
+    padding: "8px 10px",
+  },
+  fallbackBanner: {
+    marginTop: 12,
+    padding: "10px 14px",
+    borderRadius: 8,
+    background: "rgba(234, 179, 8, 0.1)",
+    border: "1px solid rgba(234, 179, 8, 0.3)",
+    color: "#fde047",
+    fontSize: 13,
+    lineHeight: 1.4,
+  },
+};
 
 const styles: Record<string, React.CSSProperties> = {
   page: {
