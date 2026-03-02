@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import type { FeedItem, FeedSource, BiasId } from "../types/feed";
 import { getConfig } from "../config";
-import { fetchAllFeedsIncremental } from "../services/feeds";
+import { fetchFeed } from "../services/feedService";
+import { isApiMode } from "../services/api";
 
 function getCacheKey() {
   return `${getConfig().theme.groupName.toLowerCase()}-feed-cache`;
@@ -63,10 +64,12 @@ export function useFeed(filter: FeedSource | "all" = "all", biases: BiasId[] = [
 
     retryTimerRef.current = setTimeout(async () => {
       try {
-        const retryItems = await fetchAllFeedsIncremental((items) => {
-          if (items.length > 0) {
-            setAllItems(items);
-          }
+        const retryItems = await fetchFeed({
+          onItems: (items) => {
+            if (items.length > 0) {
+              setAllItems(items);
+            }
+          },
         });
 
         if (retryItems.length > 0) {
@@ -105,9 +108,16 @@ export function useFeed(filter: FeedSource | "all" = "all", biases: BiasId[] = [
     }
 
     try {
-      // Use incremental loading -- items appear as each source resolves
-      const finalItems = await fetchAllFeedsIncremental((items) => {
-        setAllItems(items);
+      // In API mode, pass source for server-side filtering.
+      // In client-side mode, source filtering happens locally after fetch.
+      // Content type and bias filtering always happen locally (post-hook in News.tsx).
+      const apiMode = isApiMode();
+      const finalItems = await fetchFeed({
+        force,
+        onItems: (items) => {
+          setAllItems(items);
+        },
+        source: apiMode && filter !== "all" ? filter : undefined,
       });
 
       setCache(finalItems);
@@ -134,7 +144,7 @@ export function useFeed(filter: FeedSource | "all" = "all", biases: BiasId[] = [
     } finally {
       setIsLoading(false);
     }
-  }, [silentRetry]);
+  }, [silentRetry, filter]);
 
   useEffect(() => {
     load();

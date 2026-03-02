@@ -67,12 +67,48 @@ function capPerSource(items: FeedItem[]): FeedItem[] {
   return capped;
 }
 
+/**
+ * Basic diversity interleaving: reorder so no more than 2 consecutive items
+ * share the same source. Simpler version of the server's interleave logic.
+ */
+function interleaveSimple(items: FeedItem[]): FeedItem[] {
+  if (items.length <= 2) return items;
+
+  const result: FeedItem[] = [];
+  const remaining = [...items];
+
+  while (remaining.length > 0) {
+    const len = result.length;
+    // Check if last 2 items in result have the same source
+    const sameSourceStreak =
+      len >= 2 && result[len - 1].source === result[len - 2].source;
+
+    if (sameSourceStreak) {
+      const streakSource = result[len - 1].source;
+      // Find next item from a different source
+      const diffIdx = remaining.findIndex((item) => item.source !== streakSource);
+      if (diffIdx !== -1) {
+        result.push(remaining.splice(diffIdx, 1)[0]);
+      } else {
+        // No different source available, just append
+        result.push(remaining.shift()!);
+      }
+    } else {
+      result.push(remaining.shift()!);
+    }
+  }
+
+  return result;
+}
+
 function applyFeedPipeline(items: FeedItem[]): FeedItem[] {
   const now = Date.now();
   const fresh = items.filter((item) => now - item.timestamp < MAX_AGE_MS);
   const deduped = deduplicateByUrl(fresh);
   const capped = capPerSource(deduped);
-  return capped.sort((a, b) => computeFeedScore(b, now) - computeFeedScore(a, now));
+  return interleaveSimple(
+    capped.sort((a, b) => computeFeedScore(b, now) - computeFeedScore(a, now))
+  );
 }
 
 export async function fetchAllFeedsIncremental(onItems: FeedCallback): Promise<FeedItem[]> {
