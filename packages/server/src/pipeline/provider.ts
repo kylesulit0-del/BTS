@@ -3,6 +3,10 @@
  *
  * Reads LLM_PROVIDER and LLM_MODEL env vars to return the appropriate
  * AI SDK model instance. Provider is swappable without code changes.
+ *
+ * When no API key is configured, returns null — the pipeline should
+ * auto-approve all content. When an API key is later provided, new
+ * content will go through proper LLM moderation.
  */
 
 import { type LanguageModel } from 'ai';
@@ -14,6 +18,25 @@ export interface ProviderConfig {
   costPerInputToken: number;   // USD per token
   costPerOutputToken: number;  // USD per token
   name: string;                // e.g., 'openai/gpt-4.1-nano'
+}
+
+/**
+ * Returns true if an LLM API key is configured for the current provider.
+ * Used by the pipeline to decide whether to run LLM moderation or
+ * auto-approve all content.
+ */
+export function hasApiKey(): boolean {
+  const provider = process.env.LLM_PROVIDER || 'openai';
+  switch (provider) {
+    case 'openai':
+      return !!process.env.OPENAI_API_KEY;
+    case 'anthropic':
+      return !!process.env.ANTHROPIC_API_KEY;
+    case 'mock':
+      return true;
+    default:
+      return false;
+  }
 }
 
 /**

@@ -11,7 +11,7 @@
 import { generateText, Output, NoObjectGeneratedError } from 'ai';
 import { eq, and, isNull, inArray, sql, lt } from 'drizzle-orm';
 import { contentItems, pipelineRuns, pipelineDecisions } from '../db/schema.js';
-import { getProvider } from './provider.js';
+import { getProvider, hasApiKey } from './provider.js';
 import { BatchResultSchema } from './schemas.js';
 import { buildBatchPrompt } from './prompts.js';
 import { shouldUseFallback, recordCost } from './budget.js';
@@ -24,13 +24,44 @@ const MAX_ITEMS_PER_RUN = BATCH_SIZE * 5; // 75 items per pipeline run
 /**
  * Run the LLM moderation pipeline on raw content items.
  *
- * 1. Check budget -- fallback mode if exceeded
- * 2. Select raw items and atomically mark as 'pending'
- * 3. Process in batches via LLM (relevance + safety + classification)
- * 4. Update items with decisions, track costs, clean up old decisions
+ * 1. No API key → auto-approve all raw items (moderation disabled)
+ * 2. Check budget → fallback mode if exceeded
+ * 3. Select raw items and atomically mark as 'pending'
+ * 4. Process in batches via LLM (relevance + safety + classification)
+ * 5. Update items with decisions, track costs, clean up old decisions
+ *
+ * NOTE: When no API key is configured, ALL content is auto-approved without
+ * moderation. Once an API key is provided, new content will go through proper
+ * LLM moderation. Previously auto-approved content is NOT re-evaluated.
  */
 export async function runPipeline(db: Db): Promise<void> {
-  // Check budget first
+  // No API key → auto-approve everything (moderation disabled)
+  if (!hasApiKey()) {
+    const rawItems = db
+      .select({ id: contentItems.id })
+      .from(contentItems)
+      .where(
+        and(
+          eq(contentItems.moderationStatus, 'raw'),
+          isNull(contentItems.deletedAt),
+        )
+      )
+      .all();
+
+    if (rawItems.length === 0) return;
+
+    for (const item of rawItems) {
+      db.update(contentItems)
+        .set({ moderationStatus: 'approved', moderatedAt: new Date() })
+        .where(eq(contentItems.id, item.id))
+        .run();
+    }
+
+    console.log(`[pipeline] No API key configured — auto-approved ${rawItems.length} items. Set OPENAI_API_KEY or ANTHROPIC_API_KEY to enable LLM moderation.`);
+    return;
+  }
+
+  // Check budget — fallback mode if exceeded
   if (shouldUseFallback(db)) {
     const rawItems = db
       .select({ id: contentItems.id, sourceDetail: contentItems.sourceDetail })
