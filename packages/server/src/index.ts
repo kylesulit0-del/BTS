@@ -11,6 +11,7 @@ import { initDb } from './db/index.js';
 import { registerFeedRoutes } from './routes/feed.js';
 import { registerScrapeRoutes } from './routes/scrape.js';
 import { registerHealthRoutes } from './routes/health.js';
+import { registerPipelineRoutes } from './routes/pipeline.js';
 import { startScheduler } from './scheduler.js';
 import { RedditScraper } from './scrapers/reddit.js';
 import { YouTubeScraper } from './scrapers/youtube.js';
@@ -40,6 +41,7 @@ await server.register(async (api) => {
   registerFeedRoutes(api, db);
   registerScrapeRoutes(api, db, scrapers);
   registerHealthRoutes(api, db);
+  registerPipelineRoutes(api, db);
 }, { prefix: '/api' });
 
 // Start hourly scheduler + initial scrape

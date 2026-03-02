@@ -9,6 +9,7 @@
 import { and, eq, sql, lt, isNull } from 'drizzle-orm';
 import { contentItems, scrapeRuns } from '../db/schema.js';
 import { normalizeUrl } from './utils.js';
+import { runPipeline } from '../pipeline/pipeline.js';
 import type { Db } from '../db/index.js';
 
 // ── Scraper types ──────────────────────────────────────────────────────
@@ -214,6 +215,14 @@ export async function runAllScrapers(db: Db, scrapers: Scraper[]): Promise<RunSt
 
   stats.duration = Date.now() - overallStart;
   console.log(`[scraper] Complete: found=${stats.totalFound} new=${stats.totalNew} updated=${stats.totalUpdated} duration=${stats.duration}ms`);
+
+  // Run LLM moderation pipeline on new raw items (non-blocking)
+  try {
+    await runPipeline(db);
+  } catch (error) {
+    console.error('[pipeline] Pipeline failed:', error);
+    // Pipeline failure does not block scraping -- content stays as 'raw' until next run
+  }
 
   return stats;
 }

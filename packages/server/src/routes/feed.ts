@@ -13,17 +13,20 @@ import type { FeedItem, FeedResponse } from '@bts/shared/types/feed.js';
 
 export function registerFeedRoutes(server: FastifyInstance, db: Db) {
   server.get<{
-    Querystring: { cursor?: string; limit?: string; source?: string };
+    Querystring: { cursor?: string; limit?: string; source?: string; contentType?: string };
   }>('/feed', async (request, reply) => {
-    const { cursor, source } = request.query;
+    const { cursor, source, contentType } = request.query;
 
     // Parse limit, clamp to 1-100, default 50
     let limit = parseInt(request.query.limit || '50', 10);
     if (isNaN(limit) || limit < 1) limit = 1;
     if (limit > 100) limit = 100;
 
-    // Build WHERE conditions (always exclude soft-deleted items)
-    const conditions = [isNull(contentItems.deletedAt)];
+    // Build WHERE conditions (always exclude soft-deleted items, only show approved)
+    const conditions = [
+      isNull(contentItems.deletedAt),
+      eq(contentItems.moderationStatus, 'approved'),
+    ];
     if (cursor) {
       const cursorId = parseInt(cursor, 10);
       if (!isNaN(cursorId)) {
@@ -32,6 +35,9 @@ export function registerFeedRoutes(server: FastifyInstance, db: Db) {
     }
     if (source) {
       conditions.push(eq(contentItems.source, source));
+    }
+    if (contentType) {
+      conditions.push(eq(contentItems.contentType, contentType));
     }
 
     // Query items (fetch limit + 1 to detect hasMore)
@@ -50,10 +56,16 @@ export function registerFeedRoutes(server: FastifyInstance, db: Db) {
       ? String(items[items.length - 1].id)
       : null;
 
-    // Count total items (with source filter if applicable, always exclude soft-deleted)
-    const countConditions = [isNull(contentItems.deletedAt)];
+    // Count total items (with source/contentType filters if applicable, only approved, exclude soft-deleted)
+    const countConditions = [
+      isNull(contentItems.deletedAt),
+      eq(contentItems.moderationStatus, 'approved'),
+    ];
     if (source) {
       countConditions.push(eq(contentItems.source, source));
+    }
+    if (contentType) {
+      countConditions.push(eq(contentItems.contentType, contentType));
     }
     const countWhere = and(...countConditions);
     const countResult = db
@@ -104,7 +116,11 @@ export function registerFeedRoutes(server: FastifyInstance, db: Db) {
     const row = db
       .select()
       .from(contentItems)
-      .where(and(eq(contentItems.id, parsed), isNull(contentItems.deletedAt)))
+      .where(and(
+        eq(contentItems.id, parsed),
+        isNull(contentItems.deletedAt),
+        eq(contentItems.moderationStatus, 'approved'),
+      ))
       .get();
 
     if (!row) {
