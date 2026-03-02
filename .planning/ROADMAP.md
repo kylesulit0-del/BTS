@@ -69,11 +69,12 @@ Plans:
   2. Swapping the LLM provider via environment variable (e.g., Claude to OpenAI to mock) changes the moderation backend without code changes
   3. Irrelevant content from broad sources (e.g., general K-pop subreddits) is filtered out, and each approved item has a content type label (news, fan art, meme, video, discussion, translation, official)
   4. LLM calls are batched (10-20 items per call) and the system continues to function (auto-approve fallback) when the LLM provider is unavailable or over budget
-**Plans**: TBD
+**Plans:** 3 plans
 
 Plans:
-- [ ] 07-01: TBD
-- [ ] 07-02: TBD
+- [ ] 07-01-PLAN.md -- Schema evolution, AI SDK provider factory, Zod schemas, and prompt templates
+- [ ] 07-02-PLAN.md -- Pipeline orchestrator, budget/fallback, admin API, feed integration
+- [ ] 07-03-PLAN.md -- Frontend content type badges, feed filter, pipeline status page section
 
 ### Phase 8: Smart Blend and Integration
 **Goal**: The feed is ranked by a multi-signal blend that surfaces the best content across sources, and the frontend consumes the API as its primary data source
@@ -102,5 +103,5 @@ Plans:
 | 4. Config-Driven UI | v1.0 | 2/2 | Complete | 2026-02-26 |
 | 5. Foundation | v2.0 | 4/4 | Complete | 2026-03-01 |
 | 6. Scraper Expansion | v2.0 | 4/4 | Complete | 2026-03-02 |
-| 7. LLM Moderation Pipeline | v2.0 | 0/? | Not started | - |
+| 7. LLM Moderation Pipeline | v2.0 | 0/3 | Planned | - |
 | 8. Smart Blend and Integration | v2.0 | 0/? | Not started | - |
