@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-03-01)
 
 **Core value:** Fans see a rich, diverse stream of content from everywhere with engagement stats that help surface the best content, all without leaving the app.
-**Current focus:** Phase 6 complete -- ready for Phase 7 (LLM Moderation Pipeline)
+**Current focus:** Phase 7 in progress -- LLM Moderation Pipeline
 
 ## Current Position
 
-Phase: 6 of 8 (Scraper Expansion)
-Plan: 4 of 4 complete
-Status: Phase 6 complete
-Last activity: 2026-03-02 -- Completed 06-04-PLAN.md (Status page, thumbnails, Phase 6 verification)
+Phase: 7 of 8 (LLM Moderation Pipeline)
+Plan: 1 of 3 complete
+Status: Phase 7 in progress
+Last activity: 2026-03-02 -- Completed 07-01-PLAN.md (Schema & pipeline foundation)
 
-Progress: [===================.....] 75% (6/8 phases complete -- v1.0 shipped, Phase 5 complete, Phase 6 complete)
+Progress: [===================.....] 75% (6/8 phases complete, Phase 7 plan 1/3)
 
 ## Performance Metrics
 
@@ -38,6 +38,7 @@ Progress: [===================.....] 75% (6/8 phases complete -- v1.0 shipped, P
 |-------|-------|--------|
 | 5. Foundation | 4 | Complete (verified) |
 | 6. Scraper Expansion | 4/4 | Complete |
+| 7. LLM Moderation Pipeline | 1/3 | In progress |
 
 ## Accumulated Context
 
@@ -74,6 +75,11 @@ Recent decisions affecting current work:
 - 06-04: Traffic light thresholds: red if no runs in 24h or >50% errors, yellow if any errors <50%, green otherwise
 - 06-04: Broken images collapse entirely (hide img) rather than showing placeholder -- card becomes text-only
 - 06-04: scrape_runs cleanup is hard delete (operational metadata, not user content)
+- 07-01: AI SDK v6 uses LanguageModel type (not LanguageModelV1) and generateText + Output.object pattern
+- 07-01: Zod 4 installed as latest; compatible with AI SDK v6 structured output
+- 07-01: GPT-4.1 Nano as default LLM model ($0.10/$0.40 per M tokens)
+- 07-01: Existing content backfilled to 'approved' in migration to prevent empty feed
+- 07-01: Mock provider uses empty cast object; Plan 02 adds MockLanguageModelV3 for testing
 
 ### Pending Todos
 
@@ -88,6 +94,6 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-02
-Stopped at: Completed 06-04-PLAN.md (Phase 6 complete)
-Resume with: `/gsd:execute-phase` (Phase 7)
-Resume file: Phase 7 planning needed
+Stopped at: Completed 07-01-PLAN.md (Schema & pipeline foundation)
+Resume with: `/gsd:execute-phase` (Phase 7, Plan 02)
+Resume file: .planning/phases/07-llm-moderation-pipeline/07-02-PLAN.md

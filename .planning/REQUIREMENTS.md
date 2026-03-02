@@ -29,7 +29,7 @@ Requirements for the Content Scraping Engine milestone. Each maps to roadmap pha
 
 ### Content Pipeline
 
-- [ ] **PIPE-01**: LLM provider abstraction with configurable provider (Claude, OpenAI, etc.)
+- [x] **PIPE-01**: LLM provider abstraction with configurable provider (Claude, OpenAI, etc.)
 - [ ] **PIPE-02**: LLM relevance filtering -- classify scraped content as group-related or not, with confidence score
 - [ ] **PIPE-03**: LLM content moderation -- flag inappropriate or unsafe content
 - [ ] **PIPE-04**: LLM content type classification (news, fan art, meme, video, discussion, translation, official)
@@ -95,7 +95,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SCRAPE-05 | Phase 6 | Complete |
 | SCRAPE-06 | Phase 6 | Complete |
 | SCRAPE-07 | Phase 6 | Complete |
-| PIPE-01 | Phase 7 | Pending |
+| PIPE-01 | Phase 7 | Complete |
 | PIPE-02 | Phase 7 | Pending |
 | PIPE-03 | Phase 7 | Pending |
 | PIPE-04 | Phase 7 | Pending |
