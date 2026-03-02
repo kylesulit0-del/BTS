@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-03-01)
 
 **Core value:** Fans see a rich, diverse stream of content from everywhere with engagement stats that help surface the best content, all without leaving the app.
-**Current focus:** Phase 6 -- Scraper Expansion (v2.0 Content Scraping Engine)
+**Current focus:** Phase 6 complete -- ready for Phase 7 (LLM Moderation Pipeline)
 
 ## Current Position
 
 Phase: 6 of 8 (Scraper Expansion)
-Plan: 3 of 4 complete
-Status: Executing Phase 6 plans
-Last activity: 2026-03-01 -- Completed 06-03-PLAN.md (Tumblr and Bluesky scrapers)
+Plan: 4 of 4 complete
+Status: Phase 6 complete
+Last activity: 2026-03-02 -- Completed 06-04-PLAN.md (Status page, thumbnails, Phase 6 verification)
 
-Progress: [===============...........] 63% (5/8 phases complete -- v1.0 shipped, Phase 5 complete, Phase 6 in progress)
+Progress: [===================.....] 75% (6/8 phases complete -- v1.0 shipped, Phase 5 complete, Phase 6 complete)
 
 ## Performance Metrics
 
@@ -37,7 +37,7 @@ Progress: [===============...........] 63% (5/8 phases complete -- v1.0 shipped,
 | Phase | Plans | Status |
 |-------|-------|--------|
 | 5. Foundation | 4 | Complete (verified) |
-| 6. Scraper Expansion | 3/4 | In progress |
+| 6. Scraper Expansion | 4/4 | Complete |
 
 ## Accumulated Context
 
@@ -71,6 +71,9 @@ Recent decisions affecting current work:
 - 06-03: Bluesky scraper degrades gracefully when credentials missing -- logs warning, returns empty result
 - 06-03: Tumblr thumbnail extraction uses regex on HTML content -- first image only per user decision
 - 06-03: Bluesky deduplicates posts by AT URI across multiple keyword searches
+- 06-04: Traffic light thresholds: red if no runs in 24h or >50% errors, yellow if any errors <50%, green otherwise
+- 06-04: Broken images collapse entirely (hide img) rather than showing placeholder -- card becomes text-only
+- 06-04: scrape_runs cleanup is hard delete (operational metadata, not user content)
 
 ### Pending Todos
 
@@ -84,7 +87,7 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-01
-Stopped at: Completed 06-03-PLAN.md (Tumblr and Bluesky scrapers)
-Resume with: `/gsd:execute-phase` (Plan 06-04)
-Resume file: .planning/phases/06-scraper-expansion/06-04-PLAN.md
+Last session: 2026-03-02
+Stopped at: Completed 06-04-PLAN.md (Phase 6 complete)
+Resume with: `/gsd:execute-phase` (Phase 7)
+Resume file: Phase 7 planning needed

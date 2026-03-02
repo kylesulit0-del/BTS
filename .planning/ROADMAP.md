@@ -20,7 +20,7 @@
 ### v2.0 Content Scraping Engine
 
 - [x] **Phase 5: Foundation** -- Monorepo, database, scraper framework, Reddit scraper, minimal API, frontend feature flag
-- [ ] **Phase 6: Scraper Expansion** -- All remaining source scrapers, engagement collection, thumbnails, scheduling
+- [x] **Phase 6: Scraper Expansion** -- All remaining source scrapers, engagement collection, thumbnails, scheduling
 - [ ] **Phase 7: LLM Moderation Pipeline** -- Provider abstraction, relevance filtering, moderation, classification, batched processing
 - [ ] **Phase 8: Smart Blend and Integration** -- Cross-source ranking, engagement normalization, API polish, frontend dual-mode
 
@@ -55,10 +55,10 @@ Plans:
 **Plans:** 4 plans
 
 Plans:
-- [ ] 06-01-PLAN.md -- Schema evolution, shared types, soft-delete cleanup, engagement stats JSON
-- [ ] 06-02-PLAN.md -- Source config expansion, thumbnail utilities, YouTube + RSS/news scrapers
-- [ ] 06-03-PLAN.md -- Tumblr + Bluesky scrapers, all scrapers registered
-- [ ] 06-04-PLAN.md -- Health status page, feed card thumbnails, broken image handling, verification
+- [x] 06-01-PLAN.md -- Schema evolution, shared types, soft-delete cleanup, engagement stats JSON
+- [x] 06-02-PLAN.md -- Source config expansion, thumbnail utilities, YouTube + RSS/news scrapers
+- [x] 06-03-PLAN.md -- Tumblr + Bluesky scrapers, all scrapers registered
+- [x] 06-04-PLAN.md -- Health status page, feed card thumbnails, broken image handling, verification
 
 ### Phase 7: LLM Moderation Pipeline
 **Goal**: Scraped content is automatically filtered for relevance, moderated for safety, and classified by type -- with configurable LLM provider and cost controls
@@ -101,6 +101,6 @@ Plans:
 | 3. Short-Form Video | v1.0 | 2/2 | Complete | 2026-02-26 |
 | 4. Config-Driven UI | v1.0 | 2/2 | Complete | 2026-02-26 |
 | 5. Foundation | v2.0 | 4/4 | Complete | 2026-03-01 |
-| 6. Scraper Expansion | v2.0 | 1/4 | In Progress | - |
+| 6. Scraper Expansion | v2.0 | 4/4 | Complete | 2026-03-02 |
 | 7. LLM Moderation Pipeline | v2.0 | 0/? | Not started | - |
 | 8. Smart Blend and Integration | v2.0 | 0/? | Not started | - |
