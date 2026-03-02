@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-03-01)
 
 **Core value:** Fans see a rich, diverse stream of content from everywhere with engagement stats that help surface the best content, all without leaving the app.
-**Current focus:** Phase 8 in progress -- Smart Blend and Integration
+**Current focus:** Phase 8 complete -- Smart Blend and Integration
 
 ## Current Position
 
 Phase: 8 of 8 (Smart Blend and Integration)
-Plan: 1 of 2 complete
-Status: Executing phase 8
-Last activity: 2026-03-02 -- Completed 08-01-PLAN.md (Server-side ranking module and feed endpoint integration)
+Plan: 2 of 2 complete
+Status: Phase 8 complete
+Last activity: 2026-03-02 -- Completed 08-02-PLAN.md (Frontend dual-mode feed integration)
 
-Progress: [==========================.] 94% (7.5/8 phases)
+Progress: [============================] 100% (8/8 phases)
 
 ## Performance Metrics
 
@@ -39,7 +39,7 @@ Progress: [==========================.] 94% (7.5/8 phases)
 | 5. Foundation | 4 | Complete (verified) |
 | 6. Scraper Expansion | 4/4 | Complete |
 | 7. LLM Moderation Pipeline | 3/3 | Complete |
-| 8. Smart Blend & Integration | 1/2 | In progress |
+| 8. Smart Blend & Integration | 2/2 | Complete |
 
 ## Accumulated Context
 
@@ -92,6 +92,9 @@ Recent decisions affecting current work:
 - 08-01: Candidate set of 500 items fetched from DB for ranking per request
 - 08-01: Page-based pagination for ranked feeds, cursor-based retained as backward-compat fallback
 - 08-01: bts-trans fan translation account boosted at 1.5x via ScrapingSource.boost field
+- 08-02: Source filtering sent server-side in API mode; content type and bias filtering always local (hook API unchanged)
+- 08-02: API fallback logs warning only -- no error UI if client-side works after API failure
+- 08-02: Client-side interleaveSimple uses same max-2-consecutive constraint as server interleave
 
 ### Pending Todos
 
@@ -106,6 +109,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-02
-Stopped at: Completed 08-01-PLAN.md (Server-side ranking module and feed endpoint integration)
-Resume with: `/gsd:execute-phase` (Phase 8, Plan 02)
-Resume file: .planning/phases/08-smart-blend-and-integration/08-02-PLAN.md
+Stopped at: Completed 08-02-PLAN.md (Frontend dual-mode feed integration) -- Phase 8 complete
+Resume with: All v2.0 phases complete
