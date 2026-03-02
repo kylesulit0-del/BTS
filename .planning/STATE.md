@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-03-01)
 
 **Core value:** Fans see a rich, diverse stream of content from everywhere with engagement stats that help surface the best content, all without leaving the app.
-**Current focus:** Phase 7 complete -- LLM Moderation Pipeline
+**Current focus:** Phase 8 in progress -- Smart Blend and Integration
 
 ## Current Position
 
-Phase: 7 of 8 (LLM Moderation Pipeline)
-Plan: 3 of 3 complete
-Status: Phase 7 complete
-Last activity: 2026-03-02 -- Completed 07-03-PLAN.md (Frontend content type badges, feed filter, pipeline status)
+Phase: 8 of 8 (Smart Blend and Integration)
+Plan: 1 of 2 complete
+Status: Executing phase 8
+Last activity: 2026-03-02 -- Completed 08-01-PLAN.md (Server-side ranking module and feed endpoint integration)
 
-Progress: [=========================..] 88% (7/8 phases complete)
+Progress: [==========================.] 94% (7.5/8 phases)
 
 ## Performance Metrics
 
@@ -39,6 +39,7 @@ Progress: [=========================..] 88% (7/8 phases complete)
 | 5. Foundation | 4 | Complete (verified) |
 | 6. Scraper Expansion | 4/4 | Complete |
 | 7. LLM Moderation Pipeline | 3/3 | Complete |
+| 8. Smart Blend & Integration | 1/2 | In progress |
 
 ## Accumulated Context
 
@@ -86,6 +87,11 @@ Recent decisions affecting current work:
 - 07-02: Pipeline decisions older than 30 days are hard-deleted after each run
 - 07-03: Content type labels and badge colors extracted to shared utility file (contentTypes.ts) for reuse across components
 - 07-03: Pipeline stats fetched in parallel with health data on status page using Promise.all
+- 08-01: Blend weights: recency 0.40, engagement 0.35, contentTypeVariety 0.10, sourceDiversity 0.15
+- 08-01: Exponential decay constant k=8 gives ~0.47 at 6h, ~0.05 at 24h
+- 08-01: Candidate set of 500 items fetched from DB for ranking per request
+- 08-01: Page-based pagination for ranked feeds, cursor-based retained as backward-compat fallback
+- 08-01: bts-trans fan translation account boosted at 1.5x via ScrapingSource.boost field
 
 ### Pending Todos
 
@@ -95,11 +101,11 @@ None.
 
 - ~~ESM/CJS module interop must be resolved in Phase 5 before any cross-package code~~ (resolved: all packages use "type": "module", tsx handles .ts imports)
 - ~~LLM moderation costs need guardrails (batching, pre-filtering, spending limits)~~ (resolved: budget.ts enforces daily/monthly limits, fallback mode auto-approves BTS sources)
-- Engagement normalization needs 7+ days of real data before percentile calculation works
+- ~~Engagement normalization needs 7+ days of real data before percentile calculation works~~ (resolved: per-batch percentile works with any amount of data, neutral 0.5 for items without engagement)
 
 ## Session Continuity
 
 Last session: 2026-03-02
-Stopped at: Completed 07-03-PLAN.md (Frontend content type badges, feed filter, pipeline status) -- Phase 7 complete
-Resume with: `/gsd:execute-phase` (Phase 8)
-Resume file: .planning/phases/08-smart-blend-integration/ (needs planning)
+Stopped at: Completed 08-01-PLAN.md (Server-side ranking module and feed endpoint integration)
+Resume with: `/gsd:execute-phase` (Phase 8, Plan 02)
+Resume file: .planning/phases/08-smart-blend-and-integration/08-02-PLAN.md

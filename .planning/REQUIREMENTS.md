@@ -38,9 +38,9 @@ Requirements for the Content Scraping Engine milestone. Each maps to roadmap pha
 
 ### Ranking
 
-- [ ] **RANK-01**: Cross-source engagement normalization via per-source z-score over rolling 7-day window
-- [ ] **RANK-02**: Smart blend scoring -- weighted combination of recency, normalized engagement, source diversity, and content type variety
-- [ ] **RANK-03**: Fan translation account prioritization via configurable priority boost in source config
+- [x] **RANK-01**: Cross-source engagement normalization via per-source z-score over rolling 7-day window
+- [x] **RANK-02**: Smart blend scoring -- weighted combination of recency, normalized engagement, source diversity, and content type variety
+- [x] **RANK-03**: Fan translation account prioritization via configurable priority boost in source config
 
 ### API & Integration
 
@@ -101,9 +101,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PIPE-04 | Phase 7 | Complete |
 | PIPE-05 | Phase 7 | Complete |
 | PIPE-06 | Phase 7 | Complete |
-| RANK-01 | Phase 8 | Pending |
-| RANK-02 | Phase 8 | Pending |
-| RANK-03 | Phase 8 | Pending |
+| RANK-01 | Phase 8 | Complete |
+| RANK-02 | Phase 8 | Complete |
+| RANK-03 | Phase 8 | Complete |
 | API-01 | Phase 5 | Complete |
 | API-02 | Phase 8 | Pending |
 | API-03 | Phase 6 | Complete |
