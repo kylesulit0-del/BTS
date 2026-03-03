@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import type { FeedState, FeedAction, SortMode } from "../../hooks/useFeedState";
 import { getConfig } from "../../config";
 
@@ -17,6 +18,16 @@ const SORT_TABS: { mode: SortMode; label: string }[] = [
 ];
 
 export default function SnapControlBar({ feedState, dispatch, visible, onFilterIconClick }: SnapControlBarProps) {
+  const [initialLoad, setInitialLoad] = useState(true);
+
+  useEffect(() => {
+    // Small delay so the slide-down is visible (not instant on first paint)
+    const timer = requestAnimationFrame(() => {
+      setInitialLoad(false);
+    });
+    return () => cancelAnimationFrame(timer);
+  }, []);
+
   const config = getConfig();
   const filterCount = feedState.sources.length + feedState.members.length + feedState.contentTypes.length;
 
@@ -38,7 +49,7 @@ export default function SnapControlBar({ feedState, dispatch, visible, onFilterI
   );
 
   return (
-    <div className={`snap-control-bar${visible ? "" : " hidden"}`}>
+    <div className={`snap-control-bar${initialLoad ? ' snap-control-bar-initial' : ''}${visible ? '' : ' hidden'}`}>
       <div className="snap-control-bar-row">
         <div className="sort-tabs">
           {SORT_TABS.map((tab) => (

@@ -1587,6 +1587,10 @@ a {
   pointer-events: none;
 }
 
+.snap-control-bar.snap-control-bar-initial {
+  transform: translateY(-100%);
+}
+
 .snap-control-bar-row {
   display: flex;
   align-items: center;
@@ -2169,6 +2173,9 @@ a {
     animation: none;
     opacity: 1;
     transform: none;
+  }
+  .snap-control-bar {
+    transition-duration: 0.01ms;
   }
 }
 
