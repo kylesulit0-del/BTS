@@ -70,7 +70,7 @@ Plans:
 - [x] 10-01-PLAN.md -- Snap feed container with CSS scroll-snap, DOM virtualization, and seamless looping
 - [x] 10-02-PLAN.md -- Adaptive card layouts (image/video/text), metadata, source link, and See More bottom sheet
 - [x] 10-03-PLAN.md -- Video lifecycle (autoplay/pause, single iframe), mute state, and right-swipe gesture
-- [ ] 10-04-PLAN.md -- Gap closure: reconcile SNAP-04 requirement text with DOM_WINDOW_SIZE=5 implementation
+- [x] 10-04-PLAN.md -- Gap closure: reconcile SNAP-04 requirement text with DOM_WINDOW_SIZE=5 implementation
 
 ### Phase 11: Sort and Filter Controls
 **Goal**: Users can control what appears in their feed through a unified bar offering sort modes and source/member/content-type filters
@@ -115,6 +115,6 @@ Phases execute in numeric order: 9 -> 10 -> 11 -> 12
 | 7. LLM Moderation Pipeline | v2.0 | 3/3 | Complete | 2026-03-02 |
 | 8. Smart Blend and Integration | v2.0 | 2/2 | Complete | 2026-03-02 |
 | 9. API Contract and State Foundation | v3.0 | 0/2 | Not started | - |
-| 10. Snap Feed Core | v3.0 | 3/4 | Gap closure | 2026-03-03 |
+| 10. Snap Feed Core | v3.0 | 4/4 | Complete | 2026-03-03 |
 | 11. Sort and Filter Controls | v3.0 | 0/? | Not started | - |
 | 12. Polish and Animations | v3.0 | 0/? | Not started | - |
