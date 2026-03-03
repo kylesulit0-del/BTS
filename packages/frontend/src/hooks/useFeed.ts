@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import type { FeedItem, FeedSource, BiasId } from "../types/feed";
+import type { FeedItem, BiasId } from "../types/feed";
 import { getConfig } from "../config";
 import { fetchFeed } from "../services/feedService";
 import { isApiMode } from "../services/api";
@@ -47,7 +47,7 @@ function matchesBias(item: FeedItem, biases: BiasId[]): boolean {
   });
 }
 
-export function useFeed(filter: FeedSource | "all" = "all", biases: BiasId[] = []) {
+export function useFeed(feedState: { sort: string; source: string; contentType: string }, biases: BiasId[] = []) {
   const [allItems, setAllItems] = useState<FeedItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRetrying, setIsRetrying] = useState(false);
@@ -117,7 +117,8 @@ export function useFeed(filter: FeedSource | "all" = "all", biases: BiasId[] = [
         onItems: (items) => {
           setAllItems(items);
         },
-        source: apiMode && filter !== "all" ? filter : undefined,
+        source: apiMode && feedState.source !== "all" ? feedState.source : undefined,
+        sort: feedState.sort,
       });
 
       setCache(finalItems);
@@ -144,7 +145,7 @@ export function useFeed(filter: FeedSource | "all" = "all", biases: BiasId[] = [
     } finally {
       setIsLoading(false);
     }
-  }, [silentRetry, filter]);
+  }, [silentRetry, feedState.sort, feedState.source]);
 
   useEffect(() => {
     load();
@@ -155,9 +156,9 @@ export function useFeed(filter: FeedSource | "all" = "all", biases: BiasId[] = [
     };
   }, [load]);
 
-  let filtered = filter === "all"
+  let filtered = feedState.source === "all"
     ? allItems
-    : allItems.filter((item) => item.source === filter);
+    : allItems.filter((item) => item.source === feedState.source);
 
   if (biases.length > 0) {
     filtered = filtered.filter((item) => matchesBias(item, biases));

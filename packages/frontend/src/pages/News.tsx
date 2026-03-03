@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { FeedSource, ContentType } from "../types/feed";
+import { useFeedState } from "../hooks/useFeedState";
 import { useFeed } from "../hooks/useFeed";
 import { useBias } from "../hooks/useBias";
 import FeedCard from "../components/FeedCard";
@@ -13,16 +13,15 @@ import { contentTypeKeys, contentTypeLabels, contentTypeBadgeColors } from "../u
 
 export default function News() {
   const config = getConfig();
-  const [filter, setFilter] = useState<FeedSource | "all">("all");
-  const [contentTypeFilter, setContentTypeFilter] = useState<ContentType | "all">("all");
+  const [feedState, dispatch] = useFeedState();
   const [viewMode, setViewMode] = useState<"list" | "swipe">("list");
   const { biases, toggleBias, clearBiases } = useBias();
-  const { items: rawItems, isLoading, isRetrying, error, refresh, hasItems } = useFeed(filter, biases);
+  const { items: rawItems, isLoading, isRetrying, error, refresh, hasItems } = useFeed(feedState, biases);
 
   // Client-side content type filtering
-  const items = contentTypeFilter === "all"
+  const items = feedState.contentType === "all"
     ? rawItems
-    : rawItems.filter((item) => item.contentType === contentTypeFilter);
+    : rawItems.filter((item) => item.contentType === feedState.contentType);
 
   const biasNames = biases
     .map((id) => config.members.find((m) => m.id === id)?.stageName)
@@ -62,22 +61,22 @@ export default function News() {
         </div>
       </div>
 
-      <FeedFilter active={filter} onChange={setFilter} />
+      <FeedFilter active={feedState.source} onChange={(source) => dispatch({ type: "SET_SOURCE", source })} />
 
       <div className="content-type-filter">
         <button
-          className={`content-type-pill${contentTypeFilter === "all" ? " active" : ""}`}
-          onClick={() => setContentTypeFilter("all")}
+          className={`content-type-pill${feedState.contentType === "all" ? " active" : ""}`}
+          onClick={() => dispatch({ type: "SET_CONTENT_TYPE", contentType: "all" })}
         >
           All Types
         </button>
         {contentTypeKeys.map((type) => type && (
           <button
             key={type}
-            className={`content-type-pill${contentTypeFilter === type ? " active" : ""}`}
-            onClick={() => setContentTypeFilter(type)}
+            className={`content-type-pill${feedState.contentType === type ? " active" : ""}`}
+            onClick={() => dispatch({ type: "SET_CONTENT_TYPE", contentType: type })}
             style={
-              contentTypeFilter === type
+              feedState.contentType === type
                 ? { background: `${contentTypeBadgeColors[type]}33`, color: contentTypeBadgeColors[type], borderColor: contentTypeBadgeColors[type] }
                 : undefined
             }
