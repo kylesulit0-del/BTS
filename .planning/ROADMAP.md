@@ -64,12 +64,12 @@ Plans:
   3. Image posts display a large background with text overlay, and text-heavy posts use a reading-focused layout -- card type adapts to content
   4. Long text on any card is collapsed with a "See More" tap target that opens a modal/drawer overlay (not in-place expansion)
   5. User can tap a source link icon on any card to open the original content in a new browser tab
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 10-01: TBD
-- [ ] 10-02: TBD
-- [ ] 10-03: TBD
+- [ ] 10-01-PLAN.md -- Snap feed container with CSS scroll-snap, DOM virtualization, and seamless looping
+- [ ] 10-02-PLAN.md -- Adaptive card layouts (image/video/text), metadata, source link, and See More bottom sheet
+- [ ] 10-03-PLAN.md -- Video lifecycle (autoplay/pause, single iframe), mute state, and right-swipe gesture
 
 ### Phase 11: Sort and Filter Controls
 **Goal**: Users can control what appears in their feed through a unified bar offering sort modes and source/member/content-type filters
@@ -114,6 +114,6 @@ Phases execute in numeric order: 9 -> 10 -> 11 -> 12
 | 7. LLM Moderation Pipeline | v2.0 | 3/3 | Complete | 2026-03-02 |
 | 8. Smart Blend and Integration | v2.0 | 2/2 | Complete | 2026-03-02 |
 | 9. API Contract and State Foundation | v3.0 | 0/2 | Not started | - |
-| 10. Snap Feed Core | v3.0 | 0/? | Not started | - |
+| 10. Snap Feed Core | v3.0 | 0/3 | Not started | - |
 | 11. Sort and Filter Controls | v3.0 | 0/? | Not started | - |
 | 12. Polish and Animations | v3.0 | 0/? | Not started | - |
