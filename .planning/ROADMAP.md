@@ -94,10 +94,11 @@ Plans:
   1. Cards animate in with Motion entrance transitions when snapping into view and animate out when leaving
   2. Each card displays engagement stats (upvotes, comments, views) as a vertical action bar with icons and abbreviated counts
   3. While the feed loads, the user sees a full-viewport skeleton card placeholder instead of a blank screen or spinner
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 12-01: TBD
+- [ ] 12-01-PLAN.md -- Engagement stats bar (SnapStatsBar) and shimmer skeleton loading state (SnapSkeleton)
+- [ ] 12-02-PLAN.md -- Card entrance animations (CSS slide-up + fade-in) and control bar initial slide-down
 
 ## Progress
 
@@ -116,5 +117,5 @@ Phases execute in numeric order: 9 -> 10 -> 11 -> 12
 | 8. Smart Blend and Integration | v2.0 | 2/2 | Complete | 2026-03-02 |
 | 9. API Contract and State Foundation | v3.0 | 0/2 | Not started | - |
 | 10. Snap Feed Core | v3.0 | 4/4 | Complete | 2026-03-03 |
-| 11. Sort and Filter Controls | 2/2 | Complete   | 2026-03-03 | - |
+| 11. Sort and Filter Controls | 2/2 | Complete    | 2026-03-03 | - |
 | 12. Polish and Animations | v3.0 | 0/? | Not started | - |
