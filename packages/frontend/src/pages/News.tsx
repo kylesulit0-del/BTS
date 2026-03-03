@@ -8,6 +8,7 @@ import FeedFilter from "../components/FeedFilter";
 import BiasFilter from "../components/BiasFilter";
 import SwipeFeed from "../components/SwipeFeed";
 import SnapFeed from "../components/snap/SnapFeed";
+import SnapSkeleton from "../components/snap/SnapSkeleton";
 import SnapControlBar from "../components/snap/SnapControlBar";
 import FilterSheet from "../components/snap/FilterSheet";
 import SkeletonCard from "../components/SkeletonCard";
@@ -110,7 +111,11 @@ export default function News() {
             onClick={showBar}
           />
         )}
-        <SnapFeed items={items} onIndexChange={setSnapIndex} pagingDisabled={isFilterOpen} />
+        {isLoading && !hasItems ? (
+          <SnapSkeleton />
+        ) : (
+          <SnapFeed items={items} onIndexChange={setSnapIndex} pagingDisabled={isFilterOpen} />
+        )}
         <FilterSheet
           isOpen={isFilterOpen}
           onClose={() => setIsFilterOpen(false)}
