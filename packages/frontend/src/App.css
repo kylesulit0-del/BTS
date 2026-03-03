@@ -2147,6 +2147,31 @@ a {
   margin-top: 8px;
 }
 
+/* === Snap Card Entrance Animation === */
+@keyframes snap-card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.snap-card-enter {
+  animation: snap-card-enter 250ms cubic-bezier(0.0, 0.0, 0.2, 1) both;
+}
+
+/* Respect prefers-reduced-motion: disable slide animation, keep instant fade */
+@media (prefers-reduced-motion: reduce) {
+  .snap-card-enter {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
 /* === See More Bottom Sheet === */
 .see-more-sheet-backdrop {
   position: fixed;

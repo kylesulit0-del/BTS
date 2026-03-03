@@ -43,7 +43,7 @@ export default function SnapFeed({ items, onIndexChange, pagingDisabled }: SnapF
       >
         {visibleItems.map((vi) => (
           <div
-            className="snap-card"
+            className={`snap-card${vi.position === 0 ? ' snap-card-enter' : ''}`}
             key={`${vi.realIndex}-${vi.position}`}
             style={{ top: `${vi.position * 100}%` }}
           >
