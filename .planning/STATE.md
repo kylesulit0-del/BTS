@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-03-03)
 
 **Core value:** Fans see a rich, diverse stream of content from everywhere with engagement stats that help surface the best content, all without leaving the app.
-**Current focus:** v3.0 Immersive Feed Experience -- Phase 10: Snap Feed Core
+**Current focus:** v3.0 Immersive Feed Experience -- Phase 11: Sort & Filter Controls
 
 ## Current Position
 
-Phase: 10 of 12 (Snap Feed Core) -- COMPLETE
-Plan: 4 of 4 in current phase
-Status: Phase Complete
-Last activity: 2026-03-03 -- Completed 10-04 (gap closure: SNAP-04 requirement alignment)
+Phase: 11 of 12 (Sort & Filter Controls)
+Plan: 1 of 2 in current phase
+Status: In Progress
+Last activity: 2026-03-03 -- Completed 11-01 (control bar + sort tabs + localStorage feed state)
 
-Progress: [██████████████████████████░░░░] 80% (32/40 plans complete; 4/4 in Phase 10)
+Progress: [███████████████████████████░░░] 82% (33/40 plans complete; 1/2 in Phase 11)
 
 ## Performance Metrics
 
@@ -57,6 +57,10 @@ Recent decisions affecting current work:
 - [10-03]: Right-swipe threshold 120px with 1.5x axis lock ratio; left-swipe does nothing
 - [10-03]: Exported sendCommand from useVideoAutoplay for reuse in snap feed context
 - [10-04]: ROADMAP.md already had correct configurable language; only REQUIREMENTS.md SNAP-04 text needed updating
+- [11-01]: localStorage over useSearchParams for feed state persistence (multi-select arrays, no URL clutter)
+- [11-01]: URL param migration on first load: reads ?sort/?source/?type, stores in localStorage, clears via replaceState
+- [11-01]: Control bar uses absolute positioning overlay with blur backdrop, not flex-column layout allocation
+- [11-01]: Content type filtering uses 4-category mapping (video/image/news/discussion) for snap mode
 
 ### Pending Todos
 
@@ -70,5 +74,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-03
-Stopped at: Completed 10-04-PLAN.md (gap closure: SNAP-04 requirement alignment -- Phase 10 fully complete)
-Resume with: /gsd:execute-phase 11 (next phase)
+Stopped at: Completed 11-01-PLAN.md (control bar + sort tabs + localStorage feed state)
+Resume with: /gsd:execute-phase 11 (continue with 11-02)

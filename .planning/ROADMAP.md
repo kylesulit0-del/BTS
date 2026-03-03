@@ -116,5 +116,5 @@ Phases execute in numeric order: 9 -> 10 -> 11 -> 12
 | 8. Smart Blend and Integration | v2.0 | 2/2 | Complete | 2026-03-02 |
 | 9. API Contract and State Foundation | v3.0 | 0/2 | Not started | - |
 | 10. Snap Feed Core | v3.0 | 4/4 | Complete | 2026-03-03 |
-| 11. Sort and Filter Controls | v3.0 | 0/? | Not started | - |
+| 11. Sort and Filter Controls | 1/2 | In Progress|  | - |
 | 12. Polish and Animations | v3.0 | 0/? | Not started | - |
