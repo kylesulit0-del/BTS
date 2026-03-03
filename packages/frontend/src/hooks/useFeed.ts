@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import type { FeedItem, BiasId } from "../types/feed";
+import type { FeedState } from "./useFeedState";
 import { getConfig } from "../config";
 import { fetchFeed } from "../services/feedService";
 import { isApiMode } from "../services/api";
@@ -47,7 +48,18 @@ function matchesBias(item: FeedItem, biases: BiasId[]): boolean {
   });
 }
 
-export function useFeed(feedState: { sort: string; source: string; contentType: string }, biases: BiasId[] = []) {
+/**
+ * Resolves the source filter value for the server-side API call.
+ * When exactly one source is selected, pass it for server-side filtering.
+ * Otherwise fetch all and filter client-side.
+ */
+function getApiSource(feedState: FeedState): string | undefined {
+  if (!isApiMode()) return undefined;
+  if (feedState.sources.length === 1) return feedState.sources[0];
+  return undefined;
+}
+
+export function useFeed(feedState: FeedState, biases: BiasId[] = []) {
   const [allItems, setAllItems] = useState<FeedItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRetrying, setIsRetrying] = useState(false);
@@ -87,6 +99,9 @@ export function useFeed(feedState: { sort: string; source: string; contentType: 
     }, RETRY_DELAYS[attempt]);
   }, []);
 
+  // Derive a stable source string for server-side filtering
+  const apiSource = getApiSource(feedState);
+
   const load = useCallback(async (force = false) => {
     setIsLoading(true);
     setError(null);
@@ -108,16 +123,12 @@ export function useFeed(feedState: { sort: string; source: string; contentType: 
     }
 
     try {
-      // In API mode, pass source for server-side filtering.
-      // In client-side mode, source filtering happens locally after fetch.
-      // Content type and bias filtering always happen locally (post-hook in News.tsx).
-      const apiMode = isApiMode();
       const finalItems = await fetchFeed({
         force,
         onItems: (items) => {
           setAllItems(items);
         },
-        source: apiMode && feedState.source !== "all" ? feedState.source : undefined,
+        source: apiSource,
         sort: feedState.sort,
       });
 
@@ -145,7 +156,7 @@ export function useFeed(feedState: { sort: string; source: string; contentType: 
     } finally {
       setIsLoading(false);
     }
-  }, [silentRetry, feedState.sort, feedState.source]);
+  }, [silentRetry, feedState.sort, apiSource]);
 
   useEffect(() => {
     load();
@@ -156,10 +167,12 @@ export function useFeed(feedState: { sort: string; source: string; contentType: 
     };
   }, [load]);
 
-  let filtered = feedState.source === "all"
+  // Client-side source filtering: empty array = all sources
+  let filtered = feedState.sources.length === 0
     ? allItems
-    : allItems.filter((item) => item.source === feedState.source);
+    : allItems.filter((item) => feedState.sources.includes(item.source));
 
+  // Client-side bias/member filtering
   if (biases.length > 0) {
     filtered = filtered.filter((item) => matchesBias(item, biases));
   }

@@ -1,36 +1,49 @@
-import { useReducer, useEffect, useRef } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useReducer, useEffect } from "react";
 
 export type SortMode = "recommended" | "newest" | "oldest" | "popular" | "discussed";
 
 export interface FeedState {
   sort: SortMode;
-  source: string;
-  contentType: string;
+  sources: string[];       // empty = all (no filter)
+  members: string[];       // empty = all (replaces useBias)
+  contentTypes: string[];  // empty = all
 }
 
 export type FeedAction =
   | { type: "SET_SORT"; sort: SortMode }
-  | { type: "SET_SOURCE"; source: string }
-  | { type: "SET_CONTENT_TYPE"; contentType: string }
+  | { type: "TOGGLE_SOURCE"; source: string }
+  | { type: "TOGGLE_MEMBER"; member: string }
+  | { type: "TOGGLE_CONTENT_TYPE"; contentType: string }
+  | { type: "CLEAR_ALL_FILTERS" }
   | { type: "RESET" };
 
 const VALID_SORTS: SortMode[] = ["recommended", "newest", "oldest", "popular", "discussed"];
 
-const DEFAULT_STATE: FeedState = {
+const STORAGE_KEY = "bts-feed-preferences";
+
+export const DEFAULT_STATE: FeedState = {
   sort: "recommended",
-  source: "all",
-  contentType: "all",
+  sources: [],
+  members: [],
+  contentTypes: [],
 };
+
+function toggleInArray(arr: string[], value: string): string[] {
+  return arr.includes(value) ? arr.filter((v) => v !== value) : [...arr, value];
+}
 
 function feedReducer(state: FeedState, action: FeedAction): FeedState {
   switch (action.type) {
     case "SET_SORT":
       return { ...state, sort: action.sort };
-    case "SET_SOURCE":
-      return { ...state, source: action.source };
-    case "SET_CONTENT_TYPE":
-      return { ...state, contentType: action.contentType };
+    case "TOGGLE_SOURCE":
+      return { ...state, sources: toggleInArray(state.sources, action.source) };
+    case "TOGGLE_MEMBER":
+      return { ...state, members: toggleInArray(state.members, action.member) };
+    case "TOGGLE_CONTENT_TYPE":
+      return { ...state, contentTypes: toggleInArray(state.contentTypes, action.contentType) };
+    case "CLEAR_ALL_FILTERS":
+      return { ...state, sources: [], members: [], contentTypes: [] };
     case "RESET":
       return DEFAULT_STATE;
     default:
@@ -38,40 +51,68 @@ function feedReducer(state: FeedState, action: FeedAction): FeedState {
   }
 }
 
-function parseSortParam(value: string | null): SortMode {
-  if (value && VALID_SORTS.includes(value as SortMode)) {
-    return value as SortMode;
+function loadFeedState(): FeedState {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && VALID_SORTS.includes(parsed.sort)) {
+        return {
+          sort: parsed.sort,
+          sources: Array.isArray(parsed.sources) ? parsed.sources : [],
+          members: Array.isArray(parsed.members) ? parsed.members : [],
+          contentTypes: Array.isArray(parsed.contentTypes) ? parsed.contentTypes : [],
+        };
+      }
+    }
+  } catch {
+    // Corrupted localStorage -- fall through
   }
-  return "recommended";
+
+  // Migrate from URL params if present (smooth transition from PERF-03)
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const sortParam = params.get("sort");
+    const sourceParam = params.get("source");
+    const typeParam = params.get("type");
+
+    if (sortParam || sourceParam || typeParam) {
+      const migrated: FeedState = {
+        sort: sortParam && VALID_SORTS.includes(sortParam as SortMode)
+          ? (sortParam as SortMode)
+          : "recommended",
+        sources: sourceParam && sourceParam !== "all" ? [sourceParam] : [],
+        members: [],
+        contentTypes: typeParam && typeParam !== "all" ? [typeParam] : [],
+      };
+
+      // Clear URL params without navigation
+      window.history.replaceState({}, "", window.location.pathname);
+
+      return migrated;
+    }
+  } catch {
+    // URL parsing failed -- fall through
+  }
+
+  return DEFAULT_STATE;
+}
+
+function saveFeedState(state: FeedState) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch {
+    // localStorage full or unavailable
+  }
 }
 
 export function useFeedState() {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const isInitialMount = useRef(true);
+  const [state, dispatch] = useReducer(feedReducer, undefined, loadFeedState);
 
-  const initialState: FeedState = {
-    sort: parseSortParam(searchParams.get("sort")),
-    source: searchParams.get("source") || "all",
-    contentType: searchParams.get("type") || "all",
-  };
-
-  const [state, dispatch] = useReducer(feedReducer, initialState);
-
-  // Sync state TO URL params
+  // Persist to localStorage on every state change
   useEffect(() => {
-    // Skip the initial mount to avoid unnecessary URL update
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
-      return;
-    }
-
-    const params = new URLSearchParams();
-    if (state.sort !== "recommended") params.set("sort", state.sort);
-    if (state.source !== "all") params.set("source", state.source);
-    if (state.contentType !== "all") params.set("type", state.contentType);
-
-    setSearchParams(params, { replace: true });
-  }, [state.sort, state.source, state.contentType, setSearchParams]);
+    saveFeedState(state);
+  }, [state]);
 
   return [state, dispatch] as const;
 }
