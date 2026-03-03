@@ -54,7 +54,25 @@ Fans see a rich, diverse stream of content from everywhere — official and fan-
 
 ### Active
 
-(None — planning next milestone)
+- [ ] TikTok-style vertical snap feed replacing swipe and list views
+- [ ] Sort options (Recommended, Newest, Oldest, Most Popular, Most Discussed)
+- [ ] Filter by source, member, and content type
+- [ ] Global filter/sort state persisting across scroll
+- [ ] Virtualized rendering (current/prev/next only)
+- [ ] Collapsed long text with "See More" overlay
+- [ ] Videos play inline, separate source link icon
+- [ ] Config feature flag for snap vs list view mode
+- [ ] Styling tokens in config for white-label theming
+
+## Current Milestone: v3.0 Immersive Feed Experience
+
+**Goal:** Replace the existing feed views with an immersive, TikTok-style vertical snap feed with granular sort/filter controls and performant virtualization.
+
+**Target features:**
+- Vertical snap feed (100vh posts, Framer Motion physics)
+- Sort & filter control bar (sort modes, source/member/type filters)
+- Performance optimization (virtualization, lazy loading)
+- Enhanced config-driven theming and feature flags
 
 ### Out of Scope
 
@@ -110,4 +128,4 @@ Fans see a rich, diverse stream of content from everywhere — official and fan-
 | Twitter/X, TikTok, Instagram deferred | Fragile, expensive, high maintenance | ✓ Good — avoided cost sink |
 
 ---
-*Last updated: 2026-03-02 after v2.0 milestone*
+*Last updated: 2026-03-03 after v3.0 milestone start*
