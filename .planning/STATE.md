@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-03-03)
 
 **Core value:** Fans see a rich, diverse stream of content from everywhere with engagement stats that help surface the best content, all without leaving the app.
-**Current focus:** v3.0 Immersive Feed Experience -- Phase 11: Sort & Filter Controls
+**Current focus:** v3.0 Immersive Feed Experience -- Phase 11 complete, ready for Phase 12
 
 ## Current Position
 
-Phase: 11 of 12 (Sort & Filter Controls)
-Plan: 1 of 2 in current phase
-Status: In Progress
-Last activity: 2026-03-03 -- Completed 11-01 (control bar + sort tabs + localStorage feed state)
+Phase: 11 of 12 (Sort & Filter Controls) -- COMPLETE
+Plan: 2 of 2 in current phase (all done)
+Status: Phase Complete
+Last activity: 2026-03-03 -- Completed 11-02 (filter bottom sheet + control bar integration)
 
-Progress: [███████████████████████████░░░] 82% (33/40 plans complete; 1/2 in Phase 11)
+Progress: [████████████████████████████░░] 85% (34/40 plans complete; 2/2 in Phase 11)
 
 ## Performance Metrics
 
@@ -61,6 +61,9 @@ Recent decisions affecting current work:
 - [11-01]: URL param migration on first load: reads ?sort/?source/?type, stores in localStorage, clears via replaceState
 - [11-01]: Control bar uses absolute positioning overlay with blur backdrop, not flex-column layout allocation
 - [11-01]: Content type filtering uses 4-category mapping (video/image/news/discussion) for snap mode
+- [11-02]: Source chips derived from unique source types in config, not individual source entries
+- [11-02]: FilterSheet uses same createPortal pattern as SeeMoreSheet for z-index isolation
+- [11-02]: pagingDisabled prop on SnapFeed prevents gesture conflicts when filter sheet is open
 
 ### Pending Todos
 
@@ -74,5 +77,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-03
-Stopped at: Completed 11-01-PLAN.md (control bar + sort tabs + localStorage feed state)
-Resume with: /gsd:execute-phase 11 (continue with 11-02)
+Stopped at: Completed 11-02-PLAN.md (filter bottom sheet + control bar integration) -- Phase 11 complete
+Resume with: /gsd:execute-phase 12

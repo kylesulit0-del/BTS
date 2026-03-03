@@ -21,9 +21,9 @@ Requirements for the Immersive Feed Experience milestone. Each maps to roadmap p
 
 - [x] **FILT-01**: User can sort the feed by Recommended (default), Newest, Oldest, Most Popular, or Most Discussed
 - [x] **FILT-02**: User sees a unified control bar consolidating source, member, and content type filters
-- [ ] **FILT-03**: User can filter by source (Reddit, YouTube, RSS, Tumblr, Bluesky)
-- [ ] **FILT-04**: User can filter by member (RM, Jin, Suga, j-hope, Jimin, V, Jungkook, OT7)
-- [ ] **FILT-05**: User can filter by content type (Video, Image, News, Discussion)
+- [x] **FILT-03**: User can filter by source (Reddit, YouTube, RSS, Tumblr, Bluesky)
+- [x] **FILT-04**: User can filter by member (RM, Jin, Suga, j-hope, Jimin, V, Jungkook, OT7)
+- [x] **FILT-05**: User can filter by content type (Video, Image, News, Discussion)
 - [x] **FILT-06**: Control bar auto-hides on scroll-down and reappears on scroll-up
 
 ### Performance
@@ -85,9 +85,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SNAP-07 | Phase 10 | Complete |
 | FILT-01 | Phase 11 | Complete |
 | FILT-02 | Phase 11 | Complete |
-| FILT-03 | Phase 11 | Pending |
-| FILT-04 | Phase 11 | Pending |
-| FILT-05 | Phase 11 | Pending |
+| FILT-03 | Phase 11 | Complete |
+| FILT-04 | Phase 11 | Complete |
+| FILT-05 | Phase 11 | Complete |
 | FILT-06 | Phase 11 | Complete |
 | PERF-01 | Phase 10 | Complete |
 | PERF-02 | Phase 9 | Complete |
