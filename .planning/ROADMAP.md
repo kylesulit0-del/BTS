@@ -33,7 +33,7 @@
 **Milestone Goal:** Replace existing feed views with an immersive TikTok-style vertical snap feed with granular sort/filter controls and performant virtualization.
 
 - [ ] **Phase 9: API Contract and State Foundation** - Server-side sort endpoint, feed state hook with URL sync, feature flag routing, theme tokens
-- [x] **Phase 10: Snap Feed Core** - Full-viewport snapping cards with adaptive layouts, 3-item virtualization, video lifecycle management (completed 2026-03-03)
+- [x] **Phase 10: Snap Feed Core** - Full-viewport snapping cards with adaptive layouts, configurable DOM virtualization (default 5), video lifecycle management (completed 2026-03-03)
 - [ ] **Phase 11: Sort and Filter Controls** - Unified control bar with sort modes, source/member/type filters, auto-hide behavior
 - [ ] **Phase 12: Polish and Animations** - Motion entrance/exit transitions, engagement stats action bar, skeleton loading states
 
@@ -55,7 +55,7 @@ Plans:
 - [ ] 09-02-PLAN.md -- URL-synced feed state hook, feedMode config flag, and extended theme tokens
 
 ### Phase 10: Snap Feed Core
-**Goal**: Users experience an immersive full-screen vertical feed where each content piece fills the viewport, videos play inline, and only 3 items exist in the DOM at any time
+**Goal**: Users experience an immersive full-screen vertical feed where each content piece fills the viewport, videos play inline, and only a configurable number of items exist in the DOM at any time (default 5)
 **Depends on**: Phase 9
 **Requirements**: SNAP-01, SNAP-02, SNAP-03, SNAP-04, SNAP-05, SNAP-06, SNAP-07, PERF-01
 **Success Criteria** (what must be TRUE):
@@ -64,12 +64,13 @@ Plans:
   3. Image posts display a large background with text overlay, and text-heavy posts use a reading-focused layout -- card type adapts to content
   4. Long text on any card is collapsed with a "See More" tap target that opens a modal/drawer overlay (not in-place expansion)
   5. User can tap a source link icon on any card to open the original content in a new browser tab
-**Plans**: 3 plans
+**Plans**: 4 plans
 
 Plans:
-- [ ] 10-01-PLAN.md -- Snap feed container with CSS scroll-snap, DOM virtualization, and seamless looping
-- [ ] 10-02-PLAN.md -- Adaptive card layouts (image/video/text), metadata, source link, and See More bottom sheet
-- [ ] 10-03-PLAN.md -- Video lifecycle (autoplay/pause, single iframe), mute state, and right-swipe gesture
+- [x] 10-01-PLAN.md -- Snap feed container with CSS scroll-snap, DOM virtualization, and seamless looping
+- [x] 10-02-PLAN.md -- Adaptive card layouts (image/video/text), metadata, source link, and See More bottom sheet
+- [x] 10-03-PLAN.md -- Video lifecycle (autoplay/pause, single iframe), mute state, and right-swipe gesture
+- [ ] 10-04-PLAN.md -- Gap closure: reconcile SNAP-04 requirement text with DOM_WINDOW_SIZE=5 implementation
 
 ### Phase 11: Sort and Filter Controls
 **Goal**: Users can control what appears in their feed through a unified bar offering sort modes and source/member/content-type filters
@@ -114,6 +115,6 @@ Phases execute in numeric order: 9 -> 10 -> 11 -> 12
 | 7. LLM Moderation Pipeline | v2.0 | 3/3 | Complete | 2026-03-02 |
 | 8. Smart Blend and Integration | v2.0 | 2/2 | Complete | 2026-03-02 |
 | 9. API Contract and State Foundation | v3.0 | 0/2 | Not started | - |
-| 10. Snap Feed Core | 3/3 | Complete   | 2026-03-03 | - |
+| 10. Snap Feed Core | v3.0 | 3/4 | Gap closure | 2026-03-03 |
 | 11. Sort and Filter Controls | v3.0 | 0/? | Not started | - |
 | 12. Polish and Animations | v3.0 | 0/? | Not started | - |
