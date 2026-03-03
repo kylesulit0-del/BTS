@@ -1,232 +1,203 @@
 # Project Research Summary
 
-**Project:** BTS Army Feed v2.0 — Backend Scraping Engine
-**Domain:** Server-side content aggregation, LLM moderation pipeline, REST API, smart blend ranking
-**Researched:** 2026-03-01
+**Project:** BTS Army Feed v3.0 — Immersive Feed Experience
+**Domain:** TikTok-style vertical snap feed with sort/filter controls, content virtualization, and config-driven theming
+**Researched:** 2026-03-03
 **Confidence:** HIGH
 
 ## Executive Summary
 
-BTS Army Feed v2.0 is a content aggregation backend that replaces the existing client-side fetching architecture with a server-side scraping engine. The pattern is well-established: a scheduled scraper pipeline writes to a persistent database, an LLM moderation layer filters and classifies content, a smart blend ranking engine orders the feed, and a REST API serves the result to the existing React SPA. The v1.0 client-side approach (CORS proxies, browser-side fetching) is the baseline that must remain functional as a fallback throughout the migration; the v2.0 backend proves its value by delivering better, more reliably curated content than the client can fetch directly.
+This milestone converts the existing BTS fan content aggregation PWA from a list/swipe view into a full-screen vertical snap feed — the same interaction model used by TikTok, YouTube Shorts, and Instagram Reels, but applied to mixed content types (video, image, text, news) and extended with explicit sort/filter controls. The research is anchored to the actual codebase: the existing `SwipeFeed.tsx` already uses IntersectionObserver + CSS scroll-snap + video autoplay patterns that directly transfer to the new architecture. The core recommendation is CSS `scroll-snap-type: y mandatory` for scroll physics (native, 60fps, compositor-threaded), `motion` for card entry/exit animations, `useReducer` + `useSearchParams` for filter/sort state with URL sync, and a hand-rolled 3-item DOM window for virtualization instead of TanStack Virtual (which has a documented incompatibility with CSS scroll-snap).
 
-The recommended approach is a npm workspaces monorepo with three packages: `@bts/shared` (TypeScript types shared between frontend and server), `@bts/frontend` (the existing React SPA, moved), and `@bts/server` (the new backend). The server stack is Fastify + Drizzle ORM + SQLite (better-sqlite3) + Cheerio/Playwright for scraping + Vercel AI SDK for provider-agnostic LLM calls + node-cron for scheduling. This stack is lean, TypeScript-native, and avoids infrastructure dependencies (no Redis, no PostgreSQL, no separate queue server) that add operational burden for a single-server deployment.
+The recommended implementation order is: define the API contract and shared types first, then build the snap feed container and card components, then layer in sort/filter controls, then add polish (animations, auto-hide, haptics). This order matters because the sort API endpoint must exist before the sort UI can be correctly tested — client-side sorting on paginated data produces wrong results and should never be used as a placeholder. The feature flag (`feedMode: 'snap' | 'list'`) should be implemented in Phase 1 as insurance; the old `SwipeFeed.tsx` should not be deleted until the snap feed is verified on physical iOS and Android devices.
 
-The primary risks are platform-specific: Twitter/X data access is expensive or fragile, Instagram scraping is a legal and technical minefield, and TikTok anti-bot measures are best-in-class. All three should be either descoped or addressed via paid third-party services — not custom scrapers. LLM moderation costs can spiral without pre-filtering and batching, and engagement normalization across sources with wildly different engagement scales (YouTube views vs. Reddit upvotes) requires percentile-based normalization rather than naive linear scaling. The monorepo ESM/CJS module boundary must be resolved in Phase 1 before any scraper code is written, or it will cause cascading problems in every subsequent phase.
+The two highest-risk areas are: (1) iframe lifecycle management during virtualization — each TikTok embed costs ~15MB of bandwidth and must never auto-mount, YouTube embeds should exist in the adjacent slot only as thumbnails, and at most ONE iframe should be in the DOM at any time; (2) the Framer Motion + CSS scroll-snap rendering conflict, which produces cross-browser flickering if Motion is used for the scroll container itself. Motion must be limited to content animations within cards, not the scroll physics layer.
 
 ## Key Findings
 
 ### Recommended Stack
 
-The backend is built entirely in TypeScript on Node.js 20. **Fastify v5** handles the REST API (3x faster than Express, first-class TypeScript support, built-in JSON schema validation). **Drizzle ORM + better-sqlite3** provides the data layer: SQLite is the right database for this use case — single-file, zero ops, synchronous API that is faster than async Postgres drivers for single-process workloads, and Drizzle makes a future migration to PostgreSQL a schema-level change rather than a rewrite. **Cheerio** handles static HTML parsing; **Playwright** is held in reserve for JS-rendered sources that require a browser. The **Vercel AI SDK** (`ai` package) provides a single unified API for Claude, OpenAI, and other providers — this directly fulfills the requirement for a configurable LLM provider without building a custom abstraction. **node-cron** handles scheduling; no Redis-backed queue is needed for a single-server app scraping a fixed source list every 15-30 minutes.
+The existing stack (React 19, Vite 7, TypeScript, Fastify, SQLite/Drizzle, PWA) requires only two new frontend dependencies: `motion@^12.34.3` (the renamed successor to `framer-motion`, same API, React 19 confirmed) and `zustand@^5.0.11` (1.16KB, selector-based subscriptions prevent re-render cascades). No virtualization library is needed — TanStack Virtual and react-window both conflict with CSS scroll-snap. No theming library is needed — CSS custom properties already in use via `applyTheme.ts`, extended with a new `tokens` object in `ThemeConfig`. No additional state library beyond React's built-in `useReducer` is needed for the primary state management approach.
 
 **Core technologies:**
-- **Fastify v5**: REST API — TypeScript-native, schema validation built-in, 3x Express throughput
-- **Drizzle ORM v0.45 + better-sqlite3 v12**: Database — SQL-first ORM, zero dependencies, synchronous driver ideal for single-process workloads
-- **Cheerio v1.2**: HTML parsing — lightweight, jQuery-like API for static pages; no browser overhead
-- **Playwright v1.52**: Headless browser — fallback only for JS-rendered sources; ~800MB RAM per instance, use sparingly
-- **Vercel AI SDK v6 + @ai-sdk/anthropic + @ai-sdk/openai**: LLM integration — single `generateObject()` API across providers, structured output via Zod schemas
-- **node-cron v4**: Scheduling — in-process cron, zero infrastructure; no Redis needed
-- **Zod v4**: Validation — LLM output structure, API request params, scraped data normalization
-- **tsx v4**: TypeScript runner for development — esbuild-powered, ESM-native, avoids ts-node ESM issues
-- **npm workspaces**: Monorepo — zero-config, built into npm; two packages do not justify Turborepo
+- `CSS scroll-snap-type: y mandatory` — snap scroll physics, native compositor-threaded, zero JS — browsers do this better than any library
+- `motion@^12.34.3` — card entry/exit animations, `AnimatePresence`, `useScroll` for progress indicator — NOT for scroll physics
+- `useReducer` + `useSearchParams` in `useFeedState` hook — global filter/sort state with URL sync, no external library needed for page-local state
+- Manual 3-item DOM window with IntersectionObserver — virtualization without library conflict, proven pattern already in `SwipeFeed.tsx`
+- `100svh` (small viewport height) — stable mobile height unit, no layout jumps when address bar animates; `100dvh` causes snap jitter on iOS
+
+**What NOT to add:** TanStack Virtual (scroll-snap conflict documented in GitHub issue #478), react-window (unmaintained + conflict), framer-motion (use `motion` instead), styled-components, Redux, @tanstack/react-query for UI state, React Context for filter state (re-renders all consumers).
 
 ### Expected Features
 
-**Must have (table stakes) — v2.0 core:**
-- Scraping engine framework with abstract `BaseScraper` interface, error handling, rate limiting
-- SQLite database with `content_items`, `scrape_runs`, `moderation_log` tables
-- Reddit scraper (JSON endpoints, no CORS proxy required server-side)
-- YouTube scraper (RSS/Atom feeds + optional Data API for view counts)
-- RSS/news scrapers (Soompi, AllKPop, Koreaboo, HELLOKPOP)
-- Tumblr scraper (RSS feeds for configured blogs)
-- Scheduled scraping via node-cron (15-30 min intervals, staggered per source)
-- URL-based deduplication (UNIQUE constraint on `source + external_id`)
-- REST API (`GET /api/feed`, `GET /api/feed/stats`, `GET /api/config`)
-- Config-driven group targeting (all scrape targets in `GroupConfig`, no hardcoded BTS references)
-- LLM provider abstraction (mock, Claude, OpenAI via AI SDK)
-- LLM relevance filtering for `needsFilter: true` sources
-- Basic ranking (recency + raw engagement — parity with v1.0)
-- Frontend feature flag (`VITE_API_URL`) for dual-mode `useFeed` hook
+The feed must deliver the TikTok/Shorts interaction model while adding user controls that no major short-form platform provides. All major filter/sort capabilities are largely already implemented in the current codebase — the work is architectural reorganization plus new presentation.
 
-**Should have (differentiators) — v2.x after core validates:**
-- LLM content moderation + content type classification (combined into single relevance call for cost efficiency)
-- Cross-source engagement normalization (percentile-based, 7-day rolling window per source)
-- Smart blend ranking (recency + normalized engagement + source diversity + content type variety)
-- Bluesky scraper (AT Protocol public API, no auth for reads, easiest new social source)
-- Expanded K-pop news sources (KpopStarz, Seoulbeats, Asian Junkie)
-- Fan translation account prioritization (`priority_boost` in config)
-- Full frontend migration to API-only mode
+**Must have (v3.0 core — table stakes):**
+- Full-viewport vertical snap scrolling — core TikTok/Shorts pattern, missing this breaks the immersive contract
+- Current item detection via IntersectionObserver — foundation for video autoplay, virtualization, position tracking
+- Adaptive card layouts (3 variants: video, image, text) — content types differ too much for a single layout
+- Unified sort/filter control bar — replaces the current 3-row stacked filter UI
+- Sort options: Recommended, Newest, Most Popular, Most Discussed — all require server-side sort API endpoint
+- 3-item virtualized DOM window — prevents iframe memory explosion on mobile
+- Collapsed text with "See More" modal — mandatory snap requires content bounded to card height
+- Engagement stats overlay — right-side vertical bar matching platform conventions
+- Loading/empty states — full-viewport skeleton and filtered-empty feedback
 
-**Defer (v3+):**
-- Twitter/X scraper (requires $25-50/month third-party API or intensive ongoing maintenance)
-- TikTok scraper (best-in-class anti-bot; oEmbed + cross-platform URL discovery is the pragmatic path)
-- Instagram scraper (biweekly `doc_id` rotation, datacenter IP blocking, legal gray zone)
-- Near-duplicate semantic detection (SimHash/MinHash)
-- Full-text search (SQLite FTS5 available if demand validated)
+**Should have (v3.x — polish, add after core works):**
+- `motion` card entrance/exit animations — polish layer on top of working snap feed
+- Auto-hide control bar on scroll-down — maximize immersive space
+- Config feature flag (`feedMode: 'snap' | 'list'`) — white-label flexibility
+- Haptic feedback on snap (`navigator.vibrate(10)`) — Android-only, negligible code
+- Global filter/sort state persistence to localStorage
+- Web Share API on each card
+
+**Defer (v4+):**
+- Extended theming tokens (full semantic + component token system)
+- Gesture-based quick filters (long-press)
+- Content preview expansion to detail view
+- Preload optimization for next 3 thumbnail images
+
+**Anti-features to avoid:** Framer Motion drag navigation (conflicts with native scroll), infinite scroll auto-fetch (wrong model for snap), pull-to-refresh (conflicts with overscroll), horizontal swipe actions (conflicts with browser back/forward), dark/light mode toggle (doubles CSS surface area, app is dark-first).
 
 ### Architecture Approach
 
-The system is a monorepo with clear package boundaries: shared types, the existing frontend (minimally modified), and a new server package. The server follows a three-stage content pipeline: scrapers write items with status `raw`, a background moderation job processes them to `approved` or `rejected`, and the API serves only `approved` items. This decoupling means the API never waits for scraping or LLM responses. The scraper engine uses a plugin architecture — each source type extends `BaseScraper` and implements `scrape() -> ScrapedItem[]`; a registry maps `SourceEntry.type` to the concrete class. The LLM layer uses an adapter pattern (`LLMProvider` interface with Claude, OpenAI, and mock implementations) so swapping providers is an environment variable change. Smart blend scoring runs at query time, not at ingest time, so the blend adapts as new content arrives without pre-computation staleness.
+The existing `News.tsx` page owns all state and renders either SwipeFeed or a card list. The v3.0 architecture lifts filter/sort state into a `useFeedState` hook (`useReducer` + `useSearchParams` for URL sync), introduces a new `SnapFeed` component tree, and absorbs the separate `FeedFilter` and `BiasFilter` components into a unified `FeedControlBar`. The FeedControlBar sits as a sibling ABOVE the SnapFeed — not inside the scroll container — so it stays visible during scrolling. The existing `useFeed` hook gains a `loadMore`/`hasMore` interface and accepts the full `FeedState` object.
 
-**Major components:**
-1. **Scraper Engine** — per-source plugin classes extending `BaseScraper`; direct server-side HTTP with no CORS constraints
-2. **SQLite Database** — single `content_items` table with all sources normalized to the same row shape; `scrape_runs` for operational visibility; `moderation_log` for LLM cost tracking
-3. **Moderation Pipeline** — three-stage state machine (`raw -> pending -> approved/rejected`); batch processing (10-20 items per LLM call); auto-approve fallback if LLM unavailable
-4. **Smart Blend Engine** — query-time scoring: recency (0.35), normalized engagement (0.30), source diversity (0.20), content type variety (0.15)
-5. **REST API (Fastify)** — cursor-based pagination; `GET /api/feed` with source/member/sort filters; JSON schema validation on all routes
-6. **Scheduler (node-cron)** — staggered source scraping across 15-30 min window; separate 5-minute moderation cycle; hourly engagement refresh for recent items
-7. **Shared Types Package (`@bts/shared`)** — `FeedItem`, `SourceEntry`, `GroupConfig`, API request/response types shared by both packages via npm workspace
+**Build order (dependency-aware):**
+1. Shared types (`SortMode`, `FeedQuery`) + server sort endpoint — API contract must exist before sort UI
+2. `useFeedState` hook + modified `useFeed` — state foundation before components
+3. `SnapSlide`, `CardMedia`, `CardOverlay`, `CardActions`, `SnapCard` — leaf-to-root build order
+4. `SnapFeed` — assembles components, owns virtualization and IntersectionObserver
+5. `SortSelector`, `FeedControlBar` — controls layer
+6. `FeedPage` rewrite — wires everything together
+7. Polish: CSS, VideoEmbed `isActive` prop, feature flags, theme tokens, Motion animations
+
+**Major components (8 new, 4 modified, 2 deprecated):**
+1. `SnapFeed` — scroll-snap container, 3-item virtualization, IO-based index tracking
+2. `SnapSlide` — 100svh slide wrapper with snap alignment
+3. `SnapCard` — full-screen card layout (media ~60%, overlay ~40%)
+4. `CardMedia` — video/image/placeholder rendering, iframe lifecycle control
+5. `CardOverlay` — gradient overlay with source badge, title, truncated text, stats
+6. `CardActions` — source link icon, share button
+7. `FeedControlBar` — collapsible sort/filter bar, sibling above SnapFeed
+8. `useFeedState` — useReducer + useSearchParams, replaces scattered useState in News.tsx
+
+**Deprecated:** `SwipeFeed.tsx` (replaced by SnapFeed), inline content type pills in News.tsx (absorbed into FeedControlBar). Do not delete until snap feed is device-verified.
 
 ### Critical Pitfalls
 
-1. **Instagram/Twitter/TikTok scraping is a losing battle** — Do not build custom scrapers for these platforms. Instagram has biweekly `doc_id` rotation and datacenter IP blocking; Twitter/X requires $100-5,000/month official API or fragile session scraping; TikTok has device integrity checks, TLS fingerprinting, and behavioral analysis. Descope all three for v2.0 or budget for paid third-party scraping APIs. The TikTok oEmbed endpoint is an acceptable middle path for metadata enrichment of URLs discovered on other platforms.
+1. **Framer Motion + CSS scroll-snap = cross-browser flickering** — Use CSS scroll-snap for scroll physics ONLY. Use Motion only for card content animations (entry, exit, overlays), never on the scroll container. Confirmed in Framer Motion GitHub issues #2315 and #342. Test on Chrome AND iOS Safari before committing to any approach. (Phase 1)
 
-2. **LLM moderation costs explode without guardrails** — At naive implementation (one item per LLM call, no pre-filtering), costs reach $50-150/month for a fan app. Required mitigations before going live: pre-filter with keyword matching before sending to LLM (reduces calls 60-80%); batch 10-20 items per call; use cheapest adequate model (Claude Haiku, GPT-4o-mini); enable Anthropic prompt caching (0.1x cost on cached system prompts); set hard provider spending limits.
+2. **100vh on mobile includes hidden browser chrome** — Use `height: 100svh` (small viewport height) with `100vh` fallback. Never `100dvh` for snap cards — it resizes during address bar animation and causes snap jitter on iOS. `100dvh` has a 2025 regression on iOS Safari (Apple Developer Forums). (Phase 1)
 
-3. **Per-source database schema is an anti-pattern** — Creating separate `reddit_posts`, `youtube_videos` tables makes the unified feed query a UNION nightmare and requires a migration for every new source. Use a single `content_items` table with nullable engagement columns and a JSON `raw` column for source-specific metadata. All sources normalize to the same row shape. This schema decision must be locked before the first scraper writes data.
+3. **Iframe destroy/recreate on virtualization causes bandwidth explosion** — At most ONE iframe in the DOM at any time. TikTok embeds NEVER auto-mount — tap-to-load facade only (~15MB per auto-load). YouTube adjacent slot shows thumbnail, not iframe. Extend `VideoEmbed.tsx` with a `thumbnailOnly` mode. (Phase 2)
 
-4. **Monorepo ESM/CJS module conflicts must be resolved first** — The frontend is Vite/ESM; Node.js historically defaults to CJS. Go ESM-only everywhere (`"type": "module"` in all package.json files), share only TypeScript interfaces (no enums, no runtime values), and validate that a single shared type import works in both packages before writing any scraper or API code. If this takes more than one day, the configuration is wrong.
+4. **Sort must be server-side, not client-side** — Sorting 20 paginated recommended items client-side produces wrong results (subset != full dataset). The sort API endpoint (`?sort=newest|popular|discussed`) must be built before shipping sort UI. Cache per sort mode with sort-specific localStorage keys. (Phase 1 API contract)
 
-5. **Frontend-backend transition must be explicitly managed** — Remove nothing from the working v1.0 client-side pipeline until the API serves equivalent data. Define the API contract as shared TypeScript types first. Use `VITE_API_URL` environment variable as the feature flag for dual-mode `useFeed`. Migrate sources incrementally (Reddit first, then YouTube, then the rest) rather than all at once.
+5. **Scroll position lost on filter change** — Store current item ID (not array index) in state. On filter apply, find the saved item in the filtered array and scroll to it. "See More" must open a modal/drawer overlay, NOT expand content in-place (in-place expansion changes card height, breaking mandatory snap). (Phase 1 design)
+
+6. **Removing old views without rollback** — Implement `feedMode` feature flag FIRST. Build SnapFeed as a NEW component alongside SwipeFeed. Only delete SwipeFeed after snap feed is verified on physical devices. (Phase 1)
 
 ## Implications for Roadmap
 
-Based on the dependency graph from FEATURES.md and the build order from ARCHITECTURE.md, five phases make sense. The dependency chain is strict: monorepo and database must exist before any scraper runs; scrapers must run before there is content to moderate; moderation must produce `approved` content before smart blend ranking has anything to rank; all of this must exist before the frontend switches from client-side fetching to the REST API.
+Based on research, suggested phase structure:
 
-### Phase 1: Foundation — Monorepo, Database, and First Scraper
+### Phase 1: Foundation, API Contract, and Feature Flag
 
-**Rationale:** Everything depends on this. The ESM/CJS module conflict (Pitfall 4) must be resolved before writing any cross-package code. The single `content_items` table schema (Pitfall 3) must be designed before any scraper writes data. The feature flag for dual-mode `useFeed` (Pitfall 5) must exist before any frontend changes. This phase proves the end-to-end pipeline works with one source before expanding to many.
+**Rationale:** Everything downstream depends on the API sort contract and shared type definitions. State management architecture must be decided before any UI is built. Feature flags enable safe parallel development and preserve rollback. Card layout constraints (max heights, "See More" as modal) must be designed before component build begins. Sort API endpoint must exist before sort UI can be correctly tested.
+**Delivers:** Shared types, server sort endpoint, `useFeedState` hook, updated `useFeed` with loadMore/hasMore, `feedMode` feature flag routing, and card dimension constraint decisions
+**Addresses:** Sort options (API contract), filter state management, feature flag for snap vs list mode
+**Avoids:** Client-side sort mistake (Pitfall 9 in PITFALLS.md), scroll position loss (Pitfall 4), no rollback path (Pitfall 7), Context re-render cascade (Pitfall 5)
+**Includes:**
+- `SortMode` type in shared package, `sort` query param on `GET /api/feed` with 5 sort strategies
+- `useFeedState` hook (useReducer + useSearchParams, URL-synced)
+- `useFeed` updated to accept FeedState + loadMore/hasMore + sort-keyed localStorage cache
+- `feedMode` config feature flag in GroupConfig
+- Card dimension rules stubbed in CSS (100svh, content height caps per content type)
 
-**Delivers:** Working monorepo (`@bts/shared`, `@bts/frontend`, `@bts/server`), Drizzle schema with migrations tooling, Reddit scraper running on node-cron, minimal `GET /api/feed` endpoint returning approved content, frontend `useFeed` with `VITE_API_URL` feature flag preserving v1.0 fallback.
+### Phase 2: Snap Feed Core
 
-**Addresses:** Scraping engine framework, SQLite database, Reddit scraper, scheduled scraping, URL deduplication, REST API foundation, config-driven group targeting, frontend transition strategy.
+**Rationale:** The snap feed container and card components are the core deliverable. Build leaf-to-root (CardMedia before SnapCard before SnapFeed) to isolate dependencies. The virtualization strategy (3-item window with iframe lifecycle) is the technical centerpiece and needs full attention before adding controls on top. CSS scroll-snap and IntersectionObserver patterns transfer directly from existing `SwipeFeed.tsx`.
+**Delivers:** Functional snap feed replacing SwipeFeed — full-viewport snapping, adaptive card layouts (video/image/text variants), 3-item virtualization, video autoplay integration, TikTok tap-to-load facade, loading/empty states
+**Uses:** CSS scroll-snap, `100svh`, IntersectionObserver (existing pattern from SwipeFeed.tsx), modified VideoEmbed with `isActive` + `thumbnailOnly` props
+**Implements:** SnapFeed, SnapSlide, SnapCard, CardMedia, CardOverlay, CardActions
+**Avoids:** Framer Motion + scroll-snap conflict (Pitfall 1), 100vh mobile issue (Pitfall 2), iframe remount bandwidth explosion (Pitfall 3), TikTok embed catastrophe (Pitfall 8), mixed content heights breaking mandatory snap (Pitfall 6)
 
-**Avoids:** ESM/CJS module hell (resolve before any cross-package imports), per-source schema anti-pattern (design the schema once before any data exists), frontend-backend transition gap (feature flag from day one).
+### Phase 3: Sort and Filter Controls
 
-**Research flag:** Monorepo TypeScript project references + Vite proxy configuration may need a focused spike. The pattern is well-documented but ESM interop has known sharp edges specific to the Vite/Node combination.
+**Rationale:** Controls depend on the snap feed being stable. The FeedControlBar sits above SnapFeed and dispatches to `useFeedState` — it can only be built after the state hook and snap feed container exist. Sort UI can now be correctly built since the API endpoint exists from Phase 1.
+**Delivers:** Unified FeedControlBar replacing FeedFilter + BiasFilter + inline content type pills — sort picker, source/member/content type filter chips, collapsed/expanded states, active filter count badge, scroll position preservation on filter change
+**Implements:** FeedControlBar, SortSelector, FilterChips (absorbs FeedFilter and BiasFilter)
+**Avoids:** Sort results being misleading (API contract complete from Phase 1), scroll position reset on filter change (position restoration designed in Phase 1)
 
-### Phase 2: Scraper Expansion and Production Validation
+### Phase 4: Polish and Config Extensions
 
-**Rationale:** Source coverage must be validated from production infrastructure before the LLM pipeline is built on top of it. Scrapers that work locally but fail from datacenter IPs (Pitfall 9 in PITFALLS.md) would corrupt the moderation pipeline's input. Reddit OAuth and proper rate limiting belong here, not deferred — the unauthenticated `.json` approach should not go to production.
-
-**Delivers:** Full scraper suite (YouTube RSS/Atom, RSS/news for 4+ sources, Tumblr, Bluesky), Reddit OAuth for authenticated API access (60 req/min vs 10 unauth), per-source health monitoring via `scrape_runs` table, engagement data collection, staggered scheduling across all sources.
-
-**Addresses:** YouTube scraper, RSS/news scrapers (Soompi, AllKPop, Koreaboo, HELLOKPOP), Tumblr scraper, Bluesky scraper (AT Protocol, zero auth), engagement data collection, content age windowing (30-day cleanup cron).
-
-**Avoids:** Scraper production failure theater (test from production infrastructure before full pipeline exists), Reddit rate limiting (OAuth + token bucket rate limiter from day one), silent source failures (health monitoring built alongside each scraper, not after).
-
-**Note on high-maintenance sources:** Twitter/X, TikTok, and Instagram require explicit go/no-go decisions before Phase 2 scoping. Default recommendation: descope all three for v2.0. If any are reinstated, budget for paid third-party APIs only — no custom scrapers.
-
-**Research flag:** No additional research needed. All sources in this phase are Tier 1 (RSS/JSON/AT Protocol) with well-documented stable endpoints and no anti-bot measures.
-
-### Phase 3: LLM Moderation Pipeline
-
-**Rationale:** Content must exist in the database before moderation can be designed or calibrated. The moderation prompt needs real examples from the actual source mix to tune false positive/negative rates. Building moderation before having real data means tuning in the dark. This phase is also where the three-stage pipeline (`raw -> pending -> approved`) becomes the live gate for the API.
-
-**Delivers:** Provider-agnostic `LLMProvider` adapter interface with Claude, OpenAI, and mock implementations; three-stage pipeline (`raw -> pending -> approved/rejected`); relevance filtering for `needsFilter: true` sources; content type classification; combined relevance + safety + classification in a single LLM call; batch processing (10-20 items per call); auto-approve fallback with configurable timeout; moderation cost tracking in `moderation_log` (provider, model, tokens, cost).
-
-**Addresses:** LLM provider abstraction, LLM relevance filtering, LLM content moderation, content type classification (enables smart blend diversity in Phase 4).
-
-**Avoids:** LLM cost explosion — pre-filter with keyword matching before any LLM call, batch API enabled, cheapest adequate model selected (Haiku/GPT-4o-mini), Anthropic prompt caching for system prompt, hard spending limits set on API keys.
-
-**Research flag:** Needs research-phase during planning. The moderation prompt design (policy-as-prompt approach for BTS content), false positive calibration strategy, Anthropic batch API mechanics vs. synchronous batching, and combined relevance + safety + classification in a single structured call all warrant a focused research session before implementation begins.
-
-### Phase 4: Smart Blend Ranking and API Polish
-
-**Rationale:** The blend engine needs 7+ days of engagement data in the database to compute meaningful percentile-based normalization. It also requires content type classification tags from Phase 3. Both dependencies are satisfied only after Phase 3 completes and data accumulates. This phase completes the core v2.0 value proposition: a feed that is meaningfully better than chronological or raw-engagement ordering.
-
-**Delivers:** Percentile-based cross-source engagement normalization (7-day rolling window per source), multi-signal smart blend scoring (recency 0.35 + normalized engagement 0.30 + source diversity 0.20 + content type variety 0.15), cursor-based pagination (keyset pagination, O(1) vs offset's O(n)), source/member filtering in API, in-memory response caching (5-minute TTL), feed stats endpoint, fan translation account `priority_boost`.
-
-**Addresses:** Cross-source engagement normalization, smart blend ranking engine, source diversity enforcement (max 30% of feed from any single source), fan translation prioritization, engagement velocity tracking.
-
-**Avoids:** YouTube dominating the feed due to raw view count magnitude (source diversity cap enforced), naive linear normalization producing garbage rankings (percentile-based approach with per-source distribution baselines).
-
-**Research flag:** Standard algorithmic patterns. No research-phase needed. Bootstrap with hardcoded scale factors based on platform engagement benchmarks (TikTok ~3.7%, Instagram ~0.48%, Reddit variable) until 7+ days of real data exists for percentile calculation.
-
-### Phase 5: Frontend Migration and Production Readiness
-
-**Rationale:** The frontend switches from client-side fetching to API consumption only after the backend demonstrably delivers better content than the client fetches directly. This is the proof of value. Production hardening belongs at the end when the system is stable and the migration risk is low.
-
-**Delivers:** Frontend fully on API mode (client-side fallback retained for resilience), Fastify serving the built React SPA as static files in production, health check endpoint (`GET /health`), graceful shutdown (drain scheduler, close SQLite connection), `.env.example` documenting all required environment variables, expanded K-pop news sources added to config, deployment documentation.
-
-**Addresses:** Frontend API migration, expanded K-pop news sources (KpopStarz, Seoulbeats, Asian Junkie), production deployment, operational monitoring.
-
-**Avoids:** Big-bang migration (retain dual-mode `useFeed` with feature flag until API is fully validated in production under real traffic).
-
-**Research flag:** No additional research needed. Standard Node.js deployment and static file serving patterns.
+**Rationale:** Animation polish, auto-hide control bar, haptics, and theming tokens are non-critical enhancements that can only be added after a working, stable snap feed exists. Motion animations should never be added to an unstable feed — the cross-browser testing burden is significant. Accessibility can be layered on but the foundational ARIA structure should be completed here.
+**Delivers:** Card entrance/exit animations with Motion AnimatePresence, auto-hide control bar on scroll, haptic feedback (Android), extended ThemeConfig tokens applied via applyTheme.ts, global state persistence to localStorage, Web Share API, ARIA attributes (`role="feed"`, `role="article"`, `aria-posinset`), keyboard navigation (arrow keys between cards)
+**Uses:** `motion@^12.34.3` — installed here, not in Phase 2, to keep Phase 2 focused on native CSS patterns
+**Avoids:** ARIA/keyboard accessibility gaps (Pitfall 10), adding Motion before snap feed is stable
 
 ### Phase Ordering Rationale
 
-- **Foundation before scrapers:** ESM/CJS interop, schema design, and the frontend feature flag must exist before any cross-package code runs. Getting the schema wrong means rewriting every downstream query.
-- **Scrapers before moderation:** The LLM moderation prompt cannot be calibrated without real scraped content. The mock provider in Phase 1 is a placeholder; Phase 3 builds the real pipeline on real data.
-- **Real data before normalization:** Percentile-based engagement normalization requires a 7-day baseline of actual engagement values per source. Phase 4 is blocked on elapsed time, not just code completion.
-- **API proven before full migration:** The client-side v1.0 pipeline remains functional throughout. Phase 5 flips the switch only when the backend demonstrably delivers better results.
-- **Bluesky in Phase 2 (not later):** The AT Protocol public API requires no auth, no proxies, and no anti-bot evasion. It is the easiest new social source to add, and adding it in Phase 2 expands source diversity for the moderation calibration in Phase 3.
+- API contract before UI is non-negotiable — sort UI without server-side sort produces wrong results that users notice
+- Feature flag before snap feed enables safe shipping — old views remain functional fallbacks during development
+- Leaf-to-root component build order (CardMedia -> CardOverlay -> SnapCard -> SnapFeed) isolates dependencies and makes each component independently testable
+- Motion dependency deferred to Phase 4 — adding it in Phase 2 risks the scroll-snap + Motion conflict derailing the core snap feed work
+- State management hook built in Phase 1 before any components — prevents state shape rework mid-build
 
 ### Research Flags
 
-Needs research-phase during planning:
-- **Phase 3 (LLM Moderation Pipeline):** Moderation prompt design for BTS content (policy-as-prompt patterns), Anthropic batch API mechanics and discount structure, false positive calibration approach, combining relevance + safety + content type classification in a single `generateObject()` call with Zod schema.
+Phases likely needing deeper research during planning:
+- **Phase 2 (iframe lifecycle + virtualization):** The interaction between IntersectionObserver thresholds and CSS scroll-snap settle timing is the highest-complexity part of this milestone. The existing `useVideoAutoplay.ts` pattern is a starting point, but adding the virtualization window creates new failure modes (IO fires during snap animation, element enters/exits/re-enters as snap settles). Recommend a focused spike on the IntersectionObserver debounce pattern before full implementation.
+- **Phase 2 (TikTok facade):** The tap-to-load facade for TikTok needs a confirmed approach — verify that server-side oEmbed data includes a usable static thumbnail before committing to the facade pattern.
 
 Phases with standard patterns (skip research-phase):
-- **Phase 1:** npm workspaces + TypeScript project references are well-documented. Known ESM sharp edges are catalogued in PITFALLS.md.
-- **Phase 2:** RSS/JSON/AT Protocol scraping are standard HTTP patterns. Reddit OAuth and Bluesky public API are fully documented.
-- **Phase 4:** Blend scoring is custom logic with no external dependencies. Percentile normalization is standard statistics with a known bootstrap approach.
-- **Phase 5:** Node.js deployment, static file serving, graceful shutdown — established patterns.
+- **Phase 1 (API contract):** Adding a `sort` query param to an existing Drizzle ORM query is a well-understood pattern. No research needed.
+- **Phase 1 (useFeedState hook):** `useReducer` + `useSearchParams` is a standard React pattern with abundant documentation.
+- **Phase 3 (FeedControlBar):** Filter/sort UI with horizontal scrollable chips is a mature mobile UX pattern. Well-documented.
+- **Phase 4 (Motion animations):** `AnimatePresence` + `whileInView` animations are the primary documented use case for Motion. Standard patterns apply.
 
 ## Confidence Assessment
 
 | Area | Confidence | Notes |
 |------|------------|-------|
-| Stack | HIGH | All libraries verified against npm, official docs, and community comparison articles. Version compatibility matrix confirmed across Fastify 5, Node 20, better-sqlite3 v12, Drizzle v0.45, AI SDK v6, Zod v4. |
-| Features | HIGH | Source analysis grounded in direct codebase audit of v1.0. Platform-specific feasibility (Twitter/Instagram/TikTok) verified against 2026 sources including TikTok's own anti-scraping documentation. Feature prioritization matrix matches the dependency graph. |
-| Architecture | HIGH | Full codebase audit performed. Architecture builds directly on existing `GroupConfig`, `SourceEntry`, `FeedItem` types. All patterns (plugin scraper, LLM adapter, three-stage pipeline, dual-mode useFeed) are proven patterns for this domain. Database schema and REST API design are fully specified. |
-| Pitfalls | HIGH | Pitfalls derived from direct codebase inspection (existing Nitter regex scraper, CORS proxy pattern), legal research (hiQ v. LinkedIn, Meta rulings 2024-2025), platform documentation (TikTok's own anti-scraping blog post), and LLM cost modeling against current provider pricing. |
+| Stack | HIGH | Two new dependencies (motion, zustand) are documented, widely used, confirmed compatible with React 19. Decision NOT to use TanStack Virtual backed by documented GitHub issues #478 and #267. |
+| Features | HIGH | CSS scroll-snap and IntersectionObserver are W3C standards. Feature set researched against competitor UX analysis (TikTok, Shorts, Reels). Most features are already partially implemented in the codebase. |
+| Architecture | HIGH | Codebase fully audited. Existing patterns (IO for index tracking, localStorage caching, dual-mode API) directly inform the new architecture. Build order derived from actual component dependencies. |
+| Pitfalls | HIGH | Most pitfalls backed by specific GitHub issues (Motion #2315, TanStack Virtual #478), MDN spec documentation, and measured performance data (TikTok embed costs from Justin Ribeiro). Codebase audit confirms which pitfalls are live risks. |
 
 **Overall confidence:** HIGH
 
 ### Gaps to Address
 
-- **Twitter/X go/no-go decision:** Research confirmed the problem (expensive/fragile) but the decision requires budget input. A paid third-party service costs $25-50/month. The recommendation is to descope for v2.0, but this needs explicit confirmation before Phase 2 scoping.
-- **Moderation prompt design:** The policy-as-prompt approach is confirmed as viable, but the specific prompt for BTS content relevance (what counts as relevant, how to handle multilingual content, drama vs. music content) requires iteration against real Phase 2 data. Cannot be fully designed before real content exists.
-- **Playwright in production:** If TikTok/Instagram are reinstated in Phase 3+, the ~800MB per browser instance and the memory leak pattern (documented in PITFALLS.md) need a validation spike on the actual production server before committing to headless browser scraping.
-- **Engagement normalization bootstrap period:** Days 1-7 of operation have insufficient data for percentile normalization. Hardcoded platform scale factors are needed as a bootstrap. These factors should be derived from published engagement benchmarks before launch.
+- **Zustand vs useReducer:** STACK.md and PITFALLS.md recommend Zustand; ARCHITECTURE.md recommends useReducer + useSearchParams and explicitly lists Zustand as an anti-pattern for page-local state. This summary sides with ARCHITECTURE.md (useReducer, no external dependency). Confirm this decision at the start of Phase 1 planning. If cross-route state sharing becomes a requirement in future phases, Zustand becomes justified.
+- **`100svh` vs `100dvh`:** STACK.md specifies `100dvh`; PITFALLS.md warns against `100dvh` and recommends `100svh`. PITFALLS.md is correct based on cited sources (Apple Developer Forums 2025 dvh regression). Use `100svh` with `100vh` fallback. This discrepancy should be explicitly called out in Phase 1.
+- **"See More" implementation mode:** Research is unanimous that "See More" must open a modal/drawer, NOT expand content in-place (in-place expansion changes card height, breaks mandatory scroll-snap). This constraint must be documented as a hard requirement in Phase 2 card design.
+- **TikTok oEmbed thumbnail availability:** Server already fetches oEmbed data, but whether that reliably includes a usable static thumbnail for the tap-to-load facade needs verification during Phase 2 planning.
 
 ## Sources
 
 ### Primary (HIGH confidence)
-- Fastify v5 npm and official docs — API framework, TypeScript support, JSON schema validation, Node 20 requirement
-- Drizzle ORM official docs (orm.drizzle.team) — SQLite + better-sqlite3 setup, drizzle-kit migration workflow
-- better-sqlite3 v12 npm — synchronous driver, Node 20 compatibility, native addon build requirements
-- Vercel AI SDK docs (ai-sdk.dev) — multi-provider unified API, `generateObject()` with Zod, provider packages
-- Cheerio v1.2 npm — ESM-native rewrite, HTML parsing API
-- node-cron v4 npm — in-process scheduling, cron expression support
-- tsx v4 npm — esbuild-powered TypeScript runner, ESM-native
-- Reddit API — rate limits (10 req/min unauth, 60 req/min OAuth), `.json` endpoint structure
-- Bluesky AT Protocol docs — `app.bsky.feed.searchPosts`, public read API, no auth required
-- YouTube Data API v3 quota docs — 10K units/day, `videos.list` = 1 unit per batch of 50 videos
-- Tumblr API v2 docs — RSS endpoint behavior, API consumer key (free tier, 1000 req/hr)
-- hiQ Labs v. LinkedIn (Ninth Circuit, 2022) — CFAA and public data scraping legality
-- TikTok official anti-scraping blog — confirmed device integrity checks, behavioral analysis, CAPTCHA rotation
-- Existing codebase audit — `src/services/sources/`, `src/config/types.ts`, `src/types/feed.ts`, `src/utils/corsProxy.ts`
+- MDN: scroll-snap-type, Basic concepts of scroll snap — CSS scroll snap specification behavior
+- Motion.dev docs: React motion component, scroll animations, gestures, upgrade guide — motion@^12.34.3 API
+- Framer Motion GitHub Issue #2315, #342 — confirmed cross-browser scroll-snap + Motion conflict
+- TanStack Virtual GitHub Issue #478, #267 — confirmed CSS scroll-snap incompatibility
+- Apple Developer Forums thread 803987 — 2025 dvh regression on iOS Safari
+- Codebase audit: SwipeFeed.tsx, VideoEmbed.tsx, useVideoAutoplay.ts, useFeed.ts, News.tsx, FeedFilter.tsx, BiasFilter.tsx, api.ts, config/types.ts
 
 ### Secondary (MEDIUM confidence)
-- BetterStack: Express vs. Fastify comparison — 3x performance gap, TypeScript-first advantage
-- Bytebase: Drizzle vs. Prisma 2026 — zero deps, no codegen, SQL-first advantage
-- DataDwip: Instagram scraping technical challenges — GraphQL doc_id rotation every 2-4 weeks, datacenter IP blocking
-- TLDL/IntuitionLabs: LLM API pricing 2026 — Haiku and GPT-4o-mini cost estimates for classification tasks
-- GetMaxim: Anthropic prompt caching — 0.1x cost on cached system prompts
-- SocialInsider: Social media engagement benchmarks 2026 — TikTok 3.70%, Instagram 0.48%, Facebook 0.15%
-- ScrapeCreators: Twitter/X scraping cost analysis — third-party API $25-50/month for the volume needed
-- SitePoint: SQLite production readiness 2026 — appropriate use cases, WAL mode for concurrent reads
-- npm workspaces guide — TypeScript project references setup for 2-3 package monorepos
-- PainOnSocial: Reddit API rate limits 2026 — OAuth vs. unauthenticated request limits
+- Zustand npm + TypeScript guide — v5.0.11 API and React 19 compatibility
+- Justin Ribeiro: TikTok embed performance measurements (500KB JS + 4MB thumbnails + 10MB video per embed)
+- Mux blog: Building TikTok-style video feed — three-system architecture for video feeds
+- DEV.to: TikTok/YouTube Shorts snap infinite scroll in React — IntersectionObserver + scroll-snap pattern
+- DeveloperWay: React State Management 2025 — Zustand recommendation for filter state
+- CSS-Tricks: Practical CSS Scroll Snapping
+- Medium: Understanding mobile viewport units (svh/lvh/dvh)
 
-### Tertiary (LOW confidence)
-- datawookie.dev: Playwright browser memory footprint — ~800MB per instance; single source, needs production validation
-- Springer: LLM moderation accuracy rates — academic study; real-world BTS content performance may differ
-- Instagram legal risk assessment — evolving; Meta enforcement policy changes after 2024 Bright Data ruling
+### Tertiary (MEDIUM-LOW confidence)
+- Alvaro Trigo: Why not to use CSS scroll snap — limitations with variable heights (useful as pitfall reference)
+- react-lite-youtube-embed npm — facade pattern for YouTube (validates thumbnail-only approach)
 
 ---
-*Research completed: 2026-03-01*
+*Research completed: 2026-03-03*
 *Ready for roadmap: yes*

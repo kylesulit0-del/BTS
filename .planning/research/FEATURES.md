@@ -1,321 +1,244 @@
 # Feature Research
 
-**Domain:** Server-side content scraping engine, aggregation platform, LLM moderation pipeline, and smart blend ranking for K-pop fan feed
-**Researched:** 2026-03-01
-**Confidence:** HIGH (scraping/aggregation patterns well-established; LLM moderation is newer but well-documented; K-pop domain sources verified)
+**Domain:** Immersive vertical snap feed, sort/filter controls, content virtualization, and config-driven theming for fan content aggregation PWA
+**Researched:** 2026-03-03
+**Confidence:** HIGH (CSS scroll-snap and Intersection Observer are mature web standards; sort/filter UX patterns well-established; virtualization libraries actively maintained)
 
 ## Feature Landscape
 
 ### Table Stakes (Users Expect These)
 
-Features the v2.0 backend must have to justify the migration from client-side fetching. Without these, the backend adds complexity for zero gain.
+Features users of a TikTok/Shorts-style feed expect. Missing any of these breaks the immersive experience.
 
 | Feature | Why Expected | Complexity | Notes |
 |---------|--------------|------------|-------|
-| **Scraping engine framework** | Core purpose of v2.0. Common interface for all scrapers: fetch, parse, normalize to `FeedItem`, store. Error handling, rate limiting, retry logic. Without this, each scraper is ad-hoc spaghetti. | MEDIUM | Abstract `Scraper` interface with `scrape(): Promise<ContentItem[]>`. Per-source implementations. Shared error handling, logging, rate limit tracking. Depends on: nothing (foundation layer). |
-| **Reddit scraper (JSON endpoints)** | Already works client-side. Server-side removes CORS proxy dependency. Reddit's `old.reddit.com/r/{sub}/hot.json` returns structured JSON with full engagement stats, no API key needed. | LOW | Add 3-4s delay between subreddit requests to avoid rate limiting. Returns `score`, `num_comments`, `upvote_ratio`, `thumbnail`, `preview`, `created_utc`. Existing `sources.ts` config defines 6 subreddits. Depends on: scraping engine framework. |
-| **YouTube scraper (RSS + optional API)** | Already works client-side. YouTube RSS feeds at `youtube.com/feeds/videos.xml?channel_id={id}` return latest 15 videos per channel. No auth. Free. | LOW | RSS gives titles, IDs, publish dates, thumbnails. For view counts/likes, optional YouTube Data API v3 key (free tier: 10K quota units/day, each `videos.list` call = 1 unit). Existing config defines 4 channels. Depends on: scraping engine framework. |
-| **RSS/news site scrapers** | Already works client-side for Soompi and AllKPop. Standard RSS parsing. Server-side enables adding more K-pop news sources (Koreaboo, HELLOKPOP, KpopStarz -- all have RSS feeds). | LOW | Use `rss-parser` or `fast-xml-parser` npm packages. Extract: title, link, pubDate, description, og:image (from description HTML or separate fetch). RSS is the most stable scraping method -- rarely breaks. Depends on: scraping engine framework. |
-| **Tumblr scraper (RSS feeds)** | Already works client-side. Tumblr public blogs expose `/rss` endpoint. Existing config has 5 Tumblr blogs. RSS returns post content plus note counts. | LOW | Same RSS parsing pipeline as news sites. Tumblr API v2 available as fallback (requires consumer key, returns 20 posts with richer metadata). Depends on: scraping engine framework. |
-| **SQLite database** | Enables the entire pipeline: persistence, deduplication, historical engagement, LLM result storage, API serving. Without a database the scraping engine has nowhere to put data. | MEDIUM | SQLite: single file, zero config, no separate server process, sufficient for single-server scraping workload. Schema: `content_items` (scraped content), `engagement_snapshots` (time-series stats), `moderation_results` (LLM decisions), `scrape_runs` (audit log). Use `better-sqlite3` for synchronous API (simpler than async drivers for sequential scraping). Depends on: nothing (foundation layer). |
-| **Scheduled scraping** | Content must stay fresh. 15-30 min cadence keeps the feed current without overwhelming sources. | LOW | `node-cron` for simple interval scheduling. No Redis-backed queues (BullMQ/Agenda) needed at this scale -- single server, sequential source scraping, <100 items per run. If load grows, BullMQ upgrade path exists. Depends on: scraping engine + database. |
-| **URL-based deduplication** | Same content cross-posted to Reddit and news sites, or reposts within Reddit. Duplicates waste feed slots and confuse users. | LOW | Already implemented client-side (`normalizeUrl` in `feeds.ts`). Server-side: normalize URLs (strip tracking params), store canonical URL as UNIQUE constraint in `content_items` table. ON CONFLICT UPDATE engagement stats if newer data is better. Depends on: database. |
-| **Engagement data collection** | Drives the ranking algorithm. Users already see upvotes/views/likes on v1.0 cards -- removing them in v2.0 would be a regression. | MEDIUM | Per-source extraction: Reddit (score, num_comments, upvote_ratio), YouTube (views, likes via API), Tumblr (notes), news (none -- no engagement from RSS). Store as snapshots for trend detection (engagement velocity). Depends on: scraping engine + database. |
-| **REST API server** | Frontend needs a single clean endpoint instead of N CORS-proxied source fetches. This is how the frontend consumes the curated, ranked, moderated content. | MEDIUM | Fastify (faster, schema validation built-in) or Express. Key endpoints: `GET /api/feed` (paginated, filterable by source/type/member), `GET /api/feed/:id` (single item), `GET /api/sources/status` (scraper health). Serve pre-ranked content from DB. Depends on: database + smart blend ranking. |
-| **Thumbnail/media URL extraction** | Feed cards need images. v1.0 already renders thumbnails from source data. Server-side must extract and store these URLs. | LOW | Reddit: `thumbnail` and `preview.images[0].source.url` fields. YouTube: RSS `media:thumbnail` element. News: parse `og:image` from RSS description HTML. Tumblr: first image in RSS content. Store URLs only -- never download/cache actual media files. Depends on: scraping engine. |
-| **Config-driven group targeting** | Core architecture principle carried from v1.0. All scrape targets, keywords, member names defined in config. Swap config to scrape for any fandom. | MEDIUM | Server-side config mirrors existing `src/config/groups/bts/sources.ts` structure. Add: scrape intervals per source, LLM filter toggle per source, engagement normalization parameters. No hardcoded group references in scraper code. Depends on: nothing (design principle applied throughout). |
-| **Content age windowing** | v1.0 has 30-day window. Server-side must enforce this to prevent unbounded DB growth. | LOW | Configurable max age (default 30 days). Periodic cleanup cron job to DELETE content older than window. Keep scrape_runs metadata longer for audit. Depends on: database + scheduled scraping. |
+| **Full-viewport vertical snap scrolling** | Core TikTok/Shorts/Reels pattern -- one post fills the screen, swipe to advance. Users exposed to this in every short-form app since 2020. Without snap, the feed feels like a basic list. | MEDIUM | CSS `scroll-snap-type: y mandatory` on container with `height: 100dvh` children. Use `dvh` (dynamic viewport height) not `vh` to handle mobile address bar. `scroll-snap-align: start` on each item. Pure CSS handles the physics -- no JS animation library needed for the snap itself. **Existing `SwipeFeed.tsx` already uses IntersectionObserver for index tracking** -- same pattern applies, just with full-viewport items. |
+| **Current item detection** | Need to know which item is "active" for video autoplay/pause, analytics, and UI state (progress indicator). | LOW | IntersectionObserver with `threshold: 0.5` -- exactly what `SwipeFeed.tsx` already does. The existing pattern works. For browsers supporting it, `scrollsnapchange` event (Chrome 129+, Edge 129+) provides native snap target detection, but **not cross-browser** (no Firefox/Safari). Use IntersectionObserver as primary, snap events as progressive enhancement. |
+| **Video autoplay on visible, pause on scroll away** | Every short-form feed autoplays video when snapped into view and pauses when scrolled past. Users would be confused by a static video thumbnail in a snap feed. | LOW | **Already implemented** in `VideoEmbed.tsx` + `useVideoAutoplay.ts` hook. Uses IntersectionObserver to mount/unmount iframe when in/out of viewport. The existing system handles YouTube Shorts and TikTok iframes with mute-by-default and unmute button. No changes needed to the autoplay mechanism itself -- just ensure the snap feed container is the IntersectionObserver root. |
+| **Sort controls** | Users need to change feed ordering. "Recommended" (default blend algorithm) is good for discovery, but sometimes you want newest content, or the most popular. Without sort, users feel trapped in an opaque algorithm. | LOW | Dropdown or segmented control with options: Recommended (default, blend score), Newest (publishedAt DESC), Most Popular (engagement score DESC), Most Discussed (comment count DESC). API already supports `page` and `limit` params. Add `sort` query param to API (`GET /api/feed?sort=newest`). Client-side: single state variable, re-fetch on change. |
+| **Filter by source** | "Show me only Reddit" or "Show me only YouTube." Users already have this via `FeedFilter.tsx` source tabs. Must carry forward into snap feed. | LOW | **Already implemented** in `FeedFilter.tsx`. Maps config sources to filter tabs. Current implementation passes `filter` state to `useFeed` hook which filters client-side or via API `source` param. Just needs visual redesign to fit the snap feed control bar. |
+| **Filter by member** | "Show me only Jimin content." Users already have this via `BiasFilter.tsx` member chips. Must carry forward. | LOW | **Already implemented** in `BiasFilter.tsx` + `useBias.ts`. Keyword-based matching against member aliases. Same hook, new visual treatment in the control bar. |
+| **Filter by content type** | "Show me only fan art" or "Show me only videos." Users already have content type pills in `News.tsx`. | LOW | **Already implemented** as content type pills in `News.tsx`. LLM-classified `contentType` field on each item. Same filtering logic, integrated into unified control bar. |
+| **Collapsed long text with "See More"** | Full-viewport cards have limited space. Long Reddit post titles, news article descriptions, Tumblr text posts can overflow. Need truncation with expansion capability. | LOW | CSS `display: -webkit-line-clamp` for multi-line truncation (3-4 lines max). Gradient fade overlay at bottom of text area. "See More" button expands text within the card without navigating away. When expanded, card scrolls internally (but snap still works on the parent container). Standard pattern in every social feed app. |
+| **Source link to original content** | Users need to reach the original Reddit post, YouTube video page, news article. The feed is a discovery surface, not a replacement for the source. | LOW | **Already exists** as "View original" link in `FeedCard.tsx` and "Read More" in `SwipeFeed.tsx`. In snap feed, use a small icon button (external link icon) positioned consistently -- bottom-right corner or in the action bar area. Opens in new tab. |
+| **Loading states and skeleton screens** | First load, filter changes, and sort changes need visual feedback. Empty screen while loading breaks trust. | LOW | **Already implemented** in `SkeletonCard.tsx`. Adapt to full-viewport snap card skeleton. Single skeleton card filling the viewport with shimmer animation. |
+| **Empty state for no results** | When filters produce zero results, users need clear feedback and a path to recovery ("Try removing filters"). | LOW | **Already implemented** in `News.tsx` empty state. Same pattern, adapted for snap feed viewport. |
 
 ### Differentiators (Competitive Advantage)
 
-Features that make the v2.0 backend genuinely better than what v1.0 client-side fetching can do, and better than "just open Reddit + YouTube in separate tabs."
+Features that make this feed feel premium compared to "just scrolling Reddit" or a basic RSS reader.
 
 | Feature | Value Proposition | Complexity | Notes |
 |---------|-------------------|------------|-------|
-| **LLM relevance filtering** | Keyword matching ("BTS") catches "behind the scenes" articles, interview transcripts mentioning "BTS" in passing, etc. LLM understands context: "this is about the K-pop group BTS" vs "behind the scenes of a movie." Critical for `needsFilter: true` sources (r/kpop, AllKPop, HYBE channel, Koreaboo). | MEDIUM | Two-step pipeline: (1) wide-net scrape collects everything from source, (2) LLM classifies each item from filtered sources. Use cheap models: GPT-4o-mini at $0.15/$0.60 per M input/output tokens, or Claude Haiku at $1/$5 per M tokens. Batch items in single prompt (10-20 items per call). Estimated cost: <$1/day for hundreds of items. Structured JSON output: `{relevant: boolean, confidence: number, reason: string}`. Depends on: LLM provider interface + database (store results). |
-| **LLM content moderation** | Fan spaces attract drama, shipping wars, hate content, NSFW material. Automated moderation protects feed quality without manual curation. "Policy-as-prompt" approach: encode moderation rules as natural language in the system prompt. | MEDIUM | Combine with relevance filter in single LLM call to minimize cost. Classify: `{relevant: bool, safe: bool, contentType: string}`. Configurable policies per group (BTS config might allow fan fiction discussion, another group might not). Depends on: LLM provider interface. |
-| **LLM provider abstraction** | Avoid vendor lock-in. Optimize cost vs quality. Different providers have different strengths and pricing changes frequently. | MEDIUM | Interface: `moderate(items: ContentItem[]): Promise<ModerationResult[]>`. Implementations for Claude (Anthropic SDK), OpenAI (openai SDK), and potentially Gemini. Config selects provider + model. Batch support for cost efficiency. Depends on: nothing (interface layer). |
-| **Smart blend ranking engine** | Current 50/50 recency+engagement is decent but naive. Multiple Reddit posts cluster together, news articles dominate during comeback season, fan content gets buried. Smart blend adds source diversity and content type variety. | MEDIUM | Multi-signal weighted scoring: recency (0-1, time decay), normalized engagement (0-1, per-source z-score), source diversity penalty (reduce score for Nth consecutive item from same source), content type bonus (boost underrepresented types in current page). Configurable weights in group config. YouTube's two-stage approach (candidate generation then re-ranking for diversity) is the right mental model. Depends on: engagement normalization + content type classification. |
-| **Cross-source engagement normalization** | 1000 Reddit upvotes and 100K YouTube views are both "high engagement" but raw numbers are incomparable. Without normalization, YouTube views always dwarf Reddit scores in ranking. | MEDIUM | Per-source z-score normalization over a rolling 7-day window. For each source, compute mean and stddev of engagement. Normalize: `(raw - mean) / stddev`, then clamp to 0-1. Recompute parameters daily. Store normalization parameters in DB. Handles the "50 upvotes in r/heungtan is impressive; 50 upvotes in r/kpop is nothing" problem. Depends on: engagement data collection + database (enough historical data for statistics). |
-| **Content type classification** | Automatically tag content as news, fan art, meme, video, discussion, translation, official. Enables content type diversity in blend algorithm AND client-side type filtering UI. | MEDIUM | Combined with relevance+moderation in single LLM call. Structured output: `{contentType: "news"|"fanart"|"meme"|"video"|"discussion"|"translation"|"official"|"other"}`. Minimal additional cost -- same API call, slightly longer output. Enables the smart blend to ensure a mix of content types per page. Depends on: LLM provider interface. |
-| **Twitter/X scraper (server-side)** | Twitter is the #1 real-time platform for ARMY. Official member tweets, fan reactions, memes, translation threads. Current Nitter-based approach is broken. Server-side enables actual scraping. | HIGH | Twitter is the hardest source to scrape in 2026. Options by reliability: (1) Third-party API (Apify, SociaVault) at $25-50/mo -- most reliable; (2) Playwright headless scraping with session management -- 10-15 hrs/month maintenance as X rotates anti-bot measures every 2-4 weeks; (3) RSS bridge services -- unreliable. Recommend third-party API behind abstract interface. Depends on: scraping engine framework + budget allocation. |
-| **TikTok scraper (server-side)** | TikTok is where short-form BTS fan content lives -- edits, fancams, dance covers. v1.0 iframe embeds degraded by CORS short URL issue. Server-side can resolve redirects, extract metadata. | HIGH | Use Playwright to load TikTok pages, extract `UNIVERSAL_DATA_FOR_REHYDRATION` JSON from script tag. Gets: video URL, thumbnail, caption, engagement (likes, shares, comments, views). Anti-bot measures rotate every few months -- expect periodic breakage. Search by hashtag (#BTS, #BTSARMY, #BTSArmy) for content discovery. Depends on: scraping engine + Playwright dependency. |
-| **Instagram scraper (server-side)** | Instagram is a major ARMY platform: member posts (6 of 7 have accounts), fan art accounts, translation accounts. Descoped from v1.0 as impossible client-side. | HIGH | GraphQL endpoint scraping with `x-ig-app-id` header. `doc_id` parameters rotate every 2-4 weeks -- fragile. Instagram blocks cloud provider IPs; needs residential proxies ($20-50/mo) or third-party scraping API. Rate limit: ~200 req/hr per IP. Target: official BTS member IG accounts, top fan/translation accounts. Depends on: scraping engine + proxy infrastructure or third-party API. |
-| **Bluesky scraper** | Active ARMY migration from Twitter to Bluesky in 2025-2026. Bluesky has a fully open AT Protocol with documented public API. Generous rate limits. No auth needed for public posts. This is genuinely easy. | LOW | `app.bsky.feed.searchPosts` endpoint with keyword queries. Returns structured JSON: text, author, timestamps, likes, reposts, replies. Rate limits are generous (public API, no key needed for reads). This is the easiest new social media source to add -- easier than Reddit. Depends on: scraping engine framework. |
-| **Expanded K-pop news sources** | Beyond Soompi/AllKPop. Add Koreaboo, HELLOKPOP, KpopStarz, Seoulbeats, NetizenBuzz, Asian Junkie, The Korea Herald entertainment, Seoul Space. All have RSS except NetizenBuzz (HTML scraping). | LOW | Pure RSS scraping, same pattern as existing news sources. High value because RSS is the most stable scraping method -- rarely breaks, never blocks. 8+ additional sources for minimal effort. Depends on: RSS scraper. |
-| **Fan translation account prioritization** | Translation accounts (bts-trans Tumblr, @btranslation_ on platforms) are extremely high-value -- they make Korean-only content accessible to international fans. These should rank higher than generic fan posts. | LOW | Add `priority_boost` field to source config. Translation accounts get a ranking boost. Already partially covered (bts-trans in Tumblr config). Expand: identify top 5-10 translation accounts across platforms. Depends on: config-driven sources + smart blend ranking. |
+| **Virtualized rendering (3-item window)** | Only mount current + previous + next items in the DOM. A feed with 100+ items, each potentially containing an iframe video embed, would destroy performance without virtualization. This is what makes the snap feed usable on mobile over 5G. | MEDIUM | Two approaches: (1) **CSS scroll-snap + manual mount/unmount** -- keep the scroll container with all placeholders but only render content for items within a 3-item window around the current index. Simpler, works with native CSS snap. (2) **TanStack Virtual** -- headless virtualization that only renders visible items. More robust for large lists but requires careful integration with scroll-snap. **Recommend approach 1** because TanStack Virtual's dynamic sizing and scroll-snap interaction is underexplored territory. Manual 3-item windowing with IntersectionObserver is proven in the existing codebase and gives full control. Mount empty `div` placeholders with correct height (`100dvh`) for all items, render actual content only for `[current-1, current, current+1]`. |
+| **Unified sort/filter control bar** | Single compact bar replacing the current 3-row filter layout (source tabs + content type pills + bias filter). Consolidates all controls into a slim, persistent overlay that doesn't waste viewport space. | MEDIUM | Horizontally scrollable pill/chip bar anchored to top of viewport (below status bar on mobile). Sections: Sort dropdown (leftmost), Source pills, Content Type pills, Member chips. Active filters highlighted. Filter count badge when filters are applied but collapsed. The bar should auto-hide on scroll-down and reappear on scroll-up (or tap top of screen) to maximize immersive space. |
+| **Framer Motion entrance/exit animations** | Cards animate in with subtle slide-up and fade. When filter changes, outgoing cards exit smoothly. Creates a polished, app-like feel that basic CSS snap alone cannot achieve. | MEDIUM | `AnimatePresence` wrapper around the feed. `motion.div` cards with `initial`, `animate`, `exit` props. Entrance: `y: 50, opacity: 0` -> `y: 0, opacity: 1`. Exit: `opacity: 0, scale: 0.95`. Spring physics for natural deceleration. **Framer Motion (now just "Motion") is a new dependency** -- currently not in `package.json`. ~30KB gzipped. Worth it for the polish. Use `layoutId` for smooth card transitions when filters change. |
+| **Adaptive card layouts per content type** | Video content gets a full-bleed player. Image posts (fan art, memes) get a large image with text overlay at bottom. Text posts (discussions, news) get a reading-focused layout with larger typography. Not all content deserves the same card. | MEDIUM | 3 layout variants driven by `contentType` + `videoType` fields: (1) **Video layout**: full-viewport embedded player (YouTube Shorts/TikTok iframe) with title/meta overlay at bottom, semi-transparent gradient. (2) **Image layout**: large background image with title/meta overlaid at bottom, gradient fade. (3) **Text layout**: centered title, preview text, source branding, engagement stats. All layouts share the same outer container (100dvh snap child) but differ internally. |
+| **Global filter/sort state persistence** | When you scroll to item 47, apply a "YouTube only" filter, the feed re-renders with only YouTube items and you start from the top of the filtered list. When you remove the filter, you return to the full feed. Filters and sort persist across the session and survive page refreshes. | LOW | Store filter/sort state in `localStorage` (same pattern as existing bias storage in `useBias.ts`). On filter change: re-fetch or re-filter the local cache, reset scroll position to top. Key UX decision: **do not try to maintain scroll position across filter changes** -- it creates jarring jumps. Always reset to item 0 when filters change. |
+| **Engagement stats overlay** | Upvotes, comments, views displayed as a compact vertical action bar (like TikTok's right-side column). Tap-friendly icons with abbreviated numbers. Feels native to the immersive format. | LOW | Vertical stack of icon+count positioned at bottom-right of each card. Reuse existing `abbreviateNumber()` utility from `formatNumber.ts`. SVG icons already exist in `FeedCard.tsx`. Just re-layout for vertical orientation. Add share button (Web Share API with clipboard fallback) for social spreading. |
+| **Config feature flag: snap vs list mode** | Not all fandoms want the snap feed. Some prefer a traditional scrolling list. Config `features.feedMode: 'snap' | 'list'` controls which view renders. Supports the clone-and-swap white-label model. | LOW | Add `features` object to `GroupConfig` type in `config/types.ts`. `features.feedMode` defaults to `'snap'`. `News.tsx` conditionally renders `SnapFeed` or `FeedList` based on config. The existing `viewMode` toggle in `News.tsx` can become an override when config allows both. |
+| **Styling tokens in config for white-label theming** | Current `ThemeConfig` has 3 colors (`primaryColor`, `accentColor`, `darkColor`). Not enough for full white-label theming. Need spacing, border radius, font family, gradient definitions to truly differentiate clones. | MEDIUM | Extend `ThemeConfig` with a `tokens` object containing CSS custom property overrides. Apply via `applyTheme.ts` which already sets CSS variables. Layers: (1) **Global primitives** -- `--color-purple-600: #562B8B` (2) **Semantic tokens** -- `--color-primary: var(--color-purple-600)`, `--surface-bg: #0a0a0a` (3) **Component tokens** -- `--card-bg: var(--surface-bg)`, `--filter-pill-bg: rgba(255,255,255,0.1)`. Config only needs to override semantic layer. Component layer derives automatically. |
+| **Haptic feedback on snap** | Subtle vibration on each snap for supported devices. Reinforces the physical feel of "clicking into place." | LOW | `navigator.vibrate(10)` on snap detection (IntersectionObserver callback). Gated behind `navigator.vibrate` feature detection. iOS Safari does not support Vibration API, so this is Android-only enhancement. Negligible code, noticeable polish. |
 
 ### Anti-Features (Commonly Requested, Often Problematic)
 
 | Feature | Why Requested | Why Problematic | Alternative |
 |---------|---------------|-----------------|-------------|
-| **Weverse scraping** | Primary official BTS platform. Fans desperately want this content. | No public API, no RSS, aggressive anti-scraping by HYBE. HMAC-authenticated private API with rotating secret keys. Legal risk (ToS violation). PROJECT.md already descoped. | Link to Weverse in sidebar/members page. Accept that Weverse is a walled garden. If HYBE ever releases a public API, revisit. |
-| **Real-time WebSocket feed updates** | "I want to see new content the moment it's posted" | WebSocket server, connection management, reconnection logic, push infrastructure. Massive complexity for marginal benefit over 15-min polling. Content is not time-critical (fan memes, not stock prices). | Frontend polls REST API every 5-15 minutes. Server returns `Last-Modified` / `ETag` headers for efficient conditional requests. Content feels "fresh enough." |
-| **User accounts and personalization** | "I only care about Jimin" or "Show me only fan art" | Authentication, user database, session management, GDPR compliance, password resets. Massive scope increase for a fan project serving a niche audience. | Member bias filtering already exists client-side (keyword matching). LLM content type tags enable client-side filtering by type. Store preferences in localStorage. No accounts needed. |
-| **Full-text search** | "Let me search for specific moments or topics" | Requires search infrastructure (Elasticsearch, MeiliSearch, or Typesense), index maintenance, relevance tuning, search UI. Significant additional infrastructure. | Defer entirely. If demand arises, SQLite FTS5 extension handles basic full-text search without additional services. Add it as a v3 feature if validated. |
-| **Scraping private/authenticated content** | "Get me member-only Weverse posts" or "Access locked Instagram stories" | Legal liability, ToS violations, DMCA risk. Scraping authenticated content crosses ethical and legal lines. Tokens expire, accounts get banned. | Only scrape publicly accessible content. Link to official platforms for gated content. This is a firm ethical boundary. |
-| **Notification system (push)** | "Alert me when BTS posts something new" | FCM/APNs infrastructure, notification preferences UI, delivery reliability, battery/bandwidth impact on user devices, permission prompts. | Users check the feed on their own schedule. High-priority content (official posts) gets boosted by engagement naturally. The feed is the notification. |
-| **Media caching/CDN proxy** | "Proxy all images through our server for speed" | Storage costs balloon fast (images, video thumbnails). Bandwidth costs. Copyright issues with hosting copies of media. Single server cannot compete with YouTube/Reddit/Instagram CDNs. | Store media URLs only. Frontend loads images/videos directly from source CDNs. Source CDN thumbnail URLs are stable. If a thumbnail 404s, show a fallback image. |
-| **Automated proxy rotation** | "Handle IP bans from aggressive scraping" | Residential proxy services cost $20-100+/mo, add latency, introduce new failure modes. Only needed for adversarial platforms. | For most sources (Reddit JSON, YouTube RSS, RSS feeds, Tumblr RSS, Bluesky API), a single server IP with polite rate limiting works perfectly. Only consider proxies if/when Instagram or TikTok scraping is added AND starts getting blocked. |
-| **Near-duplicate semantic detection** | "Detect when 5 news sites publish the same story" | SimHash/MinHash algorithms, text processing pipeline, similarity threshold tuning. Adds complexity to the dedup layer. | URL-based dedup handles exact reposts. LLM moderation can flag "this is substantially the same as another recent item" if content overlap becomes a real problem. Defer until it is. |
-| **Multi-tenant group switching** | "BTS and BLACKPINK in one deployment" | Config-driven architecture means each clone is independent. Multi-tenant adds routing, per-group DB isolation, config management, resource contention. PROJECT.md descoped. | Keep clone-and-swap model. Deploy separate instances per group. Share the config template for community reuse. |
+| **Framer Motion drag-based navigation** | "Use drag gestures instead of scroll for swipe-to-advance, like a real app" | Conflicts with native scroll. Framer Motion's `drag="y"` hijacks touch events, breaking native scroll momentum, rubber-band overscroll, and scroll-snap physics. GitHub issue #185 on Motion repo documents scroll/drag conflict. Creates an uncanny valley where the feed scrolls worse than native. | Use native CSS scroll-snap for navigation. Use Framer Motion only for entrance/exit animations and micro-interactions (card reveal, filter transitions). Let the browser handle scroll physics -- it does it better than any JS library. |
+| **Infinite scroll with auto-fetch** | "Load more items automatically as I scroll near the bottom" | In a snap feed where each item is 100dvh, the user snaps one item at a time. Traditional infinite scroll (fetch when near bottom) fires too late -- user is already at the last item. Also, the current API returns the full ranked feed in one response (no cursor-based pagination for incremental loading). Infinite scroll also prevents users from reaching the footer/nav. | **Prefetch strategy**: fetch all items upfront (current behavior), render them in the virtualized window. If the feed grows beyond 200+ items, implement explicit "Load more" at the end of the feed. The API already supports `page` param for this. But with 30-day content windowing and LLM filtering, total item counts should stay manageable (<300 items). |
+| **Pull-to-refresh** | "Pull down to refresh like a native app" | Conflicts with scroll-snap behavior. When the user is at item 0 and pulls down, the browser wants to do overscroll/bounce, not trigger a custom refresh. Implementing pull-to-refresh with scroll-snap requires intercepting touch events, fighting the browser, and creating inconsistent behavior. | Refresh button in the control bar. Alternatively, auto-refresh when the user returns to the feed tab after 5+ minutes (background timer + visibility API). The existing `useFeed.refresh()` function handles cache invalidation. |
+| **Horizontal swipe for actions** | "Swipe left to dismiss, swipe right to save" | Adds horizontal gesture handling that conflicts with the browser's back/forward swipe gestures (iOS Safari, Android Chrome). Creates confusion: did I mean to go back a page or dismiss a card? | Use explicit tap targets for actions. "View original" button, share button, member chip tap. Vertical snap for navigation, taps for actions. Clear gesture vocabulary. |
+| **Complex animation sequences per card** | "Each card should have a unique entry animation based on content type" | Performance death on mid-range phones. Multiple simultaneous Framer Motion animations while scrolling causes jank. GPU memory pressure from composited layers. Battery drain from constant animation. | One simple, consistent entrance animation for all cards (fade + slide-up). Let the content itself be the visual variety (video vs image vs text layouts). Subtlety over spectacle. |
+| **Full-screen video player mode** | "Tap video to go full-screen with controls" | iframe-embedded YouTube/TikTok players already have their own fullscreen buttons. Building a custom fullscreen player layer on top of third-party iframes creates double-controls confusion and iframe sandboxing issues. | Let the embedded player's native fullscreen button handle this. YouTube iframe API supports fullscreen. TikTok player has its own controls. The snap feed IS the full-screen experience for non-video content. |
+| **Offline feed caching (Service Worker)** | "Let me browse the feed without internet" | The feed content is third-party URLs, thumbnails from CDNs, and iframe video embeds. Caching the feed JSON is trivial, but the content itself (images, videos) cannot be meaningfully cached offline. Users would see cards with broken images and non-playing videos. | Cache the feed JSON in localStorage (already done, 5-min TTL in `useFeed.ts`). Show cached items when offline with a "You're offline -- content may be stale" banner. Do not try to cache media assets. |
+| **Dark/light mode toggle** | "Let me switch between dark and light themes" | The app is designed dark-first (matching TikTok/Shorts aesthetic). Adding a light mode doubles the CSS surface area and requires testing every component in both modes. Fan apps in this space are universally dark. | Ship dark mode only. The `ThemeConfig` token system supports a future light mode if demand materializes, but do not build it now. |
 
 ## Feature Dependencies
 
 ```
-[SQLite Database]
-    |
-    +---required-by---> [REST API Server]
-    +---required-by---> [Engagement Data Collection]
-    +---required-by---> [URL Deduplication (persistent)]
-    +---required-by---> [LLM Moderation Result Storage]
-    +---required-by---> [Cross-source Engagement Normalization]
-    +---required-by---> [Content Age Windowing / Cleanup]
-    +---required-by---> [Scrape Run Audit Logging]
+[CSS Scroll-Snap Feed Container]
+    +---required-by---> [Current Item Detection (IntersectionObserver)]
+    +---required-by---> [Virtualized 3-Item Window]
+    +---required-by---> [Haptic Feedback on Snap]
 
-[Scraping Engine Framework]
-    |
-    +---required-by---> [Reddit Scraper]
-    +---required-by---> [YouTube Scraper]
-    +---required-by---> [RSS/News Scraper]
-    +---required-by---> [Tumblr Scraper]
-    +---required-by---> [Twitter/X Scraper]
-    +---required-by---> [TikTok Scraper]
-    +---required-by---> [Instagram Scraper]
-    +---required-by---> [Bluesky Scraper]
+[Current Item Detection]
+    +---required-by---> [Video Autoplay/Pause] (already implemented, needs integration)
+    +---required-by---> [Engagement Stats Overlay] (knows which card is active)
 
-[Scraping Engine] + [Database]
-    +---required-by---> [Scheduled Scraping (node-cron)]
+[Adaptive Card Layouts]
+    +---required-by---> [Collapsed Text with "See More"]
+    +---required-by---> [Video Layout] (full-bleed player)
+    +---required-by---> [Image Layout] (background image + text overlay)
+    +---required-by---> [Text Layout] (reading-focused)
 
-[LLM Provider Interface]
-    |
-    +---required-by---> [Relevance Filtering]
-    +---required-by---> [Content Moderation]
-    +---required-by---> [Content Type Classification]
+[Sort/Filter Control Bar]
+    +---requires-------> [Sort API param] (backend change: add sort to GET /api/feed)
+    +---requires-------> [Filter state management] (existing useFeed + useBias hooks)
+    +---required-by---> [Global Filter/Sort State Persistence]
+    +---required-by---> [Auto-hide on scroll / show on scroll-up]
 
-[Engagement Data] + [Database (7-day history)]
-    +---required-by---> [Cross-source Engagement Normalization]
+[Framer Motion (new dependency)]
+    +---required-by---> [Card Entrance/Exit Animations]
+    +---required-by---> [Filter Transition Animations]
 
-[Engagement Normalization] + [Content Type Classification]
-    +---required-by---> [Smart Blend Ranking Engine]
+[Config Feature Flags]
+    +---requires-------> [GroupConfig type extension]
+    +---required-by---> [Snap vs List Mode Toggle]
+    +---required-by---> [Styling Tokens / White-label Theming]
 
-[Smart Blend Ranking] + [REST API]
-    +---required-by---> [Frontend Migration to API]
+[ThemeConfig Token Extension]
+    +---requires-------> [applyTheme.ts refactor] (apply semantic + component tokens as CSS vars)
+    +---required-by---> [White-label Theming]
 
-[Config-Driven Group Targeting]
-    +---required-by---> ALL scraper modules
-    +---required-by---> LLM filter prompts (member names, keywords)
-    +---required-by---> Smart blend weights
-
-[Twitter/X Scraper] --conflicts-- [Budget] ($25-50/mo for third-party API)
-[Instagram Scraper] --conflicts-- [Maintenance budget] (doc_id rotation every 2-4 weeks)
-[TikTok Scraper] --conflicts-- [Maintenance budget] (anti-bot rotation)
+[Sort API Param] --conflicts-- [Client-side sorting fallback]
+    (When API unavailable, client-side must sort locally with same logic)
 ```
 
 ### Dependency Notes
 
-- **Database + Scraping Engine are twin foundations.** Nearly every downstream feature depends on both. They must be built in the same phase, ideally Phase 1.
-- **LLM provider interface before any moderation features.** Abstract the LLM call first, then relevance/moderation/classification all use the same interface. Combine into single API call for cost efficiency.
-- **Easy scrapers before hard scrapers.** Reddit/YouTube/RSS/Tumblr are LOW complexity and almost never break. Twitter/TikTok/Instagram are HIGH complexity with ongoing maintenance. Ship reliable sources first (Phase 1), add fragile sources later (Phase 3+).
-- **Engagement normalization requires history.** Z-score normalization needs 7+ days of engagement data in the database. Cannot launch smart blend with normalization on day 1. Ship basic recency+raw engagement first, add normalization once data accumulates.
-- **Smart blend ranking requires content type classification.** Diversity balancing by content type needs items to be classified first. LLM classification in Phase 2, smart blend in Phase 2 or 3.
-- **Frontend migration is last.** Only switch the SPA from client-side fetching to REST API consumption once the backend reliably serves better content than the client fetches directly. The v1.0 client-side pipeline is the fallback.
-- **Bluesky is a quick win.** Open AT Protocol, no auth, generous rate limits, growing ARMY presence. Can be added in any phase with minimal effort. Do it early to expand source coverage cheaply.
+- **Scroll-snap container is the foundation.** Everything else (virtualization, item detection, video autoplay) depends on the snap feed container existing with correct CSS. Build this first.
+- **Current item detection reuses existing pattern.** The IntersectionObserver logic in `SwipeFeed.tsx` is directly transferable. Not a new capability, just a re-integration.
+- **Sort API param is a backend change.** The existing `GET /api/feed` endpoint supports `page`, `limit`, `source`, `contentType` params. Adding `sort` is a simple query modification to the Drizzle ORM query in the server. Client-side fallback needs matching sort logic.
+- **Framer Motion is the only new dependency.** Everything else (scroll-snap, IntersectionObserver, CSS custom properties) is native web platform. Motion adds entrance/exit polish but the feed works without it.
+- **Config extensions are additive.** New `features` and extended `tokens` on `ThemeConfig` are backward-compatible additions to `GroupConfig`. Existing configs continue to work with defaults.
+- **Virtualization depends on item detection.** The 3-item window needs to know the current index to calculate which items to render. Item detection must work before virtualization can activate.
 
 ## MVP Definition
 
-### Launch With (v2.0 Core)
+### Launch With (v3.0 Core)
 
-The minimum to prove the server-side pipeline delivers better content than client-side fetching.
+The minimum to deliver a working immersive snap feed that replaces the existing list/swipe views.
 
-- [ ] **Scraping engine framework** -- common `Scraper` interface, error handling, rate limiting, retry logic
-- [ ] **SQLite database** -- `content_items`, `engagement_snapshots`, `scrape_runs` tables, `better-sqlite3`
-- [ ] **Reddit scraper** -- JSON endpoints for 6 configured subreddits, full engagement stats
-- [ ] **YouTube scraper** -- RSS feeds for 4 configured channels + optional API for view counts
-- [ ] **RSS/news scrapers** -- Soompi, AllKPop + add Koreaboo, HELLOKPOP
-- [ ] **Tumblr scraper** -- RSS for 5 configured blogs
-- [ ] **Scheduled scraping** -- `node-cron`, 15-30 min intervals, staggered per source type
-- [ ] **URL deduplication** -- normalized URL UNIQUE constraint in DB
-- [ ] **REST API server** -- `GET /api/feed` (paginated, filterable), `GET /api/sources/status`
-- [ ] **Config-driven sources** -- all scrape targets in config, not code
-- [ ] **LLM provider interface** -- abstract interface supporting Claude + OpenAI
-- [ ] **LLM relevance filtering** -- classify items from `needsFilter: true` sources
-- [ ] **Basic ranking** -- recency + raw engagement (same as v1.0 `computeFeedScore` but server-side)
+- [ ] **Snap feed container** -- `scroll-snap-type: y mandatory`, 100dvh children, replaces SwipeFeed + list view in News.tsx
+- [ ] **Current item detection** -- IntersectionObserver tracking active index, video autoplay/pause integration
+- [ ] **Adaptive card layouts** -- video, image, and text variants based on content type
+- [ ] **Collapsed text with "See More"** -- line-clamp truncation with expand toggle
+- [ ] **Unified sort/filter control bar** -- consolidates source tabs, content type pills, member chips into single bar
+- [ ] **Sort options** -- Recommended, Newest, Most Popular, Most Discussed (API sort param + client fallback)
+- [ ] **3-item virtualized window** -- mount content for [current-1, current, current+1] only, placeholders for rest
+- [ ] **Engagement stats overlay** -- vertical action bar with icons and abbreviated counts
+- [ ] **Loading and empty states** -- full-viewport skeleton, filtered-empty feedback
 
-### Add After Core Works (v2.x)
+### Add After Core Works (v3.x)
 
-Add once the basic pipeline is validated and there is enough historical data for normalization.
+Features to add once the snap feed is stable and usable.
 
-- [ ] **LLM content moderation + type classification** -- combine with relevance in single call
-- [ ] **Cross-source engagement normalization** -- z-score per source over 7-day rolling window
-- [ ] **Smart blend ranking** -- multi-signal with diversity and type variety
-- [ ] **Bluesky scraper** -- AT Protocol, easy win, growing ARMY community
-- [ ] **Expanded news sources** -- KpopStarz, Seoulbeats, NetizenBuzz, Asian Junkie, Seoul Space
-- [ ] **Fan translation account prioritization** -- `priority_boost` in config
-- [ ] **Frontend migration** -- switch SPA from client-side fetching to REST API consumption
-- [ ] **Engagement velocity tracking** -- detect trending content (rising engagement rate)
+- [ ] **Framer Motion animations** -- card entrance/exit, filter transitions, layout animations
+- [ ] **Auto-hide control bar** -- hide on scroll-down, show on scroll-up or tap
+- [ ] **Config feature flag** -- `features.feedMode: 'snap' | 'list'` in GroupConfig
+- [ ] **Haptic feedback** -- vibrate on snap for Android devices
+- [ ] **Global state persistence** -- save sort/filter prefs to localStorage
+- [ ] **Web Share API** -- share button on each card with clipboard fallback
+- [ ] **Auto-refresh on return** -- refresh feed when tab becomes visible after 5+ minutes
 
-### Future Consideration (v3+)
+### Future Consideration (v4+)
 
-Features to defer until the pipeline is production-stable and demand is validated.
-
-- [ ] **Twitter/X scraper** -- requires third-party API ($25-50/mo) or heavy maintenance; defer until budget/ROI justifies
-- [ ] **TikTok scraper** -- Playwright-based, fragile, high maintenance; defer until anti-bot landscape stabilizes
-- [ ] **Instagram scraper** -- GraphQL rotation, proxy requirements; defer unless strong user demand
-- [ ] **Near-duplicate semantic detection** -- SimHash/MinHash for similar-but-different-URL content
-- [ ] **Content trend detection** -- engagement velocity analysis for "what's going viral now"
-- [ ] **SQLite to PostgreSQL migration** -- only if concurrent writes become a bottleneck (unlikely for single-server)
+- [ ] **Extended theming tokens** -- full semantic + component token system in config
+- [ ] **Gesture-based quick filters** -- long-press card to filter by that source/member
+- [ ] **Content preview expansion** -- tap card to expand into detail view with full text + comments count
+- [ ] **Preload optimization** -- preload thumbnail images for next 3 items, preconnect to video embed domains
 
 ## Feature Prioritization Matrix
 
 | Feature | User Value | Implementation Cost | Priority |
 |---------|------------|---------------------|----------|
-| Scraping engine framework | HIGH | MEDIUM | P1 |
-| SQLite database + schema | HIGH | MEDIUM | P1 |
-| Reddit scraper | HIGH | LOW | P1 |
-| YouTube scraper (RSS + optional API) | HIGH | LOW | P1 |
-| RSS/news scrapers (6+ sources) | HIGH | LOW | P1 |
-| Tumblr scraper | MEDIUM | LOW | P1 |
-| Scheduled scraping (node-cron) | HIGH | LOW | P1 |
-| URL deduplication | HIGH | LOW | P1 |
-| REST API server | HIGH | MEDIUM | P1 |
-| Config-driven group targeting | HIGH | MEDIUM | P1 |
-| LLM provider abstraction | MEDIUM | MEDIUM | P1 |
-| LLM relevance filtering | HIGH | MEDIUM | P1 |
-| Basic ranking (recency + engagement) | HIGH | LOW | P1 |
-| LLM content moderation | MEDIUM | LOW (combined call) | P2 |
-| Content type classification | MEDIUM | LOW (combined call) | P2 |
-| Cross-source engagement normalization | MEDIUM | MEDIUM | P2 |
-| Smart blend ranking | HIGH | MEDIUM | P2 |
-| Bluesky scraper | MEDIUM | LOW | P2 |
-| Expanded K-pop news sources | MEDIUM | LOW | P2 |
-| Fan translation prioritization | MEDIUM | LOW | P2 |
-| Frontend API migration | HIGH | MEDIUM | P2 |
-| Engagement velocity / trending | LOW | MEDIUM | P2 |
-| Twitter/X scraper | MEDIUM | HIGH | P3 |
-| TikTok scraper | MEDIUM | HIGH | P3 |
-| Instagram scraper | MEDIUM | HIGH | P3 |
-| Near-duplicate detection | LOW | HIGH | P3 |
+| Snap feed container (CSS scroll-snap) | HIGH | MEDIUM | P1 |
+| Current item detection | HIGH | LOW | P1 |
+| Adaptive card layouts (3 variants) | HIGH | MEDIUM | P1 |
+| Unified sort/filter control bar | HIGH | MEDIUM | P1 |
+| Sort options (4 modes) | MEDIUM | LOW | P1 |
+| 3-item virtualized window | HIGH | MEDIUM | P1 |
+| Collapsed text with "See More" | MEDIUM | LOW | P1 |
+| Engagement stats overlay | MEDIUM | LOW | P1 |
+| Loading/empty states | MEDIUM | LOW | P1 |
+| Source link button | MEDIUM | LOW | P1 |
+| Framer Motion entrance/exit | MEDIUM | MEDIUM | P2 |
+| Auto-hide control bar | LOW | MEDIUM | P2 |
+| Config feature flag (snap/list) | MEDIUM | LOW | P2 |
+| Haptic feedback on snap | LOW | LOW | P2 |
+| Global state persistence | MEDIUM | LOW | P2 |
+| Web Share API integration | LOW | LOW | P2 |
+| Auto-refresh on visibility | LOW | LOW | P2 |
+| Extended theming tokens | MEDIUM | MEDIUM | P3 |
 
 **Priority key:**
-- P1: Must have for v2.0 launch -- proves the pipeline works end-to-end
-- P2: Should have, add once core pipeline is stable and historical data exists
-- P3: Nice to have, defer until demand justifies ongoing maintenance cost
+- P1: Must have for v3.0 launch -- defines the immersive experience
+- P2: Should have, adds polish and config flexibility after core works
+- P3: Nice to have, enables advanced white-label use cases
 
-## K-pop Domain Source Analysis
+## Competitor UX Analysis
 
-Comprehensive source list for a BTS Army Feed, organized by scraping reliability and fan value.
+| UX Pattern | TikTok | YouTube Shorts | Instagram Reels | BTS Army Feed v3.0 |
+|------------|--------|----------------|-----------------|---------------------|
+| Navigation | Vertical snap scroll | Vertical snap scroll | Vertical snap scroll | Vertical snap scroll |
+| Item height | 100vh, video-only | 100vh, video-only | 100vh, video-only | 100dvh, mixed content (video + image + text) |
+| Sort controls | None (algorithm-only) | None (algorithm-only) | None (algorithm-only) | Explicit sort + filter controls (our differentiator) |
+| Filter controls | None | None (separate tabs) | None | Source, member, content type filters |
+| Virtualization | Aggressive (3-item) | Aggressive (3-item) | Aggressive (3-item) | 3-item window matching platform apps |
+| Video behavior | Autoplay, mute-default | Autoplay, mute-default | Autoplay, mute-default | Autoplay, mute-default (already built) |
+| Text content | Short caption overlay | Title + description overlay | Short caption overlay | Adaptive: full text layout for articles/discussions |
+| Content types | Video only | Video only | Video/image carousel | Video, image, text, news, discussion, fan art |
+| Engagement display | Right-side vertical bar | Right-side vertical bar | Right-side vertical bar | Right-side vertical bar (matching convention) |
+| Source attribution | Creator profile | Creator channel | Creator profile | Source badge (Reddit, YouTube, etc.) + author |
+| Cross-platform content | No | No | No | Yes -- core differentiator |
+| User control over feed | None (black box) | None (black box) | None (black box) | Full sort/filter transparency |
 
-### Tier 1: High reliability, high value (RSS/JSON, no auth needed)
-
-| Source | Method | Content Type | Engagement Data | Notes |
-|--------|--------|-------------|-----------------|-------|
-| Reddit (r/bangtan, r/bts7, r/heungtan, r/kpop, r/kpoopheads, r/BTSWorld) | JSON (`/hot.json`) | Discussion, news, memes, fan art | score, num_comments, upvote_ratio | Most reliable scraping target. 3-4s delay between requests. Already configured. |
-| YouTube (BANGTANTV, HYBE, Jackpot Army, DKDKTV) | RSS feed + optional API | MVs, behind-scenes, fan edits, reactions | views, likes (API only) | RSS: 15 latest videos, no auth. API free tier: 10K units/day. Already configured. |
-| Soompi | RSS feed | K-pop news (high quality journalism) | None | `needsFilter: true`. Already configured. |
-| AllKPop | RSS feed | K-pop news, gossip (high volume) | None | `needsFilter: true`. Already configured. |
-| Koreaboo | RSS feed | K-pop news, viral content | None | `needsFilter: true`. NEW -- add to config. Good for trending BTS content. |
-| HELLOKPOP | RSS feed | K-pop news | None | `needsFilter: true`. NEW -- add to config. |
-| KpopStarz | RSS feed | K-pop news | None | `needsFilter: true`. NEW -- add to config. |
-| Tumblr (bts-trans, kimtaegis, userparkjimin, namjin, jikook) | RSS feed | Translations, fan art, fan edits | notes (from RSS) | Translation accounts (bts-trans) are extremely high value. Already configured. |
-| Bluesky | AT Protocol public API | Fan discussion, memes, reactions, updates | likes, reposts, replies | NEW -- growing ARMY community migrating from Twitter. Open protocol, no auth for public reads. Easiest new social source to add. |
-
-### Tier 2: Medium reliability, high value (requires some effort)
-
-| Source | Method | Content Type | Engagement Data | Notes |
-|--------|--------|-------------|-----------------|-------|
-| The Korea Herald (entertainment) | RSS feed | Mainstream Korean news about BTS | None | Adds mainstream credibility. `needsFilter: true`. |
-| Seoulbeats | RSS feed | Analysis, opinion, reviews | None | Higher-quality writing, less clickbait than AllKPop. |
-| NetizenBuzz | HTML scraping (Cheerio) | Translated Korean netizen comments | None | Unique content type -- Korean public opinion translated to English. No RSS, requires HTML scraping. |
-| Asian Junkie | RSS feed | Irreverent K-pop commentary | None | Different editorial voice, adds variety. |
-| Seoul Space | RSS feed | K-pop news and culture | None | Additional English-language coverage. |
-| US BTS ARMY | Web scraping | Fan org news, projects, events | None | Official US fan organization. May have RSS. |
-| Bangtan Base | Web scraping | Fan forum discussions | None | Dedicated BTS discussion forum. |
-
-### Tier 3: High value but high maintenance (fragile scraping)
-
-| Source | Method | Content Type | Engagement Data | Notes |
-|--------|--------|-------------|-----------------|-------|
-| Twitter/X | Third-party API ($25-50/mo) or Playwright | Real-time reactions, official tweets, fan content, translation threads | likes, retweets, replies | Most important real-time source. Hardest to scrape. Nitter is dead. X rotates anti-bot every 2-4 weeks. Budget third-party API or accept 10-15 hrs/mo maintenance. |
-| TikTok | Playwright + REHYDRATION JSON | Short-form edits, fancams, dance covers, memes | likes, shares, comments, views | Search by hashtag (#BTS, #BTSARMY). Anti-bot rotates every few months. UNIVERSAL_DATA_FOR_REHYDRATION script tag extraction. |
-| Instagram | GraphQL endpoint | Member posts (6/7 have IG), fan art, translation accounts | likes, comments | doc_id rotation every 2-4 weeks. Blocks cloud IPs. Needs residential proxy or third-party API. Highest-value targets: @j.m, @uarmyhope, @jin, @agaborasiddhartha, @thv, @rkive. |
-
-### Sources NOT worth scraping
-
-| Source | Why Not |
-|--------|---------|
-| Weverse | No public API, no RSS, HYBE actively blocks. Walled garden by design. |
-| V Live | Shut down 2022, migrated to Weverse. Dead platform. |
-| Daum Fancafe | Legacy platform, content moved to Weverse. Minimal activity. |
-| Spotify / Apple Music | Streaming stats, not content. No feed-worthy items to scrape. |
-| Pinterest | Low-signal reposts of fan art. No engagement context. Not where ARMY creates content. |
-| Facebook | Declining K-pop fan presence. Scraping heavily blocked by Meta. |
-| Weibo / Xiaohongshu | Chinese platforms. Language barrier, Great Firewall complications, not English-language ARMY. |
-
-## Competitor Feature Analysis
-
-| Feature | Weverse (official) | Stan Twitter Lists | Reddit (manual) | TheQoos | BTS Army Feed v2.0 |
-|---------|-------------------|--------------------|-----------------|---------|--------------------|
-| Multi-source aggregation | Single platform | Twitter only | Reddit only | News + some social | 9+ sources unified |
-| Content moderation | HYBE-controlled | None | Community voting | Editorial | LLM-based relevance + safety |
-| Ranking algorithm | Chronological | Algorithmic (opaque) | Upvote-based | Recency | Multi-signal smart blend |
-| Source diversity balance | N/A | N/A | N/A | No | Explicit diversity scoring |
-| Content type variety | N/A | N/A | N/A | No | Classified and balanced |
-| Fan translations | Official subs only | Scattered | Linked in comments | Some | Prioritized translation accounts |
-| Fan + official mix | Official only | Fan-curated | Fan + news | Mostly news | Both, classified and balanced |
-| Engagement stats | Hidden | Likes/RTs visible | Upvotes visible | No | Normalized cross-source |
-| Cross-platform | No | No | No | Partial | Yes -- core value proposition |
-| Config-portable | No | No | No | No | Swap config for any fandom |
+**Key insight:** TikTok/Shorts/Reels are video-only snap feeds with zero user control over the algorithm. The BTS Army Feed differentiates by applying the same immersive snap UX to mixed content types AND giving users explicit sort/filter controls. The combination of immersive format + user agency over content is uncommon.
 
 ## Sources
 
-### Scraping Ecosystem
-- [ScrapingBee: Best JavaScript Scraping Libraries](https://www.scrapingbee.com/blog/best-javascript-web-scraping-libraries/)
-- [Apify: Best JavaScript Scraping Libraries 2025](https://blog.apify.com/best-javascript-web-scraping-libraries/)
-- [Proxyway: Cheerio vs Puppeteer 2026](https://proxyway.com/guides/cheerio-vs-puppeteer-for-web-scraping)
-- [ScrapFly: Social Media Scraping 2026](https://scrapfly.io/blog/posts/social-media-scraping)
+### CSS Scroll Snap
+- [MDN: CSS Scroll Snap Guide](https://developer.mozilla.org/en-US/docs/Web/CSS/Guides/Scroll_snap)
+- [MDN: scroll-snap-type](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/scroll-snap-type)
+- [web.dev: Well-controlled scrolling with CSS Scroll Snap](https://web.dev/css-scroll-snap/)
+- [CSS-Tricks: Practical CSS Scroll Snapping](https://css-tricks.com/practical-css-scroll-snapping/)
+- [Ahmad Shadeed: CSS Scroll Snap](https://ishadeed.com/article/css-scroll-snap/)
+- [CodePen: CSS Scroll Snap TikTok Example](https://codepen.io/ellie_html/pen/dyYjZyB)
 
-### Platform-Specific Scraping
-- [PainOnSocial: Scrape Reddit Without API 2026](https://painonsocial.com/blog/scrape-reddit-without-api)
-- [SociaVault: YouTube API Alternatives 2025](https://sociavault.com/blog/youtube-api-alternative-scraper-2026)
-- [ScrapFly: How to Scrape TikTok 2026](https://scrapfly.io/blog/posts/how-to-scrape-tiktok-python-json)
-- [ScrapFly: How to Scrape Instagram 2026](https://scrapfly.io/blog/posts/how-to-scrape-instagram)
-- [ScrapFly: How to Scrape Twitter/X 2026](https://scrapfly.io/blog/posts/how-to-scrape-twitter)
-- [Tumblr API v2 Documentation](https://www.tumblr.com/docs/en/api/v2)
+### Scroll Snap Events (Limited Browser Support)
+- [Chrome Developers: Scroll Snap Events](https://developer.chrome.com/blog/scroll-snap-events) -- Chrome 129+ / Edge 129+ only, no Firefox/Safari
+- [MDN: scrollsnapchange event](https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollsnapchange_event)
+- [MDN: scrollsnapchanging event](https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollsnapchanging_event)
 
-### Content Moderation and LLM Pricing
-- [Mistral Moderation API](https://mistral.ai/news/mistral-moderation)
-- [IntuitionLabs: LLM API Pricing 2025](https://intuitionlabs.ai/articles/llm-api-pricing-comparison-2025)
-- [TLDL: LLM API Pricing Feb 2026](https://www.tldl.io/resources/llm-api-pricing-2026)
-- [arxiv: Policy-as-Prompt Content Moderation](https://arxiv.org/html/2502.18695v1)
-- [SkyWork: Claude Haiku vs GPT-4o-mini vs Gemini Flash](https://skywork.ai/blog/claude-haiku-4-5-vs-gpt4o-mini-vs-gemini-flash-vs-mistral-small-vs-llama-comparison/)
+### React Snap Feed Implementation
+- [DEV: Create TikTok/YouTube Shorts-like Snap Infinite Scroll in React](https://dev.to/biomathcode/create-tik-tokyoutube-shorts-like-snap-infinite-scroll-react-1mca)
+- [CoderPad: Implement Infinite Scroll in React (TikTok Clone)](https://coderpad.io/blog/development/how-to-implement-infinite-scroll-in-react-js/)
+- [DEV: IntersectionObserver, Scroll Snap and React](https://dev.to/ruben_suet/my-experience-with-intersectionobserver-scroll-snap-and-react-252a)
 
-### Recommendation and Ranking
-- [Hightouch: What is a Recommendation System](https://hightouch.com/blog/recommendation-system)
-- [Shaped.ai: How YouTube's Algorithm Works](https://www.shaped.ai/blog/how-youtubes-algorithm-works)
-- [Knight Columbia: Social Media Recommendation Algorithms](https://knightcolumbia.org/content/understanding-social-media-recommendation-algorithms)
+### Framer Motion / Motion
+- [Motion: React Scroll Animations](https://www.framer.com/motion/scroll-animations/)
+- [Motion: Gesture Animations](https://www.framer.com/motion/gestures/)
+- [Motion: useScroll hook](https://www.framer.com/motion/use-scroll/)
+- [LogRocket: React Scroll Animations with Framer Motion](https://blog.logrocket.com/react-scroll-animations-framer-motion/)
 
-### Deduplication
-- [Trafilatura: Deduplication Documentation](https://trafilatura.readthedocs.io/en/latest/deduplication.html)
-- [HuggingFace: Large-scale Near-dedup Behind BigCode](https://huggingface.co/blog/dedup)
+### Virtualization
+- [TanStack Virtual Documentation](https://tanstack.com/virtual/latest)
+- [LogRocket: Speed Up Long Lists with TanStack Virtual](https://blog.logrocket.com/speed-up-long-lists-tanstack-virtual/)
+- [Medium: Anatomy of a Vertical Videos Module](https://medium.com/@aa.castro.medina/anatomy-of-a-component-the-vertical-videos-module-2ac1999277f2)
 
-### K-pop Domain Sources
-- [Feedspot: Top 60 Kpop RSS Feeds](https://rss.feedspot.com/kpop_rss_feeds/)
-- [Feedspot: 60 Best Kpop Blogs 2026](https://bloggers.feedspot.com/kpop_blogs/)
-- [SeoulSpace: Top 10 English K-pop News Sites](https://seoulspace.com/the-top-10-english-based-k-pop-news-sites-worth-checking-out/)
-- [US BTS ARMY](https://www.usbtsarmy.com/)
-- [The BTS Effect: New Fan Guide](https://www.thebtseffect.com/new-fan-guide)
-- [KpopSource Forum](https://kpopsource.com/)
+### Sort/Filter UX Patterns
+- [Pencil & Paper: Mobile Filter UX Design Patterns](https://www.pencilandpaper.io/articles/ux-pattern-analysis-mobile-filters)
+- [Smashing Magazine: UI Patterns for Mobile Search, Sort, and Filter](https://www.smashingmagazine.com/2012/04/ui-patterns-for-mobile-apps-search-sort-filter/)
+- [Medium: Designing Filter & Sort for Better UX](https://medium.com/design-bootcamp/designing-filter-sort-for-better-ux-9b88f40081db)
+- [Medium: Filtering and Sorting Best Practices on Mobile](https://thierrymeier.medium.com/filtering-and-sorting-best-practices-on-mobile-61626449cec)
+- [UXPin: Filter UI and UX 101](https://www.uxpin.com/studio/blog/filter-ui-and-ux/)
 
-### Database
-- [SQLite: Appropriate Uses](https://sqlite.org/whentouse.html)
-- [SitePoint: SQLite on the Edge 2026](https://www.sitepoint.com/sqlite-edge-production-readiness-2026/)
-- [DataCamp: SQLite vs PostgreSQL](https://www.datacamp.com/blog/sqlite-vs-postgresql-detailed-comparison)
+### Text Truncation / "See More" Pattern
+- [Carbon Design System: Overflow Content](https://carbondesignsystem.com/patterns/overflow-content/)
+- [justmarkup: Truncating and Revealing Text](https://justmarkup.com/articles/2017-01-12-truncating-and-revealing-text-the-show-more-and-read-more-patterns/)
+- [Medium: Design for Truncation](https://medium.com/design-bootcamp/design-for-truncation-946951d5b6b8)
 
-### Job Scheduling
-- [AppSignal: Bull or Agenda](https://blog.appsignal.com/2023/09/06/job-schedulers-for-node-bull-or-agenda.html)
-- [BetterStack: BullMQ Scheduled Tasks](https://betterstack.com/community/guides/scaling-nodejs/bullmq-scheduled-tasks/)
+### Content Loading Patterns
+- [NN/g: Infinite Scrolling Tips](https://www.nngroup.com/articles/infinite-scrolling-tips/)
+- [UX Collective: Pagination, Infinite Scroll, and Load More](https://uxdesign.cc/ui-cheat-sheet-pagination-infinite-scroll-and-the-load-more-button-e5c452e279a8)
+- [ResultFirst: Pagination vs Infinite Scroll vs Load More](https://www.resultfirst.com/blog/ai-seo/pagination-vs-infinite-scroll-vs-load-more/)
+
+### Config-Driven Theming / Design Tokens
+- [Penpot: Developer's Guide to Design Tokens and CSS Variables](https://penpot.app/blog/the-developers-guide-to-design-tokens-and-css-variables/)
+- [UXPin: Managing Global Styles in React with Design Tokens](https://www.uxpin.com/studio/blog/managing-global-styles-in-react-with-design-tokens/)
+- [Medium: Advanced Theming Techniques with Design Tokens](https://david-supik.medium.com/advanced-theming-techniques-with-design-tokens-bd147fe7236e)
+- [Whoisryosuke: Theming in Modern Design Systems](https://whoisryosuke.com/blog/2020/theming-in-modern-design-systems)
 
 ---
-*Feature research for: BTS Army Feed v2.0 Content Scraping Engine*
-*Researched: 2026-03-01*
+*Feature research for: BTS Army Feed v3.0 Immersive Feed Experience*
+*Researched: 2026-03-03*

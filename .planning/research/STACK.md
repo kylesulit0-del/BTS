@@ -1,8 +1,8 @@
 # Stack Research
 
-**Domain:** Backend scraping engine, database storage, LLM moderation, REST API, scheduled jobs
-**Researched:** 2026-03-01
-**Confidence:** HIGH (core stack, ORM, API framework) / MEDIUM (LLM SDK, monorepo) / LOW (scraping edge cases)
+**Domain:** Immersive snap feed UX, scroll physics, global filter/sort state, virtualized rendering, config-driven theming
+**Researched:** 2026-03-03
+**Confidence:** HIGH (Motion, Zustand, CSS scroll-snap) / MEDIUM (virtualization strategy, theming tokens)
 
 ## Existing Stack (DO NOT CHANGE)
 
@@ -16,286 +16,346 @@ Already validated and deployed. Listed for reference only.
 | react-router-dom | ^7.13.1 | Routing |
 | vite-plugin-pwa | ^1.2.0 | PWA support |
 | dompurify | ^3.3.1 | HTML sanitization |
-| Node.js | 20.20.0 | Runtime |
+| Fastify | ^5.7.4 | REST API server |
+| SQLite + Drizzle | ^0.45.1 | Database + ORM |
+| Vercel AI SDK | ^6.0.105 | LLM moderation |
+| node-cron | ^4.2.1 | Scheduled scraping |
 
 ## Recommended Stack Additions
 
-### API Framework
+### Animation & Scroll Physics
 
 | Technology | Version | Purpose | Why Recommended |
 |------------|---------|---------|-----------------|
-| Fastify | ^5.7.4 | REST API server | 3x faster than Express (70-80K vs 20-30K req/sec). Written in TypeScript with first-class type support. Built-in JSON schema validation eliminates need for separate validation middleware. Plugin architecture keeps the server modular. Targets Node.js v20+, matching the project's runtime. For a content API serving feed data, Fastify's JSON serialization speed matters -- it fast-serializes JSON responses by compiling schema-aware serializers. |
-| @fastify/cors | ^11.2.0 | CORS for frontend access | Official Fastify plugin. TypeScript types bundled. The frontend SPA will call the API from a different origin during development. |
+| motion | ^12.34.3 | Scroll-linked animations, gesture physics, exit transitions | The successor to framer-motion (same team, same API, new package name). 18M+ monthly npm downloads. Verified compatible with React 19.2 + Vite 7.3 as of January 2026. Provides `AnimatePresence` for mount/unmount transitions, `useScroll` for scroll-linked animations, `useInView` for viewport detection, and `motion.div` drag gestures with inertia physics. The snap feed needs: (1) smooth entry animations for cards scrolling into view, (2) exit animations when navigating away, (3) scroll progress tracking for the "X of N" indicator, (4) gesture-based drag-to-dismiss or drag-to-next. CSS scroll-snap handles the actual snapping; Motion handles the polish layer on top. |
 
-### Database & ORM
+**Import path:** `import { motion, AnimatePresence, useScroll, useInView } from 'motion/react'`
 
-| Technology | Version | Purpose | Why Recommended |
-|------------|---------|---------|-----------------|
-| better-sqlite3 | ^12.6.2 | SQLite database driver | Synchronous API (faster than async for single-process workloads). No external database server to manage -- the database is a file. Fully supports Node.js 20. Prebuilt binaries available. The scraping engine is a single-process Node app, not a distributed system -- SQLite is the right fit. |
-| drizzle-orm | ^0.45.1 | TypeScript ORM | SQL-first design (write queries that look like SQL, not a query builder abstraction). Zero runtime dependencies (7.4KB gzipped). Full type inference from schema definitions -- no code generation step like Prisma. Supports both SQLite and PostgreSQL, so migration to Postgres later is a schema-level change, not a rewrite. Drizzle Kit handles migrations with `push` for dev and `generate`/`migrate` for production. |
-| drizzle-kit | ^0.45.1 | Schema migrations | Companion tool for drizzle-orm. Generates SQL migration files from schema changes. `drizzle-kit push` for rapid local dev, `drizzle-kit generate` + `drizzle-kit migrate` for production. |
+**Why `motion` not `framer-motion`:** The package was renamed. `framer-motion` still works but is the legacy import. New projects should use `motion` (same API, active development, ESM-native). The upgrade guide confirms it is a drop-in replacement.
 
-**Why SQLite over PostgreSQL for v2.0:**
-- No external service to install, configure, or keep running
-- Single-file database, trivial to backup (copy the file)
-- better-sqlite3's synchronous API is faster than any async Postgres driver for single-process workloads
-- The scraping engine runs on one server (SSH-accessed from phone) -- no horizontal scaling needed
-- Drizzle's SQLite and PostgreSQL schemas are nearly identical, so migrating later if needed is low-effort
+**What Motion handles vs what CSS handles:**
 
-**Why Drizzle over Prisma:**
-- No code generation step (Prisma requires `prisma generate` after every schema change)
-- No separate query engine binary (Prisma bundles a Rust-based engine)
-- SQL-first: the queries read like SQL, which matters when debugging scraping pipeline queries
-- Smaller footprint: 7.4KB vs Prisma's multi-MB engine
-- Same SQLite + PostgreSQL dual-support
+| Concern | Solution | Why |
+|---------|----------|-----|
+| Snap to full-viewport positions | CSS `scroll-snap-type: y mandatory` | Native browser behavior, zero JS, 60fps guaranteed. Fighting this with JS is slower. |
+| Card entry animations | Motion `whileInView` + `initial`/`animate` | Fade/slide cards as they snap into view. CSS can't do spring physics. |
+| Exit transitions | Motion `AnimatePresence` + `exit` | Animate cards out when filters change or user navigates. CSS can't animate unmounting elements. |
+| Scroll progress indicator | Motion `useScroll` | Track `scrollYProgress` to show position in feed. Leverages native ScrollTimeline API where supported for GPU-accelerated tracking. |
+| Drag-to-advance gesture | Motion `drag="y"` + `dragConstraints` | Optional enhancement: drag a card up to advance to next. Provides inertia physics on release. |
+| Video embed reveal | Motion `layoutId` + `AnimatePresence` | Smooth transition when expanding a video player from thumbnail. |
 
-### Web Scraping
+### Global State Management
 
 | Technology | Version | Purpose | Why Recommended |
 |------------|---------|---------|-----------------|
-| cheerio | ^1.2.0 | HTML parsing and data extraction | jQuery-like API for server-side HTML parsing. Fast (no browser instance), lightweight. Most scraping targets (Reddit pages, Tumblr, news sites, Nitter) serve static HTML that Cheerio handles. The project constraint is "scraping-first: public pages/RSS preferred" -- Cheerio excels at this. |
-| playwright | ^1.52.0 | Headless browser for JS-rendered pages | Required for sources that need JavaScript execution (TikTok, Instagram, some Twitter alternatives). Use ONLY as fallback when Cheerio fails -- Playwright consumes ~800MB RAM per browser instance. Install with `--with-deps` flag on Linux for system dependencies. |
+| zustand | ^5.0.11 | Global filter/sort state persisting across scroll | 1.16KB gzipped. No providers, no context wrappers. Works via hooks: `useFeedStore((s) => s.sortMode)`. The current codebase manages filter state with `useState` in `News.tsx` -- this breaks when the snap feed needs to access sort/filter state from multiple components (the control bar, the feed container, individual cards, the URL state). Zustand solves this with a single store that any component can subscribe to, with selector-based subscriptions preventing unnecessary re-renders. |
 
-**Scraping architecture -- tiered approach:**
+**Why Zustand over alternatives:**
 
-1. **RSS/Atom feeds** (cheapest): YouTube channels, Tumblr blogs, news sites. Use native `fetch` + existing XML parser logic, moved server-side.
-2. **JSON endpoints** (cheap): Reddit `.json` API. Use native `fetch` + `JSON.parse()`.
-3. **Static HTML scraping** (moderate): Nitter (Twitter proxy), fan blogs, news sites without RSS. Use `fetch` + Cheerio.
-4. **Headless browser** (expensive): TikTok trending, Instagram public pages. Use Playwright sparingly. Pool a single browser instance, reuse across scraping runs.
+| Option | Why Not |
+|--------|---------|
+| React Context | The filter/sort state updates on every user interaction (changing sort mode, toggling filters). Context re-renders ALL consumers on any state change. With 3+ cards rendered and a control bar, this causes visible jank during filter changes. Zustand's selector-based subscriptions mean only the components that read the changed slice re-render. |
+| Jotai | Atomic model is better for many independent state atoms. The feed state is a cohesive object (sortMode + sourceFilter + memberFilter + contentTypeFilter) -- a single store is cleaner than 4+ separate atoms that need coordination. |
+| Redux Toolkit | 10x the bundle size, boilerplate (slices, reducers, dispatch), overkill for one store with 4 fields. |
+| URL search params only | Sort/filter should persist in URL (for shareability), but URL is not the source of truth for React renders. Zustand store syncs to/from URL params. Reading `useSearchParams()` on every render is slower than a Zustand selector. |
 
-**Why not Puppeteer:** Playwright supports Chromium, Firefox, and WebKit from one API. Better auto-wait mechanisms. Microsoft-backed with active development. Playwright's browser context isolation is more memory-efficient than Puppeteer's page-per-tab model.
+**Store shape:**
 
-### LLM Integration
+```typescript
+import { create } from 'zustand';
 
-| Technology | Version | Purpose | Why Recommended |
-|------------|---------|---------|-----------------|
-| ai (Vercel AI SDK) | ^6.0.105 | Provider-agnostic LLM calls | Unified API across OpenAI, Anthropic, Google, Mistral, and others. The project requires "configurable LLM provider" -- this is exactly what AI SDK solves. `generateText()` and `generateObject()` work identically regardless of provider. Swap providers by changing one import. TypeScript-first with full type inference on structured outputs. Works in Node.js (not Next.js-only despite the Vercel branding). |
-| @ai-sdk/anthropic | ^3.0.48 | Claude provider for AI SDK | First-class Claude support (Claude 4 Sonnet for cost-effective moderation, Claude 4 Opus for nuanced decisions). Structured output via `generateObject()` with Zod schemas for consistent moderation verdicts. |
-| @ai-sdk/openai | ^1.3.22 | OpenAI provider for AI SDK | GPT-4o-mini for cheap high-volume moderation. Fallback provider if Anthropic is down. |
+type SortMode = 'recommended' | 'newest' | 'oldest' | 'popular' | 'discussed';
+type SourceFilter = string | 'all';
+type ContentTypeFilter = ContentType | 'all';
 
-**Why AI SDK over direct SDKs (@anthropic-ai/sdk, openai):**
-- Direct SDKs lock you to one provider. AI SDK's `generateText()` works with any provider.
-- Swapping providers is a config change: `import { anthropic } from '@ai-sdk/anthropic'` vs `import { openai } from '@ai-sdk/openai'`.
-- Structured output via `generateObject()` with Zod schemas returns typed moderation results, not raw text to parse.
-- The project explicitly requires "configurable LLM provider" -- AI SDK is built for this.
+interface FeedStore {
+  sortMode: SortMode;
+  sourceFilter: SourceFilter;
+  memberFilters: string[];  // bias IDs
+  contentTypeFilter: ContentTypeFilter;
+  setSortMode: (mode: SortMode) => void;
+  setSourceFilter: (source: SourceFilter) => void;
+  toggleMemberFilter: (memberId: string) => void;
+  setContentTypeFilter: (type: ContentTypeFilter) => void;
+  clearFilters: () => void;
+}
 
-**Why NOT a custom abstraction layer:**
-- AI SDK already IS the abstraction layer. Building another one on top wastes effort.
-- It handles retries, streaming, token counting, and structured output across providers.
-
-### Job Scheduling
-
-| Technology | Version | Purpose | Why Recommended |
-|------------|---------|---------|-----------------|
-| node-cron | ^4.2.1 | Scheduled scraping every 15-30 min | In-process cron scheduler. Zero external dependencies (no Redis). Cron expressions for scheduling (`*/15 * * * *` for every 15 min). For a single-server scraping engine, this is all you need. The scraping jobs are idempotent (re-scraping the same content deduplicates on insert), so missed executions during restarts are harmless -- the next run catches up. |
-
-**Why node-cron over BullMQ:**
-- BullMQ requires Redis. This project runs on a single server accessed via SSH. Adding Redis doubles the infrastructure.
-- BullMQ's value is distributed job processing, retry queues, and worker scaling. None of these are needed for "scrape 9 sources every 15 minutes on one server."
-- If a scraping run fails, the next scheduled run retries naturally. Content sources don't change fast enough for missed runs to matter.
-- node-cron is 50 lines of scheduling logic. BullMQ + Redis is an architectural commitment.
-
-**When to migrate to BullMQ:** If the app needs to run scrapers across multiple servers, or if individual scraping jobs need retry logic with backoff, or if job history/monitoring becomes important. Not for v2.0.
-
-### Schema Validation
-
-| Technology | Version | Purpose | Why Recommended |
-|------------|---------|---------|-----------------|
-| zod | ^4.3.6 | Runtime validation for API responses, LLM outputs, config | Already a transitive dependency (Vite's config validation uses it). TypeScript-first schema validation with static type inference. Three critical uses: (1) Validate LLM moderation output structure via AI SDK's `generateObject()`. (2) Validate API request parameters. (3) Validate scraped data before database insertion. In v1.0 the config was validated at compile time only -- with a backend processing external data, runtime validation is essential. |
-
-### Development & Runtime Tools
-
-| Technology | Version | Purpose | Why Recommended |
-|------------|---------|---------|-----------------|
-| tsx | ^4.21.0 | Run TypeScript directly in Node.js | Powered by esbuild for fast TypeScript compilation. Replaces ts-node (which has ESM compatibility issues on Node 20). Use for running the backend server in development (`tsx watch src/server/index.ts`). Supports ESM natively, matching the project's `"type": "module"` configuration. |
-
-### Monorepo Structure
-
-| Technology | Version | Purpose | Why Recommended |
-|------------|---------|---------|-----------------|
-| npm workspaces | (built-in) | Monorepo package management | Already available in the project's npm installation. Zero new tooling. Symlinks workspace packages to node_modules for cross-package imports. Shared `node_modules` at root reduces duplication. |
-
-**Why npm workspaces over Turborepo/Nx:**
-- The project has TWO packages (frontend + backend) plus a shared types package. Turborepo/Nx add value at 5+ packages with complex dependency graphs.
-- npm workspaces handle the core need: shared `node_modules`, cross-package imports, workspace-scoped scripts.
-- Zero configuration beyond `workspaces` field in root `package.json`.
-- No new CLI tools, no build orchestration config files.
-
-**Proposed workspace structure:**
-
+export const useFeedStore = create<FeedStore>()((set) => ({
+  sortMode: 'recommended',
+  sourceFilter: 'all',
+  memberFilters: [],
+  contentTypeFilter: 'all',
+  setSortMode: (mode) => set({ sortMode: mode }),
+  setSourceFilter: (source) => set({ sourceFilter: source }),
+  toggleMemberFilter: (memberId) => set((s) => ({
+    memberFilters: s.memberFilters.includes(memberId)
+      ? s.memberFilters.filter((id) => id !== memberId)
+      : [...s.memberFilters, memberId],
+  })),
+  setContentTypeFilter: (type) => set({ contentTypeFilter: type }),
+  clearFilters: () => set({
+    sortMode: 'recommended',
+    sourceFilter: 'all',
+    memberFilters: [],
+    contentTypeFilter: 'all',
+  }),
+}));
 ```
-bts/
-  package.json              # workspaces: ["packages/*"]
-  packages/
-    shared/                 # Shared TypeScript types, GroupConfig, content schemas
-      package.json          # name: "@bts/shared"
-      src/
-        types/              # ContentItem, ModerationResult, GroupConfig
-        schemas/            # Zod schemas for validation
-    server/                 # Backend: scraping, DB, LLM, API
-      package.json          # name: "@bts/server", depends on @bts/shared
-      src/
-        scrapers/           # Per-source scraper modules
-        db/                 # Drizzle schema, migrations, queries
-        moderation/         # LLM moderation pipeline
-        api/                # Fastify routes
-        scheduler/          # node-cron job definitions
-        index.ts            # Server entry point
-    web/                    # Existing frontend (moved from root src/)
-      package.json          # name: "@bts/web", depends on @bts/shared
-      src/                  # Existing React app
-      vite.config.ts
+
+### Virtualized Rendering
+
+| Technology | Version | Purpose | Why Recommended |
+|------------|---------|---------|-----------------|
+| **No library -- manual 3-slide window** | N/A | Render only current + prev + next slides | TanStack Virtual and react-window are designed for lists with hundreds or thousands of small items where the DOM node count is the bottleneck. The snap feed has full-viewport (100vh) slides -- even with 200 items, the performance problem is not DOM node count but **iframe/media loading**. Rendering 3 slides (the visible one + 1 buffer on each side) with `display: contents` or conditional rendering is trivial to implement manually and avoids fighting TanStack Virtual's scroll container assumptions vs CSS `scroll-snap-type`. |
+
+**Why NOT TanStack Virtual:**
+
+1. **Scroll-snap conflict.** TanStack Virtual manages a scroll container with `position: relative` and absolutely-positioned children. CSS `scroll-snap-type: y mandatory` requires children to be in normal document flow within the scroll container. These two models fight each other.
+2. **Overkill for the item count.** The API serves paginated feeds (50 items default). Even 200 items at 100vh each = 200 DOM nodes. The browser handles 200 divs fine. The performance bottleneck is embedded iframes and images, not div count.
+3. **3-slide window is simpler.** Rendering `items[currentIndex - 1]`, `items[currentIndex]`, `items[currentIndex + 1]` with `IntersectionObserver` to detect the current slide is ~30 lines of code. TanStack Virtual would add a dependency for the same result with more configuration.
+
+**Implementation approach:**
+
+```typescript
+// Render ALL slides as scroll-snap containers (CSS handles positioning)
+// But only MOUNT expensive content (iframes, images) for current +/- 1
+function SnapFeed({ items }: { items: FeedItem[] }) {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // IntersectionObserver detects which slide is centered
+  // Only slides within window of activeIndex get media content
+  const shouldRenderMedia = (index: number) =>
+    Math.abs(index - activeIndex) <= 1;
+
+  return (
+    <div className="snap-feed" ref={containerRef}>
+      {items.map((item, i) => (
+        <div key={item.id} className="snap-slide">
+          {shouldRenderMedia(i) ? (
+            <FullSlideContent item={item} />
+          ) : (
+            <SlideShell item={item} /> {/* Title + placeholder only */}
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+**CSS for snap behavior:**
+
+```css
+.snap-feed {
+  height: 100vh;
+  height: 100dvh; /* dynamic viewport height for mobile */
+  overflow-y: scroll;
+  scroll-snap-type: y mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+.snap-slide {
+  height: 100vh;
+  height: 100dvh;
+  scroll-snap-align: start;
+  scroll-snap-stop: always; /* prevent skipping slides on fast scroll */
+}
+```
+
+**Why `100dvh` not `100vh`:** On mobile browsers, `100vh` includes the area behind the address bar. `100dvh` (dynamic viewport height) accounts for the browser chrome shrinking/expanding. Supported in all modern browsers since 2023.
+
+### Config-Driven Theming
+
+| Technology | Version | Purpose | Why Recommended |
+|------------|---------|---------|-----------------|
+| **CSS custom properties (expanded)** | N/A | Design token system for white-label theming | The existing `applyTheme()` sets 3 CSS variables (`--theme-primary`, `--theme-accent`, `--theme-dark`). Expand this to a full token system covering typography, spacing, border radius, shadows, and component-specific tokens. No library needed -- CSS custom properties cascade, inherit, and can be scoped to components. The config-driven architecture already works (change config, change app). Extending `ThemeConfig` with more tokens follows the existing pattern. |
+
+**Why NOT a theming library (styled-components, Stitches, vanilla-extract):**
+
+1. **Already have CSS custom properties working.** `applyTheme()` in `config/applyTheme.ts` sets properties on `:root`. Extending this is 10 lines, not a migration.
+2. **No CSS-in-JS overhead.** The app uses plain CSS (`.css` files). Adding styled-components means rewriting every component's styles. Not worth it for theming alone.
+3. **CSS custom properties are the standard.** They cascade, they're inspectable in DevTools, they work in media queries, they animate with `@property`. No build step, no runtime.
+
+**Expanded token schema:**
+
+```typescript
+// Extend existing ThemeConfig
+interface ThemeConfig {
+  // Existing (keep)
+  groupName: string;
+  groupNameNative: string;
+  tagline: string;
+  fandomName: string;
+  primaryColor: string;
+  accentColor: string;
+  darkColor: string;
+  logoUrl: string;
+  socialLinks: { platform: string; handle: string; url: string }[];
+
+  // NEW: Extended design tokens
+  tokens?: {
+    // Colors
+    surfaceColor?: string;       // Card/overlay background
+    surfaceDimColor?: string;    // Muted surface
+    textColor?: string;          // Primary text
+    textMutedColor?: string;     // Secondary text
+    borderColor?: string;        // Dividers, card borders
+
+    // Typography
+    fontFamily?: string;         // Body font
+    fontFamilyHeading?: string;  // Heading font (defaults to fontFamily)
+    fontSizeBase?: string;       // Base font size (rem)
+
+    // Spacing & Shape
+    radiusSm?: string;           // Small border radius (pills, badges)
+    radiusMd?: string;           // Medium radius (cards)
+    radiusLg?: string;           // Large radius (modals)
+    spacingUnit?: string;        // Base spacing unit (px or rem)
+
+    // Feed-specific
+    cardBackdropBlur?: string;   // Glassmorphism blur amount
+    cardOverlayOpacity?: string; // Text overlay opacity on images
+  };
+
+  // NEW: Feature flags
+  features?: {
+    snapFeed?: boolean;          // true = snap feed, false = list view
+    showEngagementStats?: boolean;
+    showContentTypeBadges?: boolean;
+    enableMemberFilter?: boolean;
+    enableDarkMode?: boolean;
+  };
+}
+```
+
+**Updated applyTheme():**
+
+```typescript
+export function applyTheme(theme: ThemeConfig): void {
+  const s = document.documentElement.style;
+  // Existing
+  s.setProperty('--theme-primary', theme.primaryColor);
+  s.setProperty('--theme-accent', theme.accentColor);
+  s.setProperty('--theme-dark', theme.darkColor);
+
+  // Extended tokens (with defaults)
+  const t = theme.tokens;
+  if (t) {
+    if (t.surfaceColor) s.setProperty('--surface', t.surfaceColor);
+    if (t.textColor) s.setProperty('--text', t.textColor);
+    if (t.textMutedColor) s.setProperty('--text-muted', t.textMutedColor);
+    if (t.borderColor) s.setProperty('--border', t.borderColor);
+    if (t.fontFamily) s.setProperty('--font-body', t.fontFamily);
+    if (t.fontFamilyHeading) s.setProperty('--font-heading', t.fontFamilyHeading);
+    if (t.radiusSm) s.setProperty('--radius-sm', t.radiusSm);
+    if (t.radiusMd) s.setProperty('--radius-md', t.radiusMd);
+    if (t.radiusLg) s.setProperty('--radius-lg', t.radiusLg);
+  }
+}
 ```
 
 ## Supporting Libraries
 
 | Library | Version | Purpose | When to Use |
 |---------|---------|---------|-------------|
-| @types/better-sqlite3 | ^7.6.14 | TypeScript types for better-sqlite3 | Always (better-sqlite3 doesn't bundle its own types) |
-| dotenv | ^16.5.0 | Load environment variables from .env files | Store LLM API keys, database path, scraping config. Never commit .env files. |
-| pino | ^9.6.0 | Structured JSON logging | Fastify uses Pino by default. Structured logs are searchable. Use for scraping run logs, moderation decisions, API request logs. |
-| rss-parser | ^3.13.0 | Parse RSS/Atom feeds server-side | Replace the client-side XML parsing for RSS sources. Handles RSS 2.0, Atom, and edge cases (CDATA, namespaces) that manual DOMParser parsing misses. |
+| motion | ^12.34.3 | Animation, gestures, scroll-linked effects | Every snap slide transition, filter change animation, card entry/exit |
+| zustand | ^5.0.11 | Global sort/filter state | Shared state between ControlBar, SnapFeed, and URL sync |
+
+**That's it.** Two new dependencies for v3.0. The rest (virtualization, theming) is built with existing browser APIs and the current CSS approach.
 
 ## Installation
 
 ```bash
-# Initialize workspaces (run from project root)
-# After restructuring into packages/web, packages/server, packages/shared
-
-# Core server dependencies (from packages/server/)
-npm install fastify @fastify/cors better-sqlite3 drizzle-orm cheerio node-cron ai @ai-sdk/anthropic @ai-sdk/openai zod dotenv rss-parser
-
-# Server dev dependencies
-npm install -D drizzle-kit @types/better-sqlite3 tsx
-
-# Optional: Playwright (install only when needed for JS-rendered sources)
-npm install playwright
-npx playwright install chromium --with-deps
-
-# Shared package (from packages/shared/)
-npm install zod
-
-# No changes to packages/web/ dependencies
+# From packages/frontend/ (or from root with workspace flag)
+npm install motion zustand --workspace=packages/frontend
 ```
+
+No dev dependencies needed. Both packages include TypeScript types.
 
 ## Alternatives Considered
 
 | Recommended | Alternative | Why Not Alternative |
 |-------------|-------------|---------------------|
-| Fastify | Express | Express lacks built-in TypeScript support, JSON schema validation, and structured logging. 3x slower JSON serialization. Express 5 has been in beta for years. For a new project in 2026, Fastify is the modern choice. |
-| Fastify | Hono | Hono is optimized for edge/serverless runtimes (Cloudflare Workers, Bun). This project runs on a traditional Node.js server. Fastify has a deeper plugin ecosystem for Node.js-specific needs (CORS, rate limiting, auth). |
-| Drizzle ORM | Prisma | Prisma requires a code generation step, bundles a Rust query engine binary (~15MB), and has slower cold starts. Drizzle is SQL-first with zero dependencies. For a scraping engine writing thousands of rows, Drizzle's lightweight approach wins. |
-| Drizzle ORM | Knex.js | Knex is a query builder, not an ORM -- no schema definition, no type inference from tables. Drizzle gives you Knex-level SQL control PLUS full TypeScript type inference from schema definitions. |
-| SQLite (better-sqlite3) | PostgreSQL | PostgreSQL requires running a separate database server. SQLite is a file. The scraping engine is single-process, single-server. Postgres advantages (concurrent writes, full-text search, JSONB) aren't needed at this scale. Drizzle makes migrating to Postgres later straightforward if needed. |
-| AI SDK (Vercel) | Direct @anthropic-ai/sdk | Direct SDK locks you to one provider. The project requires provider-agnostic moderation. AI SDK's unified API makes swapping providers a one-line change. |
-| AI SDK (Vercel) | LangChain | LangChain is massive (100+ dependencies), designed for RAG pipelines and agent chains. This project needs one thing: send content to LLM, get moderation verdict back. AI SDK's `generateObject()` does this in 5 lines. LangChain is overkill. |
-| node-cron | BullMQ | BullMQ requires Redis. Adds infrastructure complexity for a single-server app. The scraping use case (run jobs on a timer) doesn't need distributed queuing, retry policies, or job persistence across restarts. |
-| node-cron | Agenda | Agenda requires MongoDB. Same objection as BullMQ -- unnecessary infrastructure for a cron schedule. |
-| Cheerio + Playwright | Puppeteer | Playwright supersedes Puppeteer with multi-browser support, better auto-wait, and more efficient browser contexts. Puppeteer is Chrome-only. |
-| npm workspaces | Turborepo | Two packages don't justify Turborepo's configuration overhead. npm workspaces solve cross-package imports and shared node_modules with zero config. |
-| npm workspaces | pnpm workspaces | Would require switching package managers. npm workspaces work with the existing npm setup. pnpm's strict node_modules isolation is valuable for large monorepos, not for 2-3 packages. |
-| tsx | ts-node | ts-node has known ESM compatibility issues with Node.js 20+. tsx uses esbuild for fast compilation and handles ESM/CJS interop transparently. |
-| Pino | Winston | Fastify bundles Pino by default. Using Winston would mean running two loggers. Pino's JSON output is faster and more structured. |
+| motion (formerly framer-motion) | react-spring | react-spring uses a different mental model (spring physics config objects). Motion's declarative props (`animate`, `exit`, `whileInView`) are more readable for a team of 1. Motion has 10x the community examples for scroll-snap + animation combos. |
+| motion | GSAP (GreenSock) | GSAP is imperative (timeline-based). Requires refs and manual cleanup. Great for complex sequenced animations, overkill for "fade card in on scroll." GSAP's license also restricts use in some commercial contexts. |
+| motion | CSS-only animations | CSS `@keyframes` + `animation` can't animate elements unmounting from the DOM (no exit animations). Can't track scroll progress as a JS value. Can't do spring physics. Motion adds what CSS can't. |
+| motion | auto-animate | auto-animate is a lightweight alternative (1.5KB) but only handles enter/exit transitions. No scroll-linked animations, no drag gestures, no layout animations. Too limited for the snap feed. |
+| zustand | Jotai | Jotai's atomic model is better for many independent state pieces. Feed filter state is a cohesive object (sort + source + member + contentType filters all belong together). A single Zustand store is cleaner than coordinating 4 atoms. |
+| zustand | React Context | Context re-renders all consumers on any change. The snap feed renders 3+ cards plus a control bar -- context would cause all of them to re-render when sort mode changes, even if only the control bar reads sort mode. Zustand's selectors prevent this. |
+| zustand | @tanstack/react-query | React Query is for server state (caching API responses). Sort/filter is client-only UI state. The existing `useFeed` hook already handles API fetching with caching. Zustand handles UI state that doesn't come from the server. |
+| Manual 3-slide window | @tanstack/react-virtual | TanStack Virtual's scroll container management conflicts with CSS scroll-snap. The feed has ~50-200 items at 100vh each -- DOM count isn't the bottleneck. Media loading is. A manual window handles this with less complexity. |
+| Manual 3-slide window | react-window | Same CSS scroll-snap conflict. react-window is also unmaintained (last publish 2021). |
+| CSS custom properties | styled-components | The app uses plain CSS files. Migrating to CSS-in-JS to gain theming is backwards -- CSS custom properties already provide theming with zero runtime cost. |
+| CSS custom properties | Tailwind CSS | Would require rewriting all existing styles. Tailwind's utility classes are great for new projects, but migrating an existing CSS codebase is high effort for low gain when the theming need is just "more CSS variables." |
 
 ## What NOT to Add
 
 | Avoid | Why | Use Instead |
 |-------|-----|-------------|
-| Express | Legacy framework. Fastify is faster, has better TypeScript support, and built-in validation. | Fastify |
-| Prisma | Code generation step, Rust engine binary, slower for high-write workloads. | Drizzle ORM |
-| Redis | No distributed job processing needed. Adds infrastructure to manage. | node-cron (in-process) |
-| LangChain | Massive dependency tree. The moderation use case is a single LLM call, not a chain. | Vercel AI SDK |
-| MongoDB / Mongoose | Document databases are wrong for structured content with relational queries (content belongs to sources, has engagement metrics, has moderation status). | SQLite via Drizzle |
-| Puppeteer | Chrome-only, less efficient than Playwright. | Playwright (when headless browser needed) |
-| axios | Native `fetch` is available in Node.js 20. No reason to add an HTTP client library. | Native `fetch` |
-| NestJS | Full framework with decorators, dependency injection, module system. Massive overkill for a REST API serving scraped content. | Fastify (standalone) |
-| @tanstack/react-query | Frontend concern, not backend. The frontend will call the REST API with native `fetch`. React Query can be considered later if the frontend needs caching/refetching logic. | Native `fetch` on frontend (for now) |
-| nodemon | tsx has built-in watch mode (`tsx watch`). No need for a separate file watcher. | `tsx watch` |
-
-## Stack Patterns by Feature
-
-**Adding a new scraper (e.g., Instagram, new subreddit):**
-1. Create `packages/server/src/scrapers/{source}.ts`
-2. Implement the `Scraper` interface (fetch, parse, normalize to `ContentItem`)
-3. Register in scraper registry with schedule config
-4. Add source config to `GroupConfig.sources` in `@bts/shared`
-
-**Running LLM moderation on scraped content:**
-1. Query unmoderated content from SQLite: `db.select().from(content).where(eq(content.moderationStatus, 'pending'))`
-2. Batch content into LLM calls (send 10-20 items per call for cost efficiency)
-3. Use `generateObject()` with Zod schema: `{ relevant: boolean, reason: string, category: string }`
-4. Update moderation status in database
-5. Provider is read from config/env: `process.env.LLM_PROVIDER` selects `@ai-sdk/anthropic` or `@ai-sdk/openai`
-
-**Serving content via REST API:**
-1. Fastify route queries SQLite for moderated content
-2. JSON schema validates response shape (Fastify built-in)
-3. Frontend calls `/api/feed?group=bts&limit=50&offset=0`
-4. Response includes engagement metrics, source attribution, media URLs
-
-**Migrating from SQLite to PostgreSQL (future):**
-1. Change Drizzle schema imports: `sqliteTable` to `pgTable`, `integer` to `serial`
-2. Change driver: `better-sqlite3` to `postgres` or `pg`
-3. Run `drizzle-kit generate` + `drizzle-kit migrate`
-4. Update connection string in `.env`
-5. Query code stays identical (Drizzle's query API is database-agnostic)
+| @tanstack/react-virtual | Scroll-snap conflict, overkill for 50-200 full-viewport items | Manual 3-slide rendering window with IntersectionObserver |
+| react-window | Unmaintained (last publish 2021), same scroll-snap conflict | Manual 3-slide rendering window |
+| react-virtuoso | Another virtualization lib that fights scroll-snap | Manual approach |
+| framer-motion | Legacy package name, still works but no new features | `motion` (the successor package) |
+| styled-components / emotion | CSS-in-JS migration for theming alone is not worth it | CSS custom properties (already in use) |
+| @tanstack/react-query | The API fetching layer (`useFeed` + `feedService`) works. Adding React Query for sort/filter would mean refactoring the data layer during a UI milestone. | Keep existing `useFeed`, add Zustand for UI state only |
+| redux / @reduxjs/toolkit | 10x bundle size, boilerplate for one store with 4 fields | Zustand |
+| react-snap-carousel | Horizontal carousel library, not vertical snap feed | CSS scroll-snap + Motion |
+| swiper | Heavy (50KB+), designed for horizontal sliders. Vertical mode exists but scroll-snap conflict. | CSS scroll-snap + Motion |
+| overlayscrollbars | Custom scrollbar library. Fighting native scroll-snap. | Native scrollbar (hide with CSS if needed) |
 
 ## Version Compatibility
 
 | Package | Compatible With | Notes |
 |---------|-----------------|-------|
-| fastify@^5.7.4 | Node.js >= 20 | Fastify 5 dropped Node 18 support |
-| better-sqlite3@^12.6.2 | Node.js 14-24 | Prebuilt binaries for LTS versions. Native addon -- needs build tools (build-essential on Ubuntu). |
-| drizzle-orm@^0.45.1 | better-sqlite3, pg, postgres.js | Same ORM API, different drivers. Schema syntax differs slightly (sqliteTable vs pgTable). |
-| ai@^6.0.105 | @ai-sdk/anthropic@^3.x, @ai-sdk/openai@^1.x | Provider packages must match AI SDK major version. |
-| cheerio@^1.2.0 | Node.js >= 18 | v1.0 was a major rewrite. ESM-native. |
-| playwright@^1.52.0 | Node.js >= 18 | Requires system dependencies on Linux (`npx playwright install --with-deps chromium`). ~400MB disk for Chromium. |
-| tsx@^4.21.0 | Node.js >= 18, TypeScript 5.x | Dev-only. Uses esbuild internally. |
-| zod@^4.3.6 | TypeScript >= 5.0 | Major version bump from Zod 3. New API for union types (`z.xor()`). |
-| node-cron@^4.2.1 | Node.js >= 14 | Pure JS, no native dependencies. |
+| motion@^12.34.3 | React >= 18, React 19.2 confirmed | Import from `motion/react`. Lazy loading available via `motion/react-m` + `LazyMotion`. |
+| zustand@^5.0.11 | React >= 18, React 19 confirmed | Use `create<T>()()` double-parens syntax for TypeScript. No provider wrapper needed. |
+| CSS scroll-snap | All modern browsers | `scroll-snap-type`, `scroll-snap-align`, `scroll-snap-stop` have universal support. `100dvh` supported since Chrome 108, Safari 15.4, Firefox 94. |
 
-## Environment Variables
+## Integration Points with Existing Code
 
-```bash
-# .env (DO NOT COMMIT)
+### What changes in existing files
 
-# LLM Provider
-LLM_PROVIDER=anthropic              # or "openai"
-ANTHROPIC_API_KEY=sk-ant-...
-OPENAI_API_KEY=sk-...
+| File | Change | Why |
+|------|--------|-----|
+| `pages/News.tsx` | Replace `useState` filter/sort state with `useFeedStore` selectors | State moves from local to global so SnapFeed and ControlBar can share it |
+| `components/SwipeFeed.tsx` | Replace entirely with new `SnapFeed.tsx` | Current swipe feed renders all items, no snap behavior, no Motion animations |
+| `components/FeedFilter.tsx` | Refactor into `ControlBar.tsx` with sort + filters | Current filter is source-only tabs. New control bar adds sort modes, content type, member filters |
+| `components/BiasFilter.tsx` | Merge into ControlBar | Currently a separate component; consolidate into unified control bar |
+| `hooks/useFeed.ts` | Add sort parameter, integrate with Zustand store | Currently only filters by source and bias. Needs to pass `sortMode` to API |
+| `hooks/useBias.ts` | Remove (replaced by Zustand store) | Bias/member filter state moves into `useFeedStore` |
+| `config/types.ts` | Extend `ThemeConfig` with `tokens` and `features` | Add design tokens and feature flags |
+| `config/applyTheme.ts` | Expand to set all new CSS custom properties | Currently sets 3 vars, needs to set 10+ |
+| `services/api.ts` | Add `sort` query parameter to feed endpoint | Server needs to know sort mode for `popular` and `discussed` sort |
 
-# Database
-DATABASE_PATH=./data/bts.db          # SQLite file path
+### What stays the same
 
-# YouTube (carried over from v1.0)
-YOUTUBE_API_KEY=AIza...
-
-# Server
-PORT=3001                            # API server port (frontend dev server uses 5173)
-NODE_ENV=development
-
-# Scraping
-SCRAPE_INTERVAL_MINUTES=15           # Cron interval
-```
+| File | Why No Change |
+|------|---------------|
+| `components/FeedCard.tsx` | Cards render inside SnapFeed slides. Card component doesn't know about snap behavior. |
+| `components/VideoEmbed.tsx` | Video embeds are unchanged. They render inside cards. |
+| `services/feedService.ts` | Feed fetching logic stays. Zustand handles what to fetch, feedService handles how. |
+| `config/groups/bts/*` | Config files get new optional fields (`tokens`, `features`). Existing fields unchanged. |
+| All server-side code | This milestone is frontend-only. API may add a `sort` parameter but core server is unchanged. |
 
 ## Sources
 
-- [Fastify npm](https://www.npmjs.com/package/fastify) -- v5.7.4, Node.js 20+ required (HIGH confidence)
-- [Express vs Fastify comparison](https://betterstack.com/community/guides/scaling-nodejs/fastify-express/) -- 3x performance gap, TypeScript-first (HIGH confidence)
-- [Drizzle ORM docs](https://orm.drizzle.team/docs/get-started-sqlite) -- SQLite + better-sqlite3 setup, migration workflow (HIGH confidence)
-- [Drizzle vs Prisma 2026](https://www.bytebase.com/blog/drizzle-vs-prisma/) -- Zero deps, no codegen, SQL-first (MEDIUM confidence)
-- [better-sqlite3 npm](https://www.npmjs.com/package/better-sqlite3) -- v12.6.2, Node 20 support confirmed (HIGH confidence)
-- [Cheerio npm](https://www.npmjs.com/package/cheerio) -- v1.2.0, ESM-native (HIGH confidence)
-- [Scraping libraries comparison](https://www.scrapingbee.com/blog/best-javascript-web-scraping-libraries/) -- Cheerio for static, Playwright for dynamic (HIGH confidence)
-- [AI SDK docs](https://ai-sdk.dev/docs/introduction) -- Multi-provider unified API, generateText/generateObject (HIGH confidence)
-- [AI SDK Anthropic provider](https://ai-sdk.dev/providers/ai-sdk-providers/anthropic) -- @ai-sdk/anthropic for Claude integration (HIGH confidence)
-- [node-cron npm](https://www.npmjs.com/package/node-cron) -- v4.2.1, in-process scheduling (HIGH confidence)
-- [BullMQ vs node-cron](https://betterstack.com/community/guides/scaling-nodejs/best-nodejs-schedulers/) -- BullMQ needs Redis, overkill for single-server (HIGH confidence)
-- [tsx npm](https://www.npmjs.com/package/tsx) -- v4.21.0, ESM-native TypeScript runner (HIGH confidence)
-- [npm workspaces guide](https://johnh.co/blog/setting-up-npm-workspaces-for-a-monorepo) -- Setup for TypeScript monorepos (MEDIUM confidence)
-- [Zod npm](https://www.npmjs.com/package/zod) -- v4.3.6, TypeScript-first validation (HIGH confidence)
-- [Playwright memory usage](https://datawookie.dev/blog/2025/06/playwright-browser-footprint/) -- ~800MB per browser instance (MEDIUM confidence)
+- [Motion (framer-motion successor) npm](https://www.npmjs.com/package/motion) -- v12.34.3, 18M+ monthly downloads (HIGH confidence)
+- [Motion React 19 compatibility](https://github.com/motiondivision/motion/issues/2668) -- v12.27.5+ confirmed with React 19.2.3 (HIGH confidence)
+- [Motion upgrade guide](https://motion.dev/docs/react-upgrade-guide) -- framer-motion to motion migration, import from `motion/react` (HIGH confidence)
+- [Motion scroll animations](https://motion.dev/docs/react-scroll-animations) -- useScroll, whileInView, ScrollTimeline API support (HIGH confidence)
+- [Motion gestures](https://motion.dev/docs/react-gestures) -- drag, press, hover gesture props (HIGH confidence)
+- [Zustand npm](https://www.npmjs.com/package/zustand) -- v5.0.11, 1.16KB gzipped (HIGH confidence)
+- [Zustand vs Jotai vs Context 2026](https://inhaq.com/blog/react-state-management-2026-redux-vs-zustand-vs-jotai.html) -- Zustand for cohesive stores, Jotai for atomic state (MEDIUM confidence)
+- [Zustand TypeScript guide](https://dev.to/avt/understanding-zustand-a-beginners-guide-with-typescript-4jjo) -- `create<T>()()` pattern for TS (MEDIUM confidence)
+- [TanStack Virtual npm](https://www.npmjs.com/package/@tanstack/react-virtual) -- v3.13.19, headless virtualizer (HIGH confidence)
+- [TanStack Virtual vs react-window](https://borstch.com/blog/development/comparing-tanstack-virtual-with-react-window-which-one-should-you-choose) -- TanStack for complex layouts, react-window for simple fixed-size (MEDIUM confidence)
+- [CSS scroll-snap MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/scroll-snap-type) -- Universal browser support, mandatory vs proximity (HIGH confidence)
+- [TikTok-style snap scroll in React](https://dev.to/biomathcode/create-tik-tokyoutube-shorts-like-snap-infinite-scroll-react-1mca) -- CSS scroll-snap + IntersectionObserver pattern (MEDIUM confidence)
+- [CSS custom properties theming guide 2026](https://devtoolbox.dedyn.io/blog/css-custom-properties-complete-guide) -- Token naming conventions, cascade behavior (MEDIUM confidence)
+- [Design tokens with CSS variables](https://penpot.app/blog/the-developers-guide-to-design-tokens-and-css-variables/) -- Primitive/semantic/component token layers (MEDIUM confidence)
+- [100dvh viewport units](https://web.dev/blog/viewport-units) -- Dynamic viewport units for mobile (HIGH confidence)
 
 ---
-*Stack research for: BTS Army Feed v2.0 -- Backend Scraping Engine*
-*Researched: 2026-03-01*
+*Stack research for: BTS Army Feed v3.0 -- Immersive Feed Experience*
+*Researched: 2026-03-03*
