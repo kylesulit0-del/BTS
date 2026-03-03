@@ -7,9 +7,10 @@ import SnapCard from "./SnapCard";
 interface SnapFeedProps {
   items: FeedItem[];
   onIndexChange?: (index: number) => void;
+  pagingDisabled?: boolean;
 }
 
-export default function SnapFeed({ items, onIndexChange }: SnapFeedProps) {
+export default function SnapFeed({ items, onIndexChange, pagingDisabled }: SnapFeedProps) {
   const { visibleItems, currentIndex, goNext, goPrev } = useSnapFeed(items);
 
   // Notify parent of index changes for control bar visibility
@@ -19,14 +20,14 @@ export default function SnapFeed({ items, onIndexChange }: SnapFeedProps) {
   const { trackRef, containerRef, gestureClaimedRef, onTransitionEnd } = useVerticalPaging({
     onCommitNext: goNext,
     onCommitPrev: goPrev,
-    enabled: items.length > 0,
+    enabled: !pagingDisabled && items.length > 0,
     currentIndex,
   });
 
   if (items.length === 0) {
     return (
       <div className="snap-feed-empty">
-        No items to display. Try a different filter.
+        No items match your filters. Try adjusting your selections or tap Clear All.
       </div>
     );
   }

@@ -29,12 +29,9 @@ export default function SnapControlBar({ feedState, dispatch, visible, onFilterI
   );
   const contentTypeLabels: Record<string, string> = {
     video: "Video",
-    fan_art: "Fan Art",
-    meme: "Meme",
+    image: "Image",
     news: "News",
     discussion: "Discussion",
-    translation: "Translation",
-    official: "Official",
   };
   const ctLabels = feedState.contentTypes.map(
     (ct) => contentTypeLabels[ct] ?? ct

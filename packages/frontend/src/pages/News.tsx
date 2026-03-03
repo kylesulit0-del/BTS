@@ -9,6 +9,7 @@ import BiasFilter from "../components/BiasFilter";
 import SwipeFeed from "../components/SwipeFeed";
 import SnapFeed from "../components/snap/SnapFeed";
 import SnapControlBar from "../components/snap/SnapControlBar";
+import FilterSheet from "../components/snap/FilterSheet";
 import SkeletonCard from "../components/SkeletonCard";
 import NewsCard from "../components/NewsCard";
 import { getConfig } from "../config";
@@ -46,15 +47,17 @@ export default function News() {
   // Client-side content type filtering for snap mode
   const items = useMemo(() => {
     if (feedMode === "snap") {
-      return matchesContentTypeFilter.length === 0
-        ? rawItems
-        : rawItems.filter((item) => matchesContentTypeFilter(item.contentType, feedState.contentTypes));
+      if (feedState.contentTypes.length === 0) return rawItems;
+      return rawItems.filter((item) => matchesContentTypeFilter(item.contentType, feedState.contentTypes));
     }
     // List mode: uses old single-string approach but feedState.contentTypes is now an array
     // Empty array = all, otherwise filter by first selected (backward compat)
     if (feedState.contentTypes.length === 0) return rawItems;
     return rawItems.filter((item) => feedState.contentTypes.includes(item.contentType ?? ""));
   }, [rawItems, feedState.contentTypes, feedMode]);
+
+  // Filter sheet state
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   // Snap mode index tracking for control bar visibility
   const [snapIndex, setSnapIndex] = useState(0);
@@ -99,7 +102,7 @@ export default function News() {
           feedState={feedState}
           dispatch={dispatch}
           visible={barVisible}
-          onFilterIconClick={() => {/* Plan 02 wires filter sheet */}}
+          onFilterIconClick={() => setIsFilterOpen(true)}
         />
         {!barVisible && (
           <div
@@ -107,7 +110,13 @@ export default function News() {
             onClick={showBar}
           />
         )}
-        <SnapFeed items={items} onIndexChange={setSnapIndex} />
+        <SnapFeed items={items} onIndexChange={setSnapIndex} pagingDisabled={isFilterOpen} />
+        <FilterSheet
+          isOpen={isFilterOpen}
+          onClose={() => setIsFilterOpen(false)}
+          feedState={feedState}
+          dispatch={dispatch}
+        />
       </div>
     );
   }
