@@ -15,7 +15,7 @@ Requirements for the Immersive Feed Experience milestone. Each maps to roadmap p
 - [x] **SNAP-04**: User sees only 3 items rendered in DOM at any time (current/prev/next) for performance
 - [x] **SNAP-05**: User sees long text collapsed with "See More" that opens a modal/drawer overlay
 - [x] **SNAP-06**: User can tap a source link icon to navigate to the original content in a new tab
-- [ ] **SNAP-07**: Videos autoplay when snapped into view and pause when scrolled away
+- [x] **SNAP-07**: Videos autoplay when snapped into view and pause when scrolled away
 
 ### Sort & Filter
 
@@ -28,7 +28,7 @@ Requirements for the Immersive Feed Experience milestone. Each maps to roadmap p
 
 ### Performance
 
-- [ ] **PERF-01**: At most one video iframe exists in the DOM at any time (facade pattern for others)
+- [x] **PERF-01**: At most one video iframe exists in the DOM at any time (facade pattern for others)
 - [x] **PERF-02**: Sort is computed server-side via API `sort` query parameter
 - [x] **PERF-03**: Filter/sort state persists in URL params and survives page refresh
 
@@ -82,14 +82,14 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SNAP-04 | Phase 10 | Complete |
 | SNAP-05 | Phase 10 | Complete |
 | SNAP-06 | Phase 10 | Complete |
-| SNAP-07 | Phase 10 | Pending |
+| SNAP-07 | Phase 10 | Complete |
 | FILT-01 | Phase 11 | Pending |
 | FILT-02 | Phase 11 | Pending |
 | FILT-03 | Phase 11 | Pending |
 | FILT-04 | Phase 11 | Pending |
 | FILT-05 | Phase 11 | Pending |
 | FILT-06 | Phase 11 | Pending |
-| PERF-01 | Phase 10 | Pending |
+| PERF-01 | Phase 10 | Complete |
 | PERF-02 | Phase 9 | Complete |
 | PERF-03 | Phase 9 | Complete |
 | PLSH-01 | Phase 12 | Pending |

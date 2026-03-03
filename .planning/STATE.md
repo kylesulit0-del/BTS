@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-03-03)
 
 ## Current Position
 
-Phase: 10 of 12 (Snap Feed Core)
-Plan: 2 of 3 in current phase
-Status: Executing
-Last activity: 2026-03-03 -- Completed 10-02 (snap card layouts with image/video/text variants and bottom sheet)
+Phase: 10 of 12 (Snap Feed Core) -- COMPLETE
+Plan: 3 of 3 in current phase
+Status: Phase Complete
+Last activity: 2026-03-03 -- Completed 10-03 (video lifecycle & swipe gesture)
 
-Progress: [████████████████████████░░░░░░] 77% (30/39 plans complete; 2/3 in Phase 10)
+Progress: [█████████████████████████░░░░░] 79% (31/39 plans complete; 3/3 in Phase 10)
 
 ## Performance Metrics
 
@@ -51,6 +51,11 @@ Recent decisions affecting current work:
 - [10-02]: Card type discriminator priority: videoType+videoId > youtube source > thumbnail > text
 - [10-02]: Shared SnapCardMeta component for consistent metadata across all card variants
 - [10-02]: Video card facade-only pre-Plan 03; isActive prop accepted for future iframe rendering
+- [10-03]: Session mute starts muted per browser autoplay policy; auto-unmutes after first user interaction
+- [10-03]: Custom progress bar hidden for TikTok (native progress_bar=1 suffices)
+- [10-03]: iframe rendered directly in SnapCardVideo, not via VideoEmbed (avoid conflicting IntersectionObservers)
+- [10-03]: Right-swipe threshold 120px with 1.5x axis lock ratio; left-swipe does nothing
+- [10-03]: Exported sendCommand from useVideoAutoplay for reuse in snap feed context
 
 ### Pending Todos
 
@@ -64,5 +69,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-03
-Stopped at: Completed 10-02-PLAN.md (snap card layouts with image/video/text variants and bottom sheet)
-Resume with: /gsd:execute-phase 10 (continue with plan 03)
+Stopped at: Completed 10-03-PLAN.md (video lifecycle & swipe gesture -- Phase 10 complete)
+Resume with: /gsd:execute-phase 11 (next phase)
