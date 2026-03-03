@@ -2100,3 +2100,119 @@ a {
   text-align: left;
   margin: 0;
 }
+
+/* === Filter Sheet === */
+.filter-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 200;
+  display: flex;
+  align-items: flex-end;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+
+.filter-sheet-backdrop.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.filter-sheet {
+  width: 100%;
+  max-height: 65vh;
+  background: var(--bg-card, #1a1a2e);
+  border-radius: 16px 16px 0 0;
+  padding: 0 16px 24px;
+  padding-bottom: max(24px, env(safe-area-inset-bottom));
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+  z-index: 201;
+  overflow-y: auto;
+}
+
+.filter-sheet-backdrop.open .filter-sheet {
+  transform: translateY(0);
+}
+
+.filter-sheet-handle {
+  width: 36px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
+  margin: 12px auto;
+}
+
+.filter-sheet-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 16px;
+  position: sticky;
+  top: 0;
+  background: var(--bg-card, #1a1a2e);
+  z-index: 1;
+}
+
+.filter-sheet-tab {
+  flex: 1;
+  padding: 10px 0;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.filter-sheet-tab.active {
+  color: var(--text-primary);
+  border-bottom-color: var(--theme-primary);
+}
+
+.filter-chip-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.filter-chip-toggle {
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.filter-chip-toggle.active {
+  background: rgba(86, 43, 139, 0.2);
+  border-color: var(--theme-primary);
+  color: var(--text-primary);
+}
+
+.filter-sheet-clear {
+  display: block;
+  width: 100%;
+  margin-top: 16px;
+  padding: 12px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  color: var(--theme-primary);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.filter-sheet-clear:active {
+  background: rgba(255, 255, 255, 0.05);
+}
