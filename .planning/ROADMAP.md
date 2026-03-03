@@ -48,11 +48,11 @@
   2. User's active filter and sort selections persist in the browser URL and survive a full page refresh
   3. Setting `feedMode: 'snap'` in config renders the new snap feed container; setting `feedMode: 'list'` renders the existing SwipeFeed
   4. CSS custom properties from the extended ThemeConfig tokens are applied to the document and visible in browser dev tools
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 09-01: TBD
-- [ ] 09-02: TBD
+- [ ] 09-01-PLAN.md -- Server-side sort endpoint with SortMode type and frontend API client propagation
+- [ ] 09-02-PLAN.md -- URL-synced feed state hook, feedMode config flag, and extended theme tokens
 
 ### Phase 10: Snap Feed Core
 **Goal**: Users experience an immersive full-screen vertical feed where each content piece fills the viewport, videos play inline, and only 3 items exist in the DOM at any time
@@ -113,7 +113,7 @@ Phases execute in numeric order: 9 -> 10 -> 11 -> 12
 | 6. Scraper Expansion | v2.0 | 4/4 | Complete | 2026-03-02 |
 | 7. LLM Moderation Pipeline | v2.0 | 3/3 | Complete | 2026-03-02 |
 | 8. Smart Blend and Integration | v2.0 | 2/2 | Complete | 2026-03-02 |
-| 9. API Contract and State Foundation | v3.0 | 0/? | Not started | - |
+| 9. API Contract and State Foundation | v3.0 | 0/2 | Not started | - |
 | 10. Snap Feed Core | v3.0 | 0/? | Not started | - |
 | 11. Sort and Filter Controls | v3.0 | 0/? | Not started | - |
 | 12. Polish and Animations | v3.0 | 0/? | Not started | - |
