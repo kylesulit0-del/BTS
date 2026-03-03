@@ -35,8 +35,8 @@ Requirements for the Immersive Feed Experience milestone. Each maps to roadmap p
 ### Polish
 
 - [ ] **PLSH-01**: Cards animate in/out with Motion entrance/exit transitions
-- [ ] **PLSH-02**: Engagement stats displayed as vertical action bar (icons + abbreviated counts)
-- [ ] **PLSH-03**: Loading state shows full-viewport skeleton card
+- [x] **PLSH-02**: Engagement stats displayed as vertical action bar (icons + abbreviated counts)
+- [x] **PLSH-03**: Loading state shows full-viewport skeleton card
 
 ### Config
 
@@ -93,8 +93,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PERF-02 | Phase 9 | Complete |
 | PERF-03 | Phase 9 | Complete |
 | PLSH-01 | Phase 12 | Pending |
-| PLSH-02 | Phase 12 | Pending |
-| PLSH-03 | Phase 12 | Pending |
+| PLSH-02 | Phase 12 | Complete |
+| PLSH-03 | Phase 12 | Complete |
 | CONF-01 | Phase 9 | Complete |
 | CONF-02 | Phase 9 | Complete |
 

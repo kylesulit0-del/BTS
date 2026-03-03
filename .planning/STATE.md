@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-03-03)
 
 **Core value:** Fans see a rich, diverse stream of content from everywhere with engagement stats that help surface the best content, all without leaving the app.
-**Current focus:** v3.0 Immersive Feed Experience -- Phase 11 complete, ready for Phase 12
+**Current focus:** v3.0 Immersive Feed Experience -- Phase 12 in progress
 
 ## Current Position
 
-Phase: 11 of 12 (Sort & Filter Controls) -- COMPLETE
-Plan: 2 of 2 in current phase (all done)
-Status: Phase Complete
-Last activity: 2026-03-03 -- Completed 11-02 (filter bottom sheet + control bar integration)
+Phase: 12 of 12 (Polish & Animations)
+Plan: 1 of 2 in current phase (12-01 complete)
+Status: In Progress
+Last activity: 2026-03-03 -- Completed 12-01 (stats bar & skeleton loading)
 
-Progress: [████████████████████████████░░] 85% (34/40 plans complete; 2/2 in Phase 11)
+Progress: [█████████████████████████████░] 88% (35/40 plans complete; 1/2 in Phase 12)
 
 ## Performance Metrics
 
@@ -64,6 +64,7 @@ Recent decisions affecting current work:
 - [11-02]: Source chips derived from unique source types in config, not individual source entries
 - [11-02]: FilterSheet uses same createPortal pattern as SeeMoreSheet for z-index isolation
 - [11-02]: pagingDisabled prop on SnapFeed prevents gesture conflicts when filter sheet is open
+- [12-01]: ReactNode type over JSX.Element for stat icon entries (React 19 compatibility)
 
 ### Pending Todos
 
@@ -77,5 +78,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-03
-Stopped at: Completed 11-02-PLAN.md (filter bottom sheet + control bar integration) -- Phase 11 complete
-Resume with: /gsd:execute-phase 12
+Stopped at: Completed 12-01-PLAN.md (stats bar & skeleton loading)
+Resume with: /gsd:execute-phase 12 (continue with 12-02)
