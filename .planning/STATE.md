@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-03-03)
 ## Current Position
 
 Phase: 9 of 12 (API Contract and State Foundation)
-Plan: 0 of ? in current phase
-Status: Ready to plan
-Last activity: 2026-03-03 -- Roadmap created for v3.0 milestone
+Plan: 1 of 2 in current phase
+Status: Executing
+Last activity: 2026-03-03 -- Completed 09-01 (server-side feed sort)
 
-Progress: [████████████████████░░░░░░░░░░] 66% (26/26 plans from v1.0+v2.0 complete; v3.0 plans TBD)
+Progress: [█████████████████████░░░░░░░░░] 69% (27/39 plans complete; 1/2 in Phase 9)
 
 ## Performance Metrics
 
@@ -39,6 +39,8 @@ Recent decisions affecting current work:
 - [v3.0 Roadmap]: 100svh with 100vh fallback, NOT 100dvh (iOS Safari regression)
 - [v3.0 Roadmap]: Motion for card animations only, NOT scroll physics (cross-browser flickering with scroll-snap)
 - [v3.0 Roadmap]: Manual 3-item DOM window over TanStack Virtual (documented scroll-snap incompatibility)
+- [09-01]: Sort applied to 500-item candidate set in-memory before pagination, not via SQL ORDER BY
+- [09-01]: engagementStats parsed only for popular sort mode to minimize JSON.parse overhead
 
 ### Pending Todos
 
@@ -52,5 +54,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-03
-Stopped at: v3.0 roadmap created, ready to plan Phase 9
-Resume with: /gsd:plan-phase 9
+Stopped at: Completed 09-01-PLAN.md (server-side feed sort)
+Resume with: /gsd:execute-phase 09 (plan 02 next)

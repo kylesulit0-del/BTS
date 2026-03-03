@@ -29,7 +29,7 @@ Requirements for the Immersive Feed Experience milestone. Each maps to roadmap p
 ### Performance
 
 - [ ] **PERF-01**: At most one video iframe exists in the DOM at any time (facade pattern for others)
-- [ ] **PERF-02**: Sort is computed server-side via API `sort` query parameter
+- [x] **PERF-02**: Sort is computed server-side via API `sort` query parameter
 - [ ] **PERF-03**: Filter/sort state persists in URL params and survives page refresh
 
 ### Polish
@@ -90,7 +90,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | FILT-05 | Phase 11 | Pending |
 | FILT-06 | Phase 11 | Pending |
 | PERF-01 | Phase 10 | Pending |
-| PERF-02 | Phase 9 | Pending |
+| PERF-02 | Phase 9 | Complete |
 | PERF-03 | Phase 9 | Pending |
 | PLSH-01 | Phase 12 | Pending |
 | PLSH-02 | Phase 12 | Pending |
