@@ -2058,6 +2058,36 @@ a {
   width: 100%;
 }
 
+/* === Snap Stats Bar === */
+.snap-stats-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 10px 16px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, transparent 100%);
+  z-index: 6;
+  pointer-events: none;
+}
+
+.snap-stats-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 500;
+}
+
+.snap-stats-item svg {
+  flex-shrink: 0;
+  opacity: 0.8;
+}
+
 /* === See More Bottom Sheet === */
 .see-more-sheet-backdrop {
   position: fixed;
