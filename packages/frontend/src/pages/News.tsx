@@ -6,6 +6,7 @@ import FeedCard from "../components/FeedCard";
 import FeedFilter from "../components/FeedFilter";
 import BiasFilter from "../components/BiasFilter";
 import SwipeFeed from "../components/SwipeFeed";
+import SnapFeed from "../components/snap/SnapFeed";
 import SkeletonCard from "../components/SkeletonCard";
 import NewsCard from "../components/NewsCard";
 import { getConfig } from "../config";
@@ -144,9 +145,7 @@ export default function News() {
       )}
 
       {feedMode === "snap" ? (
-        <div style={{ height: "calc(100svh - var(--nav-height, 60px))", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-secondary, #b0b0c0)" }}>
-          Snap feed coming in Phase 10
-        </div>
+        <SnapFeed items={items} />
       ) : (
         hasItems && (
           <>
