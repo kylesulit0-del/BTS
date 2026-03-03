@@ -23,6 +23,8 @@ export default function News() {
     ? rawItems
     : rawItems.filter((item) => item.contentType === feedState.contentType);
 
+  const feedMode = config.feedMode ?? "list";
+
   const biasNames = biases
     .map((id) => config.members.find((m) => m.id === id)?.stageName)
     .filter(Boolean);
@@ -141,28 +143,34 @@ export default function News() {
         </div>
       )}
 
-      {hasItems && (
-        <>
-          {error && <p className="feed-error-msg">{error}</p>}
-          {viewMode === "swipe" ? (
-            <SwipeFeed items={items} />
-          ) : (
-            <div className="feed-list">
-              {items.map((item) => (
-                <FeedCard key={item.id} item={item} />
-              ))}
-            </div>
-          )}
-          {items.length === 0 && (
-            <div className="feed-empty">
-              <p>
-                {biases.length > 0
-                  ? `No items found for ${biasNames.join(", ")}. Try selecting different members or "All".`
-                  : 'No items for this filter. Try "All" to see everything.'}
-              </p>
-            </div>
-          )}
-        </>
+      {feedMode === "snap" ? (
+        <div style={{ height: "calc(100svh - var(--nav-height, 60px))", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-secondary, #b0b0c0)" }}>
+          Snap feed coming in Phase 10
+        </div>
+      ) : (
+        hasItems && (
+          <>
+            {error && <p className="feed-error-msg">{error}</p>}
+            {viewMode === "swipe" ? (
+              <SwipeFeed items={items} />
+            ) : (
+              <div className="feed-list">
+                {items.map((item) => (
+                  <FeedCard key={item.id} item={item} />
+                ))}
+              </div>
+            )}
+            {items.length === 0 && (
+              <div className="feed-empty">
+                <p>
+                  {biases.length > 0
+                    ? `No items found for ${biasNames.join(", ")}. Try selecting different members or "All".`
+                    : 'No items for this filter. Try "All" to see everything.'}
+                </p>
+              </div>
+            )}
+          </>
+        )
       )}
     </div>
   );

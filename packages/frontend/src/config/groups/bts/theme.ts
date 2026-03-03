@@ -12,4 +12,17 @@ export const theme: ThemeConfig = {
   socialLinks: [
     { platform: "Twitter", handle: "@BTS_twt", url: "https://x.com/BTS_twt" },
   ],
+  tokens: {
+    surfaceColor: "#1a1a2e",
+    surfaceElevatedColor: "#222244",
+    overlayColor: "rgba(13, 13, 13, 0.85)",
+    textPrimaryColor: "#ffffff",
+    textSecondaryColor: "#b0b0c0",
+    textOnPrimaryColor: "#ffffff",
+    radiusSm: "4px",
+    radiusMd: "8px",
+    radiusLg: "16px",
+    cardOverlayGradient: "linear-gradient(to top, rgba(13,13,13,0.95) 0%, rgba(13,13,13,0.6) 50%, transparent 100%)",
+    controlBarBg: "rgba(26, 26, 46, 0.95)",
+  },
 };

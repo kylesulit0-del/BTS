@@ -28,6 +28,20 @@ export interface SourceEntry {
   enabled?: boolean;
 }
 
+export interface ThemeTokens {
+  surfaceColor?: string;
+  surfaceElevatedColor?: string;
+  overlayColor?: string;
+  textPrimaryColor?: string;
+  textSecondaryColor?: string;
+  textOnPrimaryColor?: string;
+  radiusSm?: string;
+  radiusMd?: string;
+  radiusLg?: string;
+  cardOverlayGradient?: string;
+  controlBarBg?: string;
+}
+
 export interface ThemeConfig {
   groupName: string;
   groupNameNative: string;
@@ -38,6 +52,7 @@ export interface ThemeConfig {
   darkColor: string;
   logoUrl: string;
   socialLinks: { platform: string; handle: string; url: string }[];
+  tokens?: ThemeTokens;
 }
 
 export interface GroupLabels {
@@ -80,4 +95,5 @@ export interface GroupConfig {
   labels: GroupLabels;
   events: Event[];
   news: NewsItem[];
+  feedMode?: "snap" | "list";
 }
