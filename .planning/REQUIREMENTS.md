@@ -12,7 +12,7 @@ Requirements for the Immersive Feed Experience milestone. Each maps to roadmap p
 - [x] **SNAP-01**: User sees a full-viewport vertical snap feed where each post fills the screen (100svh)
 - [x] **SNAP-02**: User can flick/scroll to snap to the next content piece
 - [x] **SNAP-03**: User sees adaptive card layouts — video posts get full-bleed player, image posts get large background with overlay, text posts get reading-focused layout
-- [x] **SNAP-04**: User sees only 3 items rendered in DOM at any time (current/prev/next) for performance
+- [x] **SNAP-04**: User sees only a configurable number of items rendered in DOM at any time (default 5 — current + 2 prev + 2 next) for performance
 - [x] **SNAP-05**: User sees long text collapsed with "See More" that opens a modal/drawer overlay
 - [x] **SNAP-06**: User can tap a source link icon to navigate to the original content in a new tab
 - [x] **SNAP-07**: Videos autoplay when snapped into view and pause when scrolled away
