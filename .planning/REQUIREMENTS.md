@@ -76,33 +76,33 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SNAP-01 | — | Pending |
-| SNAP-02 | — | Pending |
-| SNAP-03 | — | Pending |
-| SNAP-04 | — | Pending |
-| SNAP-05 | — | Pending |
-| SNAP-06 | — | Pending |
-| SNAP-07 | — | Pending |
-| FILT-01 | — | Pending |
-| FILT-02 | — | Pending |
-| FILT-03 | — | Pending |
-| FILT-04 | — | Pending |
-| FILT-05 | — | Pending |
-| FILT-06 | — | Pending |
-| PERF-01 | — | Pending |
-| PERF-02 | — | Pending |
-| PERF-03 | — | Pending |
-| PLSH-01 | — | Pending |
-| PLSH-02 | — | Pending |
-| PLSH-03 | — | Pending |
-| CONF-01 | — | Pending |
-| CONF-02 | — | Pending |
+| SNAP-01 | Phase 10 | Pending |
+| SNAP-02 | Phase 10 | Pending |
+| SNAP-03 | Phase 10 | Pending |
+| SNAP-04 | Phase 10 | Pending |
+| SNAP-05 | Phase 10 | Pending |
+| SNAP-06 | Phase 10 | Pending |
+| SNAP-07 | Phase 10 | Pending |
+| FILT-01 | Phase 11 | Pending |
+| FILT-02 | Phase 11 | Pending |
+| FILT-03 | Phase 11 | Pending |
+| FILT-04 | Phase 11 | Pending |
+| FILT-05 | Phase 11 | Pending |
+| FILT-06 | Phase 11 | Pending |
+| PERF-01 | Phase 10 | Pending |
+| PERF-02 | Phase 9 | Pending |
+| PERF-03 | Phase 9 | Pending |
+| PLSH-01 | Phase 12 | Pending |
+| PLSH-02 | Phase 12 | Pending |
+| PLSH-03 | Phase 12 | Pending |
+| CONF-01 | Phase 9 | Pending |
+| CONF-02 | Phase 9 | Pending |
 
 **Coverage:**
 - v3.0 requirements: 21 total
-- Mapped to phases: 0
-- Unmapped: 21 ⚠️
+- Mapped to phases: 21
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-03*
-*Last updated: 2026-03-03 after initial definition*
+*Last updated: 2026-03-03 after roadmap creation*
