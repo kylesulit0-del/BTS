@@ -1,0 +1,108 @@
+# Requirements: BTS Army Feed
+
+**Defined:** 2026-03-03
+**Core Value:** Fans see a rich, diverse stream of content from everywhere with engagement stats that help surface the best content, all without leaving the app.
+
+## v3.0 Requirements
+
+Requirements for the Immersive Feed Experience milestone. Each maps to roadmap phases.
+
+### Snap Feed
+
+- [ ] **SNAP-01**: User sees a full-viewport vertical snap feed where each post fills the screen (100svh)
+- [ ] **SNAP-02**: User can flick/scroll to snap to the next content piece
+- [ ] **SNAP-03**: User sees adaptive card layouts — video posts get full-bleed player, image posts get large background with overlay, text posts get reading-focused layout
+- [ ] **SNAP-04**: User sees only 3 items rendered in DOM at any time (current/prev/next) for performance
+- [ ] **SNAP-05**: User sees long text collapsed with "See More" that opens a modal/drawer overlay
+- [ ] **SNAP-06**: User can tap a source link icon to navigate to the original content in a new tab
+- [ ] **SNAP-07**: Videos autoplay when snapped into view and pause when scrolled away
+
+### Sort & Filter
+
+- [ ] **FILT-01**: User can sort the feed by Recommended (default), Newest, Oldest, Most Popular, or Most Discussed
+- [ ] **FILT-02**: User sees a unified control bar consolidating source, member, and content type filters
+- [ ] **FILT-03**: User can filter by source (Reddit, YouTube, RSS, Tumblr, Bluesky)
+- [ ] **FILT-04**: User can filter by member (RM, Jin, Suga, j-hope, Jimin, V, Jungkook, OT7)
+- [ ] **FILT-05**: User can filter by content type (Video, Image, News, Discussion)
+- [ ] **FILT-06**: Control bar auto-hides on scroll-down and reappears on scroll-up
+
+### Performance
+
+- [ ] **PERF-01**: At most one video iframe exists in the DOM at any time (facade pattern for others)
+- [ ] **PERF-02**: Sort is computed server-side via API `sort` query parameter
+- [ ] **PERF-03**: Filter/sort state persists in URL params and survives page refresh
+
+### Polish
+
+- [ ] **PLSH-01**: Cards animate in/out with Motion entrance/exit transitions
+- [ ] **PLSH-02**: Engagement stats displayed as vertical action bar (icons + abbreviated counts)
+- [ ] **PLSH-03**: Loading state shows full-viewport skeleton card
+
+### Config
+
+- [ ] **CONF-01**: Config feature flag `feedMode: 'snap' | 'list'` toggles between snap feed and traditional list
+- [ ] **CONF-02**: Extended ThemeConfig with semantic styling tokens applied as CSS custom properties
+
+## Future Requirements
+
+Deferred to v3.1+ or later milestones.
+
+### Polish Enhancements
+
+- **PLSH-04**: Haptic feedback on snap (Android only, navigator.vibrate)
+- **PLSH-05**: Web Share API integration on each card
+- **PLSH-06**: Auto-refresh feed when tab becomes visible after 5+ minutes
+
+### Advanced Theming
+
+- **THEME-01**: Full semantic + component token system in config (primitives → semantic → component layers)
+- **THEME-02**: Gesture-based quick filters (long-press card to filter by source/member)
+
+## Out of Scope
+
+| Feature | Reason |
+|---------|--------|
+| Framer Motion drag-based navigation | Conflicts with native CSS scroll-snap physics — Motion cannot control scroll |
+| Infinite scroll auto-fetch | Wrong model for snap feed; current API returns full ranked feed |
+| Pull-to-refresh | Conflicts with scroll-snap overscroll behavior on mobile |
+| Horizontal swipe actions | Conflicts with browser back/forward gestures |
+| Dark/light mode toggle | App is dark-first; light mode doubles CSS surface area |
+| Full-screen video player mode | Embedded iframes already have native fullscreen buttons |
+| New source scrapers (Weverse, X, Instagram, TikTok) | High complexity, out of scope for this UI milestone |
+
+## Traceability
+
+Which phases cover which requirements. Updated during roadmap creation.
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| SNAP-01 | — | Pending |
+| SNAP-02 | — | Pending |
+| SNAP-03 | — | Pending |
+| SNAP-04 | — | Pending |
+| SNAP-05 | — | Pending |
+| SNAP-06 | — | Pending |
+| SNAP-07 | — | Pending |
+| FILT-01 | — | Pending |
+| FILT-02 | — | Pending |
+| FILT-03 | — | Pending |
+| FILT-04 | — | Pending |
+| FILT-05 | — | Pending |
+| FILT-06 | — | Pending |
+| PERF-01 | — | Pending |
+| PERF-02 | — | Pending |
+| PERF-03 | — | Pending |
+| PLSH-01 | — | Pending |
+| PLSH-02 | — | Pending |
+| PLSH-03 | — | Pending |
+| CONF-01 | — | Pending |
+| CONF-02 | — | Pending |
+
+**Coverage:**
+- v3.0 requirements: 21 total
+- Mapped to phases: 0
+- Unmapped: 21 ⚠️
+
+---
+*Requirements defined: 2026-03-03*
+*Last updated: 2026-03-03 after initial definition*
