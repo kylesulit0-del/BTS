@@ -1802,6 +1802,50 @@ a {
   transition: opacity 0.2s;
 }
 
+.snap-card-video-loading {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.snap-card-video-mute-btn {
+  position: absolute;
+  bottom: 80px;
+  right: 12px;
+  background: rgba(0, 0, 0, 0.6);
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  cursor: pointer;
+  z-index: 10;
+  padding: 0;
+}
+
+/* Video progress bar */
+.snap-video-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.2);
+  z-index: 10;
+}
+
+.snap-video-progress-fill {
+  height: 100%;
+  background: var(--theme-primary, #fff);
+  transition: width 0.1s linear;
+}
+
 .snap-card-video-overlay {
   position: absolute;
   bottom: 0;
@@ -1809,6 +1853,8 @@ a {
   right: 0;
   padding: 40px 16px 20px;
   background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.4) 60%, transparent 100%);
+  z-index: 5;
+  pointer-events: none;
 }
 
 /* === Text Card === */

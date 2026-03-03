@@ -7,7 +7,7 @@ let currentlyPlaying: {
   videoType: VideoType;
 } | null = null;
 
-function sendCommand(
+export function sendCommand(
   iframe: HTMLIFrameElement,
   videoType: VideoType,
   action: "play" | "pause",
