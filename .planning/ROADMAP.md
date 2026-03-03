@@ -80,11 +80,11 @@ Plans:
   1. User can switch between Recommended, Newest, Oldest, Most Popular, and Most Discussed sort orders and the feed re-renders with correctly ordered results
   2. User can filter by any combination of source (Reddit, YouTube, RSS, Tumblr, Bluesky), member, and content type, and the feed shows only matching content
   3. The unified control bar consolidates all sort/filter options into a single row that auto-hides on scroll-down and reappears on scroll-up
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 11-01: TBD
-- [ ] 11-02: TBD
+- [ ] 11-01-PLAN.md -- Feed state refactor (multi-select, localStorage), overlay control bar with sort tabs, auto-hide visibility hook
+- [ ] 11-02-PLAN.md -- Filter bottom sheet with Source/Member/Type tabs, chip toggles, integration wiring
 
 ### Phase 12: Polish and Animations
 **Goal**: The feed feels premium with smooth card transitions, visible engagement stats, and polished loading states
