@@ -9,6 +9,7 @@ export interface FetchFeedOptions {
   onItems?: (items: FeedItem[]) => void;
   source?: string;
   contentType?: string;
+  sort?: string;
 }
 
 /**
@@ -19,13 +20,14 @@ export interface FetchFeedOptions {
  * - Client-side mode: uses local source fetchers with incremental loading.
  */
 export async function fetchFeed(options?: FetchFeedOptions): Promise<FeedItem[]> {
-  const { onItems, source, contentType } = options ?? {};
+  const { onItems, source, contentType, sort } = options ?? {};
 
   if (isApiMode()) {
     try {
       const result = await fetchApiFeed({
         source: source && source !== 'all' ? source : undefined,
         contentType: contentType ?? undefined,
+        sort,
       });
       // API mode: deliver all items at once (no incremental loading)
       if (onItems) {

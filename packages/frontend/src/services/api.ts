@@ -41,12 +41,14 @@ export async function fetchApiFeed(params?: {
   limit?: number;
   source?: string;
   contentType?: string;
+  sort?: string;
 }): Promise<{ items: FeedItem[]; hasMore: boolean; total: number }> {
   const url = new URL(`${API_URL}/api/feed`);
   if (params?.page != null) url.searchParams.set('page', String(params.page));
   if (params?.limit != null) url.searchParams.set('limit', String(params.limit));
   if (params?.source) url.searchParams.set('source', params.source);
   if (params?.contentType) url.searchParams.set('contentType', params.contentType);
+  if (params?.sort && params.sort !== 'recommended') url.searchParams.set('sort', params.sort);
 
   const res = await fetch(url.toString());
   if (!res.ok) {
