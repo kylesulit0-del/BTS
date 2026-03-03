@@ -13,7 +13,7 @@ import type { FastifyInstance } from 'fastify';
 import { and, desc, lt, eq, sql, isNull } from 'drizzle-orm';
 import { contentItems } from '../db/schema.js';
 import type { Db } from '../db/index.js';
-import type { FeedItem, FeedResponse } from '@bts/shared/types/feed.js';
+import type { FeedItem, FeedResponse, SortMode } from '@bts/shared/types/feed.js';
 import { rankFeed } from '../ranking/index.js';
 import { getBtsScrapingConfig } from '@bts/shared/config/sources.js';
 
@@ -65,7 +65,7 @@ function mapRowToFeedItem(row: {
 
 export function registerFeedRoutes(server: FastifyInstance, db: Db) {
   server.get<{
-    Querystring: { cursor?: string; limit?: string; page?: string; source?: string; contentType?: string };
+    Querystring: { cursor?: string; limit?: string; page?: string; source?: string; contentType?: string; sort?: string };
   }>('/feed', async (request, reply) => {
     const { cursor, source, contentType } = request.query;
 
@@ -164,17 +164,67 @@ export function registerFeedRoutes(server: FastifyInstance, db: Db) {
       .limit(500)
       .all();
 
-    // Parse engagementStats from JSON for ranking, then rank
-    const rankableItems = candidateRows.map(row => ({
-      ...row,
-      engagementStats: row.engagementStats ? JSON.parse(row.engagementStats) as Record<string, number> : null,
-    }));
+    // Validate sort param
+    const validSorts = ['recommended', 'newest', 'oldest', 'popular', 'discussed'] as const;
+    const sortMode: SortMode = validSorts.includes(request.query.sort as any)
+      ? (request.query.sort as SortMode)
+      : 'recommended';
 
-    const ranked = rankFeed(rankableItems, boostMap);
+    /** Normalize a publishedAt value (Date or epoch seconds) to epoch ms for comparison. */
+    const toEpochMs = (v: Date | number): number =>
+      v instanceof Date ? v.getTime() : (v as unknown as number) * 1000;
+
+    /** Item shape after parsing engagementStats from JSON string. */
+    type ParsedRow = Omit<typeof candidateRows[number], 'engagementStats'> & {
+      engagementStats: Record<string, number> | null;
+    };
+
+    let sortedItems: ParsedRow[];
+
+    if (sortMode === 'recommended') {
+      // Parse engagementStats from JSON for ranking, then rank
+      const rankableItems: ParsedRow[] = candidateRows.map(row => ({
+        ...row,
+        engagementStats: row.engagementStats ? JSON.parse(row.engagementStats) as Record<string, number> : null,
+      }));
+
+      sortedItems = rankFeed(rankableItems, boostMap);
+    } else {
+      // Non-recommended sorts: sort candidateRows in-memory
+      // Only parse engagementStats for 'popular' sort
+      const items: ParsedRow[] = candidateRows.map(row => ({
+        ...row,
+        engagementStats: sortMode === 'popular' && row.engagementStats
+          ? JSON.parse(row.engagementStats) as Record<string, number>
+          : null,
+      }));
+
+      switch (sortMode) {
+        case 'newest':
+          items.sort((a, b) => toEpochMs(b.publishedAt) - toEpochMs(a.publishedAt));
+          break;
+        case 'oldest':
+          items.sort((a, b) => toEpochMs(a.publishedAt) - toEpochMs(b.publishedAt));
+          break;
+        case 'popular': {
+          const sumStats = (stats: Record<string, number> | null): number => {
+            if (!stats) return 0;
+            return Object.values(stats).reduce((sum, v) => sum + (typeof v === 'number' ? v : 0), 0);
+          };
+          items.sort((a, b) => sumStats(b.engagementStats) - sumStats(a.engagementStats));
+          break;
+        }
+        case 'discussed':
+          items.sort((a, b) => b.commentCount - a.commentCount);
+          break;
+      }
+
+      sortedItems = items;
+    }
 
     // Slice for requested page
-    const pageItems = ranked.slice(offset, offset + limit);
-    const hasMore = offset + limit < ranked.length;
+    const pageItems = sortedItems.slice(offset, offset + limit);
+    const hasMore = offset + limit < sortedItems.length;
 
     // Count total items matching filters (may be more than 500 candidate set)
     const countConditions = [

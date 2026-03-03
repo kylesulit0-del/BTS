@@ -2,6 +2,9 @@
  * Shared types for the BTS feed API contract between server and frontend.
  */
 
+/** Sort modes supported by the /api/feed endpoint. */
+export type SortMode = 'recommended' | 'newest' | 'oldest' | 'popular' | 'discussed';
+
 /** Content classification type -- nullable, populated by Phase 7 LLM. */
 export type ContentType =
   | 'news'
@@ -44,4 +47,5 @@ export interface FeedQuery {
   cursor?: string;
   limit?: number;
   source?: string;
+  sort?: SortMode;
 }
