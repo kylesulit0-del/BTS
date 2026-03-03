@@ -44,7 +44,7 @@ Immersive full-screen vertical snap feed where each content piece fills the view
 - **Feed ordering:** Claude's discretion — pick best ordering strategy (chronological vs interleaved)
 
 ### Video playback
-- **Autoplay:** Sound on by default when snapped into view
+- **Autoplay:** Starts muted per browser autoplay policy; auto-unmutes after first user interaction (session mute state)
 - **Pause behavior:** Video pauses when scrolled away; at most one video iframe in DOM
 - **Tap action:** Tap anywhere on video card to toggle play/pause
 - **Mute control:** Mute/unmute icon in bottom-right corner of video cards
