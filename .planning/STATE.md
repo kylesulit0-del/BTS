@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-03-03)
 
 **Core value:** Fans see a rich, diverse stream of content from everywhere with engagement stats that help surface the best content, all without leaving the app.
-**Current focus:** v3.0 Immersive Feed Experience -- Phase 12 in progress
+**Current focus:** v3.0 Immersive Feed Experience -- Phase 12 complete
 
 ## Current Position
 
 Phase: 12 of 12 (Polish & Animations)
-Plan: 1 of 2 in current phase (12-01 complete)
-Status: In Progress
-Last activity: 2026-03-03 -- Completed 12-01 (stats bar & skeleton loading)
+Plan: 2 of 2 in current phase (12-02 complete)
+Status: Complete
+Last activity: 2026-03-03 -- Completed 12-02 (card entrance & control bar animations)
 
-Progress: [█████████████████████████████░] 88% (35/40 plans complete; 1/2 in Phase 12)
+Progress: [██████████████████████████████] 100% (36/36 plans complete; 2/2 in Phase 12)
 
 ## Performance Metrics
 
@@ -65,6 +65,8 @@ Recent decisions affecting current work:
 - [11-02]: FilterSheet uses same createPortal pattern as SeeMoreSheet for z-index isolation
 - [11-02]: pagingDisabled prop on SnapFeed prevents gesture conflicts when filter sheet is open
 - [12-01]: ReactNode type over JSX.Element for stat icon entries (React 19 compatibility)
+- [12-02]: CSS-only card entrance via key-based remounting -- no useState/useEffect needed for animation trigger
+- [12-02]: requestAnimationFrame for control bar initial slide instead of setTimeout (browser-synced timing)
 
 ### Pending Todos
 
@@ -78,5 +80,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-03
-Stopped at: Completed 12-01-PLAN.md (stats bar & skeleton loading)
-Resume with: /gsd:execute-phase 12 (continue with 12-02)
+Stopped at: Completed 12-02-PLAN.md (card entrance & control bar animations)
+Resume with: All phases complete
