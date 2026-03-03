@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-03-03)
 
 **Core value:** Fans see a rich, diverse stream of content from everywhere with engagement stats that help surface the best content, all without leaving the app.
-**Current focus:** v3.0 Immersive Feed Experience -- Phase 9: API Contract and State Foundation (COMPLETE)
+**Current focus:** v3.0 Immersive Feed Experience -- Phase 10: Snap Feed Core
 
 ## Current Position
 
-Phase: 9 of 12 (API Contract and State Foundation) -- COMPLETE
-Plan: 2 of 2 in current phase
-Status: Phase Complete
-Last activity: 2026-03-03 -- Completed 09-02 (URL-synced feed state, feedMode config, theme tokens)
+Phase: 10 of 12 (Snap Feed Core)
+Plan: 1 of 3 in current phase
+Status: Executing
+Last activity: 2026-03-03 -- Completed 10-01 (snap feed container with DOM virtualization and scroll-snap)
 
-Progress: [██████████████████████░░░░░░░░] 72% (28/39 plans complete; 2/2 in Phase 9)
+Progress: [███████████████████████░░░░░░░] 74% (29/39 plans complete; 1/3 in Phase 10)
 
 ## Performance Metrics
 
@@ -44,6 +44,9 @@ Recent decisions affecting current work:
 - [09-02]: useFeedState uses useRef to skip initial mount URL sync, avoiding unnecessary history entry
 - [09-02]: Theme tokens mapped to existing CSS variable names (surfaceColor -> --bg-card) so existing CSS rules benefit
 - [09-02]: feedMode defaults to 'list' for backward compat; snap placeholder ready for Phase 10
+- [10-01]: DOM_WINDOW_SIZE default 5, IntersectionObserver threshold 0.6 for snap detection
+- [10-01]: useLayoutEffect for scroll position adjustment to prevent visual jumps during window shifts
+- [10-01]: Items fewer than window size skip virtualization entirely to avoid duplicate keys
 
 ### Pending Todos
 
@@ -57,5 +60,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-03
-Stopped at: Completed 09-02-PLAN.md (URL-synced feed state, feedMode config, theme tokens) -- Phase 9 complete
-Resume with: /gsd:execute-phase 10 (next phase)
+Stopped at: Completed 10-01-PLAN.md (snap feed container with DOM virtualization and scroll-snap)
+Resume with: /gsd:execute-phase 10 (continue with plan 02)
