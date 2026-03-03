@@ -1672,6 +1672,14 @@ a {
   overflow: hidden;
 }
 
+/* Swipeable card content wrapper */
+.snap-card-content {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  background: var(--bg-primary);
+}
+
 /* Source link icon - top right of every card */
 .snap-card-source-link {
   position: absolute;

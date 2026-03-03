@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import type { FeedItem } from "../../types/feed";
 import { abbreviateNumber } from "../../utils/formatNumber";
+import { useSwipeGesture } from "../../hooks/useSwipeGesture";
 import SnapCardImage from "./SnapCardImage";
 import SnapCardVideo from "./SnapCardVideo";
 import SnapCardText from "./SnapCardText";
@@ -97,37 +98,53 @@ export default function SnapCard({ item, isActive }: SnapCardProps) {
   const [seeMoreOpen, setSeeMoreOpen] = useState(false);
   const variant = getCardVariant(item);
 
+  const openSourceUrl = useCallback(() => {
+    window.open(item.url, "_blank", "noopener");
+  }, [item.url]);
+
+  const sourceColor = sourceBadgeColors[item.source] ?? "var(--theme-primary)";
+  const { handlers, style, swiping } = useSwipeGesture(openSourceUrl, sourceColor);
+
   return (
     <>
-      <div className="snap-card-layout">
-        {/* Source link icon - top right of every card */}
-        <button
-          className="snap-card-source-link"
-          aria-label="Open original"
-          onClick={() => window.open(item.url, "_blank", "noopener")}
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-            <polyline points="15 3 21 3 21 9" />
-            <line x1="10" y1="14" x2="21" y2="3" />
-          </svg>
-        </button>
+      <div
+        className="snap-card-layout"
+        {...handlers}
+        style={{ background: swiping ? sourceColor : undefined }}
+      >
+        <div className="snap-card-content" style={style}>
+          {/* Source link icon - top right of every card */}
+          <button
+            className="snap-card-source-link"
+            aria-label="Open original"
+            onClick={(e) => {
+              e.stopPropagation();
+              openSourceUrl();
+            }}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+              <polyline points="15 3 21 3 21 9" />
+              <line x1="10" y1="14" x2="21" y2="3" />
+            </svg>
+          </button>
 
-        {variant === "video" && (
-          <SnapCardVideo item={item} isActive={isActive} />
-        )}
-        {variant === "image" && (
-          <SnapCardImage
-            item={item}
-            onSeeMore={() => setSeeMoreOpen(true)}
-          />
-        )}
-        {variant === "text" && (
-          <SnapCardText
-            item={item}
-            onSeeMore={() => setSeeMoreOpen(true)}
-          />
-        )}
+          {variant === "video" && (
+            <SnapCardVideo item={item} isActive={isActive} />
+          )}
+          {variant === "image" && (
+            <SnapCardImage
+              item={item}
+              onSeeMore={() => setSeeMoreOpen(true)}
+            />
+          )}
+          {variant === "text" && (
+            <SnapCardText
+              item={item}
+              onSeeMore={() => setSeeMoreOpen(true)}
+            />
+          )}
+        </div>
       </div>
 
       {seeMoreOpen && item.preview && (
