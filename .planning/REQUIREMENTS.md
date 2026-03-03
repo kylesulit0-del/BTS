@@ -11,10 +11,10 @@ Requirements for the Immersive Feed Experience milestone. Each maps to roadmap p
 
 - [x] **SNAP-01**: User sees a full-viewport vertical snap feed where each post fills the screen (100svh)
 - [x] **SNAP-02**: User can flick/scroll to snap to the next content piece
-- [ ] **SNAP-03**: User sees adaptive card layouts — video posts get full-bleed player, image posts get large background with overlay, text posts get reading-focused layout
+- [x] **SNAP-03**: User sees adaptive card layouts — video posts get full-bleed player, image posts get large background with overlay, text posts get reading-focused layout
 - [x] **SNAP-04**: User sees only 3 items rendered in DOM at any time (current/prev/next) for performance
-- [ ] **SNAP-05**: User sees long text collapsed with "See More" that opens a modal/drawer overlay
-- [ ] **SNAP-06**: User can tap a source link icon to navigate to the original content in a new tab
+- [x] **SNAP-05**: User sees long text collapsed with "See More" that opens a modal/drawer overlay
+- [x] **SNAP-06**: User can tap a source link icon to navigate to the original content in a new tab
 - [ ] **SNAP-07**: Videos autoplay when snapped into view and pause when scrolled away
 
 ### Sort & Filter
@@ -78,10 +78,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 |-------------|-------|--------|
 | SNAP-01 | Phase 10 | Complete |
 | SNAP-02 | Phase 10 | Complete |
-| SNAP-03 | Phase 10 | Pending |
+| SNAP-03 | Phase 10 | Complete |
 | SNAP-04 | Phase 10 | Complete |
-| SNAP-05 | Phase 10 | Pending |
-| SNAP-06 | Phase 10 | Pending |
+| SNAP-05 | Phase 10 | Complete |
+| SNAP-06 | Phase 10 | Complete |
 | SNAP-07 | Phase 10 | Pending |
 | FILT-01 | Phase 11 | Pending |
 | FILT-02 | Phase 11 | Pending |
