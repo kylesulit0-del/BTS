@@ -1,13 +1,27 @@
+import { useEffect } from "react";
 import type { FeedItem } from "../../types/feed";
 import { useSnapFeed } from "../../hooks/useSnapFeed";
+import { useVerticalPaging } from "../../hooks/useVerticalPaging";
 import SnapCard from "./SnapCard";
 
 interface SnapFeedProps {
   items: FeedItem[];
+  onIndexChange?: (index: number) => void;
 }
 
-export default function SnapFeed({ items }: SnapFeedProps) {
-  const { windowedItems, currentIndex, containerRef } = useSnapFeed(items);
+export default function SnapFeed({ items, onIndexChange }: SnapFeedProps) {
+  const { visibleItems, currentIndex, goNext, goPrev } = useSnapFeed(items);
+
+  // Notify parent of index changes for control bar visibility
+  useEffect(() => {
+    onIndexChange?.(currentIndex);
+  }, [currentIndex, onIndexChange]);
+  const { trackRef, containerRef, gestureClaimedRef, onTransitionEnd } = useVerticalPaging({
+    onCommitNext: goNext,
+    onCommitPrev: goPrev,
+    enabled: items.length > 0,
+    currentIndex,
+  });
 
   if (items.length === 0) {
     return (
@@ -19,15 +33,28 @@ export default function SnapFeed({ items }: SnapFeedProps) {
 
   return (
     <div className="snap-feed" ref={containerRef}>
-      {windowedItems.map(({ item, realIndex }) => (
-        <div
-          key={realIndex}
-          className="snap-card"
-          data-realindex={realIndex}
-        >
-          <SnapCard item={item} isActive={realIndex === currentIndex} />
-        </div>
-      ))}
+      <div
+        className="snap-paging-track"
+        ref={trackRef}
+        onTransitionEnd={(e) => {
+          if (e.target === trackRef.current) onTransitionEnd();
+        }}
+      >
+        {visibleItems.map((vi) => (
+          <div
+            className="snap-card"
+            key={`${vi.realIndex}-${vi.position}`}
+            style={{ top: `${vi.position * 100}%` }}
+          >
+            <SnapCard
+              item={vi.item}
+              isActive={vi.position === 0}
+              gestureClaimedRef={gestureClaimedRef}
+            />
+          </div>
+        ))}
+      </div>
+      <div className="snap-counter">{currentIndex + 1} / {items.length}</div>
     </div>
   );
 }

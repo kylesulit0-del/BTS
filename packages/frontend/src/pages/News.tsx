@@ -1,34 +1,116 @@
-import { useState } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { useFeedState } from "../hooks/useFeedState";
 import { useFeed } from "../hooks/useFeed";
 import { useBias } from "../hooks/useBias";
+import { useControlBarVisibility } from "../hooks/useControlBarVisibility";
 import FeedCard from "../components/FeedCard";
 import FeedFilter from "../components/FeedFilter";
 import BiasFilter from "../components/BiasFilter";
 import SwipeFeed from "../components/SwipeFeed";
 import SnapFeed from "../components/snap/SnapFeed";
+import SnapControlBar from "../components/snap/SnapControlBar";
 import SkeletonCard from "../components/SkeletonCard";
 import NewsCard from "../components/NewsCard";
 import { getConfig } from "../config";
 import { contentTypeKeys, contentTypeLabels, contentTypeBadgeColors } from "../utils/contentTypes";
+
+// Category mapping for snap mode content type filtering
+const CONTENT_TYPE_CATEGORIES: Record<string, string[]> = {
+  video: ["video"],
+  image: ["fan_art", "meme"],
+  news: ["news", "official", "translation"],
+  discussion: ["discussion"],
+};
+
+function matchesContentTypeFilter(itemContentType: string | null | undefined, selectedCategories: string[]): boolean {
+  if (selectedCategories.length === 0) return true;
+  if (!itemContentType) return false;
+  return selectedCategories.some((category) => {
+    const types = CONTENT_TYPE_CATEGORIES[category];
+    return types ? types.includes(itemContentType) : itemContentType === category;
+  });
+}
 
 export default function News() {
   const config = getConfig();
   const [feedState, dispatch] = useFeedState();
   const [viewMode, setViewMode] = useState<"list" | "swipe">("list");
   const { biases, toggleBias, clearBiases } = useBias();
-  const { items: rawItems, isLoading, isRetrying, error, refresh, hasItems } = useFeed(feedState, biases);
-
-  // Client-side content type filtering
-  const items = feedState.contentType === "all"
-    ? rawItems
-    : rawItems.filter((item) => item.contentType === feedState.contentType);
 
   const feedMode = config.feedMode ?? "list";
+
+  // In snap mode, use feedState.members for bias filtering
+  const effectiveBiases = feedMode === "snap" ? feedState.members : biases;
+  const { items: rawItems, isLoading, isRetrying, error, refresh, hasItems } = useFeed(feedState, effectiveBiases);
+
+  // Client-side content type filtering for snap mode
+  const items = useMemo(() => {
+    if (feedMode === "snap") {
+      return matchesContentTypeFilter.length === 0
+        ? rawItems
+        : rawItems.filter((item) => matchesContentTypeFilter(item.contentType, feedState.contentTypes));
+    }
+    // List mode: uses old single-string approach but feedState.contentTypes is now an array
+    // Empty array = all, otherwise filter by first selected (backward compat)
+    if (feedState.contentTypes.length === 0) return rawItems;
+    return rawItems.filter((item) => feedState.contentTypes.includes(item.contentType ?? ""));
+  }, [rawItems, feedState.contentTypes, feedMode]);
+
+  // Snap mode index tracking for control bar visibility
+  const [snapIndex, setSnapIndex] = useState(0);
+  const { visible: barVisible, showBar } = useControlBarVisibility({ currentIndex: snapIndex });
+
+  // Attempt to preserve current card position when sort/filter changes
+  const prevItemsRef = useRef(items);
+  const currentItemIdRef = useRef<string | null>(null);
+
+  // Track current item ID based on snapIndex
+  useEffect(() => {
+    if (items.length > 0 && snapIndex < items.length) {
+      currentItemIdRef.current = items[snapIndex].id;
+    }
+  }, [snapIndex, items]);
+
+  // Calculate startIndex when items change to preserve current card
+  const startIndex = useMemo(() => {
+    if (prevItemsRef.current === items) return undefined;
+    prevItemsRef.current = items;
+
+    if (!currentItemIdRef.current) return 0;
+    const idx = items.findIndex((item) => item.id === currentItemIdRef.current);
+    return idx >= 0 ? idx : 0;
+  }, [items]);
+
+  // Reset snapIndex when startIndex changes
+  useEffect(() => {
+    if (startIndex !== undefined && startIndex !== snapIndex) {
+      setSnapIndex(startIndex);
+    }
+  }, [startIndex]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const biasNames = biases
     .map((id) => config.members.find((m) => m.id === id)?.stageName)
     .filter(Boolean);
+
+  if (feedMode === "snap") {
+    return (
+      <div className="snap-page">
+        <SnapControlBar
+          feedState={feedState}
+          dispatch={dispatch}
+          visible={barVisible}
+          onFilterIconClick={() => {/* Plan 02 wires filter sheet */}}
+        />
+        {!barVisible && (
+          <div
+            className="snap-reveal-zone"
+            onClick={showBar}
+          />
+        )}
+        <SnapFeed items={items} onIndexChange={setSnapIndex} />
+      </div>
+    );
+  }
 
   return (
     <div className={`page${viewMode === "swipe" ? " swipe-mode" : ""}`}>
@@ -64,22 +146,31 @@ export default function News() {
         </div>
       </div>
 
-      <FeedFilter active={feedState.source} onChange={(source) => dispatch({ type: "SET_SOURCE", source })} />
+      <FeedFilter active={feedState.sources.length === 1 ? feedState.sources[0] : "all"} onChange={(source) => {
+        // List mode backward compat: single-select behavior
+        if (source === "all") {
+          dispatch({ type: "CLEAR_ALL_FILTERS" });
+        } else {
+          // Clear sources then toggle the one we want
+          dispatch({ type: "CLEAR_ALL_FILTERS" });
+          dispatch({ type: "TOGGLE_SOURCE", source });
+        }
+      }} />
 
       <div className="content-type-filter">
         <button
-          className={`content-type-pill${feedState.contentType === "all" ? " active" : ""}`}
-          onClick={() => dispatch({ type: "SET_CONTENT_TYPE", contentType: "all" })}
+          className={`content-type-pill${feedState.contentTypes.length === 0 ? " active" : ""}`}
+          onClick={() => dispatch({ type: "CLEAR_ALL_FILTERS" })}
         >
           All Types
         </button>
         {contentTypeKeys.map((type) => type && (
           <button
             key={type}
-            className={`content-type-pill${feedState.contentType === type ? " active" : ""}`}
-            onClick={() => dispatch({ type: "SET_CONTENT_TYPE", contentType: type })}
+            className={`content-type-pill${feedState.contentTypes.includes(type) ? " active" : ""}`}
+            onClick={() => dispatch({ type: "TOGGLE_CONTENT_TYPE", contentType: type })}
             style={
-              feedState.contentType === type
+              feedState.contentTypes.includes(type)
                 ? { background: `${contentTypeBadgeColors[type]}33`, color: contentTypeBadgeColors[type], borderColor: contentTypeBadgeColors[type] }
                 : undefined
             }
@@ -144,32 +235,28 @@ export default function News() {
         </div>
       )}
 
-      {feedMode === "snap" ? (
-        <SnapFeed items={items} />
-      ) : (
-        hasItems && (
-          <>
-            {error && <p className="feed-error-msg">{error}</p>}
-            {viewMode === "swipe" ? (
-              <SwipeFeed items={items} />
-            ) : (
-              <div className="feed-list">
-                {items.map((item) => (
-                  <FeedCard key={item.id} item={item} />
-                ))}
-              </div>
-            )}
-            {items.length === 0 && (
-              <div className="feed-empty">
-                <p>
-                  {biases.length > 0
-                    ? `No items found for ${biasNames.join(", ")}. Try selecting different members or "All".`
-                    : 'No items for this filter. Try "All" to see everything.'}
-                </p>
-              </div>
-            )}
-          </>
-        )
+      {hasItems && (
+        <>
+          {error && <p className="feed-error-msg">{error}</p>}
+          {viewMode === "swipe" ? (
+            <SwipeFeed items={items} />
+          ) : (
+            <div className="feed-list">
+              {items.map((item) => (
+                <FeedCard key={item.id} item={item} />
+              ))}
+            </div>
+          )}
+          {items.length === 0 && (
+            <div className="feed-empty">
+              <p>
+                {biases.length > 0
+                  ? `No items found for ${biasNames.join(", ")}. Try selecting different members or "All".`
+                  : 'No items for this filter. Try "All" to see everything.'}
+              </p>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
