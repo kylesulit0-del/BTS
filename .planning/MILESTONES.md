@@ -43,3 +43,25 @@
 
 ---
 
+
+## v3.0 Immersive Feed Experience (Shipped: 2026-03-03)
+
+**Phases completed:** 4 phases, 10 plans, 18 feat commits
+**Timeline:** 7 days (2026-02-24 → 2026-03-03)
+**Codebase:** 9,384 LOC TypeScript (57 files modified, +7,727 insertions)
+
+**Key accomplishments:**
+- TikTok-style vertical snap feed with CSS scroll-snap (100svh cards) and DOM virtualization
+- Three adaptive card layouts (video/image/text) with See More bottom sheet overlay
+- Video autoplay/pause lifecycle with single-iframe performance and session mute persistence
+- Unified control bar with 5 sort modes and tabbed filter bottom sheet (source/member/type)
+- Card entrance animations (slide-up + fade), engagement stats bar, shimmer skeleton loading
+- Server-side sort API, URL-persisted feed state, feedMode config flag, semantic theme tokens
+
+**Known tech debt (3 items):**
+- windowedItems (DOM_WINDOW_SIZE=5) computed but only 3-item visibleItems rendered
+- SortMode type duplicated between @bts/shared and useFeedState.ts
+- startIndex position-preserve dead code — feed resets to card 0 on sort/filter change
+
+---
+
