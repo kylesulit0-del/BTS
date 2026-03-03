@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-03-03)
 
 **Core value:** Fans see a rich, diverse stream of content from everywhere with engagement stats that help surface the best content, all without leaving the app.
-**Current focus:** v3.0 Immersive Feed Experience -- Phase 9: API Contract and State Foundation
+**Current focus:** v3.0 Immersive Feed Experience -- Phase 9: API Contract and State Foundation (COMPLETE)
 
 ## Current Position
 
-Phase: 9 of 12 (API Contract and State Foundation)
-Plan: 1 of 2 in current phase
-Status: Executing
-Last activity: 2026-03-03 -- Completed 09-01 (server-side feed sort)
+Phase: 9 of 12 (API Contract and State Foundation) -- COMPLETE
+Plan: 2 of 2 in current phase
+Status: Phase Complete
+Last activity: 2026-03-03 -- Completed 09-02 (URL-synced feed state, feedMode config, theme tokens)
 
-Progress: [█████████████████████░░░░░░░░░] 69% (27/39 plans complete; 1/2 in Phase 9)
+Progress: [██████████████████████░░░░░░░░] 72% (28/39 plans complete; 2/2 in Phase 9)
 
 ## Performance Metrics
 
@@ -41,6 +41,9 @@ Recent decisions affecting current work:
 - [v3.0 Roadmap]: Manual 3-item DOM window over TanStack Virtual (documented scroll-snap incompatibility)
 - [09-01]: Sort applied to 500-item candidate set in-memory before pagination, not via SQL ORDER BY
 - [09-01]: engagementStats parsed only for popular sort mode to minimize JSON.parse overhead
+- [09-02]: useFeedState uses useRef to skip initial mount URL sync, avoiding unnecessary history entry
+- [09-02]: Theme tokens mapped to existing CSS variable names (surfaceColor -> --bg-card) so existing CSS rules benefit
+- [09-02]: feedMode defaults to 'list' for backward compat; snap placeholder ready for Phase 10
 
 ### Pending Todos
 
@@ -54,5 +57,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-03
-Stopped at: Completed 09-01-PLAN.md (server-side feed sort)
-Resume with: /gsd:execute-phase 09 (plan 02 next)
+Stopped at: Completed 09-02-PLAN.md (URL-synced feed state, feedMode config, theme tokens) -- Phase 9 complete
+Resume with: /gsd:execute-phase 10 (next phase)

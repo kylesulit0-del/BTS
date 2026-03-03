@@ -30,7 +30,7 @@ Requirements for the Immersive Feed Experience milestone. Each maps to roadmap p
 
 - [ ] **PERF-01**: At most one video iframe exists in the DOM at any time (facade pattern for others)
 - [x] **PERF-02**: Sort is computed server-side via API `sort` query parameter
-- [ ] **PERF-03**: Filter/sort state persists in URL params and survives page refresh
+- [x] **PERF-03**: Filter/sort state persists in URL params and survives page refresh
 
 ### Polish
 
@@ -40,8 +40,8 @@ Requirements for the Immersive Feed Experience milestone. Each maps to roadmap p
 
 ### Config
 
-- [ ] **CONF-01**: Config feature flag `feedMode: 'snap' | 'list'` toggles between snap feed and traditional list
-- [ ] **CONF-02**: Extended ThemeConfig with semantic styling tokens applied as CSS custom properties
+- [x] **CONF-01**: Config feature flag `feedMode: 'snap' | 'list'` toggles between snap feed and traditional list
+- [x] **CONF-02**: Extended ThemeConfig with semantic styling tokens applied as CSS custom properties
 
 ## Future Requirements
 
@@ -91,12 +91,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 | FILT-06 | Phase 11 | Pending |
 | PERF-01 | Phase 10 | Pending |
 | PERF-02 | Phase 9 | Complete |
-| PERF-03 | Phase 9 | Pending |
+| PERF-03 | Phase 9 | Complete |
 | PLSH-01 | Phase 12 | Pending |
 | PLSH-02 | Phase 12 | Pending |
 | PLSH-03 | Phase 12 | Pending |
-| CONF-01 | Phase 9 | Pending |
-| CONF-02 | Phase 9 | Pending |
+| CONF-01 | Phase 9 | Complete |
+| CONF-02 | Phase 9 | Complete |
 
 **Coverage:**
 - v3.0 requirements: 21 total
