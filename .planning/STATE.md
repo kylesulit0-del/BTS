@@ -2,16 +2,16 @@
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-03-03)
+See: .planning/PROJECT.md (updated 2026-03-04)
 
 **Core value:** Fans see a rich, diverse stream of content from everywhere with engagement stats that help surface the best content, all without leaving the app.
-**Current focus:** Planning next milestone
+**Current focus:** v4.0 Enhanced Feed UI & Navigation
 
 ## Current Position
 
-Phase: v3.0 complete (12 phases, 36 plans shipped)
-Status: Between milestones
-Last activity: 2026-03-03 -- v3.0 Immersive Feed Experience shipped
+Phase: Not started (defining requirements)
+Status: Defining requirements
+Last activity: 2026-03-04 — Milestone v4.0 started
 
 ## Performance Metrics
 
@@ -35,7 +35,6 @@ Last activity: 2026-03-03 -- v3.0 Immersive Feed Experience shipped
 ### Decisions
 
 Decisions are logged in PROJECT.md Key Decisions table.
-All v3.0 decisions archived — see .planning/milestones/v3.0-ROADMAP.md for full history.
 
 ### Pending Todos
 
@@ -48,6 +47,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-03
-Stopped at: v3.0 milestone completed and archived
+Last session: 2026-03-04
+Stopped at: Defining v4.0 requirements
 Resume with: /gsd:new-milestone

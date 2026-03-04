@@ -68,7 +68,15 @@ Fans see a rich, diverse stream of content from everywhere — official and fan-
 
 ### Active
 
-(No active requirements — plan next milestone)
+- [ ] Fixed header with "Army Feed" branding (left) and Sort/Filter buttons (right), always visible
+- [ ] Sort bottom sheet matching Filter UI design language
+- [ ] Media-centric card layout: media ~60% viewport top, title, metadata, snippet, Show More
+- [ ] Auto-snippet: first 100-150 characters of post description
+- [ ] Consistent card layout even for video-only posts (title + metadata always present)
+- [ ] Engagement stats showing available per-source data (date, likes, comments, views, etc.)
+- [ ] "(Show More)" link opens original source URL in new tab
+- [ ] Video gesture fix: transparent touch overlay for vertical swipe passthrough over iframes
+- [ ] Bottom sheet consistency: Sort and Filter share same slide-up design
 
 ### Out of Scope
 
@@ -142,4 +150,4 @@ Fans see a rich, diverse stream of content from everywhere — official and fan-
 | Server-side sort on 500-item candidate set | Client sort on full feed too slow | ✓ Good — fast sort response |
 
 ---
-*Last updated: 2026-03-03 after v3.0 milestone completion*
+*Last updated: 2026-03-04 after v4.0 milestone start*
