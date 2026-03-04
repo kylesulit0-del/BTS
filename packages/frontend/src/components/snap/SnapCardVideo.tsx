@@ -1,7 +1,7 @@
 import { useRef, useState, useCallback } from "react";
 import type { FeedItem, VideoType } from "../../types/feed";
 import { useSnapVideo } from "../../hooks/useSnapVideo";
-import { SnapCardMeta } from "./SnapCard";
+import { InfoPanel } from "./SnapCard";
 
 const TAP_MAX_DISTANCE = 10; // px — beyond this, it's a swipe not a tap
 const TAP_MAX_DURATION = 300; // ms — beyond this, it's a long press not a tap
@@ -101,7 +101,7 @@ export default function SnapCardVideo({ item, isActive }: SnapCardVideoProps) {
         </div>
 
         <div className="snap-card-video-overlay">
-          <SnapCardMeta item={item} />
+          <InfoPanel item={item} />
         </div>
       </div>
     );
@@ -217,7 +217,7 @@ export default function SnapCardVideo({ item, isActive }: SnapCardVideoProps) {
 
       {/* Metadata overlay at bottom */}
       <div className="snap-card-video-overlay">
-        <SnapCardMeta item={item} />
+        <InfoPanel item={item} />
       </div>
     </div>
   );

@@ -1831,21 +1831,14 @@ a {
   flex-direction: column;
 }
 
-.snap-card-image-hero {
-  flex: 0 0 60%;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-}
-
-.snap-card-image-panel {
-  flex: 1;
-  background: var(--bg-card, #1a1a2e);
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  overflow: hidden;
+.snap-card-media-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  position: absolute;
+  inset: 0;
+  transition: opacity 0.3s ease;
 }
 
 /* === Video Card === */
@@ -1965,43 +1958,6 @@ a {
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: var(--bg-card, #1a1a2e);
-}
-
-.snap-card-text-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  padding: 24px 20px 16px;
-  max-width: 600px;
-  margin: 0 auto;
-  width: 100%;
-  justify-content: center;
-}
-
-.snap-card-text-title {
-  font-size: 22px;
-  font-weight: 700;
-  line-height: 1.3;
-  color: var(--text-primary);
-  margin: 0 0 16px;
-  text-align: left;
-}
-
-.snap-card-text-preview-wrap {
-  position: relative;
-}
-
-.snap-card-text-body {
-  font-size: 15px;
-  color: var(--text-secondary);
-  line-height: 1.65;
-  text-align: left;
-  margin: 0;
-  display: -webkit-box;
-  -webkit-line-clamp: 5;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
 }
 
 
