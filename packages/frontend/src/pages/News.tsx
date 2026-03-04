@@ -2,14 +2,14 @@ import { useState, useMemo, useRef, useEffect } from "react";
 import { useFeedState } from "../hooks/useFeedState";
 import { useFeed } from "../hooks/useFeed";
 import { useBias } from "../hooks/useBias";
-import { useControlBarVisibility } from "../hooks/useControlBarVisibility";
 import FeedCard from "../components/FeedCard";
 import FeedFilter from "../components/FeedFilter";
 import BiasFilter from "../components/BiasFilter";
 import SwipeFeed from "../components/SwipeFeed";
 import SnapFeed from "../components/snap/SnapFeed";
 import SnapSkeleton from "../components/snap/SnapSkeleton";
-import SnapControlBar from "../components/snap/SnapControlBar";
+import FixedHeader from "../components/snap/FixedHeader";
+import SortSheet from "../components/snap/SortSheet";
 import FilterSheet from "../components/snap/FilterSheet";
 import SkeletonCard from "../components/SkeletonCard";
 import NewsCard from "../components/NewsCard";
@@ -60,9 +60,11 @@ export default function News() {
   // Filter sheet state
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
-  // Snap mode index tracking for control bar visibility
+  // Sort sheet state
+  const [isSortOpen, setIsSortOpen] = useState(false);
+
+  // Snap mode index tracking for card position preservation
   const [snapIndex, setSnapIndex] = useState(0);
-  const { visible: barVisible, showBar } = useControlBarVisibility({ currentIndex: snapIndex });
 
   // Attempt to preserve current card position when sort/filter changes
   const prevItemsRef = useRef(items);
@@ -99,23 +101,22 @@ export default function News() {
   if (feedMode === "snap") {
     return (
       <div className="snap-page">
-        <SnapControlBar
+        <FixedHeader
           feedState={feedState}
-          dispatch={dispatch}
-          visible={barVisible}
-          onFilterIconClick={() => setIsFilterOpen(true)}
+          onSortClick={() => setIsSortOpen(true)}
+          onFilterClick={() => setIsFilterOpen(true)}
         />
-        {!barVisible && (
-          <div
-            className="snap-reveal-zone"
-            onClick={showBar}
-          />
-        )}
         {isLoading && !hasItems ? (
           <SnapSkeleton />
         ) : (
-          <SnapFeed items={items} onIndexChange={setSnapIndex} pagingDisabled={isFilterOpen} />
+          <SnapFeed items={items} onIndexChange={setSnapIndex} pagingDisabled={isFilterOpen || isSortOpen} />
         )}
+        <SortSheet
+          isOpen={isSortOpen}
+          onClose={() => setIsSortOpen(false)}
+          feedState={feedState}
+          dispatch={dispatch}
+        />
         <FilterSheet
           isOpen={isFilterOpen}
           onClose={() => setIsFilterOpen(false)}
