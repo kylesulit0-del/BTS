@@ -70,7 +70,9 @@ Plans:
   1. Swiping up or down on a card with an embedded YouTube video navigates to the next/previous card (verified on physical iOS device)
   2. Tapping on a video card toggles play/pause on the video player
   3. Right-swiping on a video card opens the source URL in a new tab, same as on image and text cards
-**Plans**: TBD
+**Plans:** 1 plan
+Plans:
+- [ ] 14-01-PLAN.md -- Touch overlay with tap detection, play/pause icon, and iOS device verification
 
 ### Phase 15: Media-Centric Card Layout
 **Goal**: Every card in the feed has a consistent, media-forward layout with media filling the top ~60% and structured info below
@@ -102,5 +104,5 @@ Plans:
 | 11. Sort and Filter Controls | v3.0 | 2/2 | Complete | 2026-03-03 |
 | 12. Polish and Animations | v3.0 | 2/2 | Complete | 2026-03-03 |
 | 13. Fixed Header & Sort Bottom Sheet | 2/2 | Complete    | 2026-03-04 | - |
-| 14. Video Touch Overlay | v4.0 | 0/? | Not started | - |
+| 14. Video Touch Overlay | v4.0 | 0/1 | Planned | - |
 | 15. Media-Centric Card Layout | v4.0 | 0/? | Not started | - |
