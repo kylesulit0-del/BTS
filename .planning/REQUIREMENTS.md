@@ -33,7 +33,7 @@ Requirements for Enhanced Feed UI & Navigation milestone.
 
 ## Future Requirements
 
-None deferred — full spec included in v4.0.
+None deferred -- full spec included in v4.0.
 
 ## Out of Scope
 
@@ -49,27 +49,27 @@ None deferred — full spec included in v4.0.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| NAV-01 | — | Pending |
-| NAV-02 | — | Pending |
-| NAV-03 | — | Pending |
-| NAV-04 | — | Pending |
-| NAV-05 | — | Pending |
-| CARD-01 | — | Pending |
-| CARD-02 | — | Pending |
-| CARD-03 | — | Pending |
-| CARD-04 | — | Pending |
-| CARD-05 | — | Pending |
-| CARD-06 | — | Pending |
-| CARD-07 | — | Pending |
-| GEST-01 | — | Pending |
-| GEST-02 | — | Pending |
-| GEST-03 | — | Pending |
+| NAV-01 | Phase 13 | Pending |
+| NAV-02 | Phase 13 | Pending |
+| NAV-03 | Phase 13 | Pending |
+| NAV-04 | Phase 13 | Pending |
+| NAV-05 | Phase 13 | Pending |
+| CARD-01 | Phase 15 | Pending |
+| CARD-02 | Phase 15 | Pending |
+| CARD-03 | Phase 15 | Pending |
+| CARD-04 | Phase 15 | Pending |
+| CARD-05 | Phase 15 | Pending |
+| CARD-06 | Phase 15 | Pending |
+| CARD-07 | Phase 15 | Pending |
+| GEST-01 | Phase 14 | Pending |
+| GEST-02 | Phase 14 | Pending |
+| GEST-03 | Phase 14 | Pending |
 
 **Coverage:**
 - v4.0 requirements: 15 total
-- Mapped to phases: 0
-- Unmapped: 15
+- Mapped to phases: 15
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-04*
-*Last updated: 2026-03-04 after initial definition*
+*Last updated: 2026-03-04 after roadmap creation*
