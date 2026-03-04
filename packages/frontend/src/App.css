@@ -1726,16 +1726,26 @@ a {
   background: rgba(0, 0, 0, 0.7);
 }
 
-/* Shared metadata block */
-.snap-card-meta-block {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  width: 100%;
+/* Source dot (used in InfoPanel metadata row) */
+.snap-card-source-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 
-.snap-card-meta-title {
-  font-size: 16px;
+/* === Shared Info Panel === */
+.snap-card-info-panel {
+  flex: 1;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow: hidden;
+}
+
+.snap-card-info-title {
+  font-size: 18px;
   font-weight: 700;
   line-height: 1.3;
   color: var(--text-primary);
@@ -1746,32 +1756,19 @@ a {
   margin: 0;
 }
 
-.snap-card-meta-row {
+.snap-card-info-meta {
   display: flex;
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
 }
 
-.snap-card-source-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.snap-card-meta-author {
-  font-size: 12px;
-  color: var(--text-secondary);
-  font-weight: 500;
-}
-
-.snap-card-meta-time {
+.snap-card-info-date {
   font-size: 12px;
   color: var(--text-muted);
 }
 
-.snap-card-meta-stat {
+.snap-card-info-stat {
   display: inline-flex;
   align-items: center;
   gap: 3px;
@@ -1780,8 +1777,50 @@ a {
   white-space: nowrap;
 }
 
-.snap-card-meta-stat svg {
+.snap-card-info-stat svg {
   flex-shrink: 0;
+  opacity: 0.7;
+}
+
+.snap-card-info-snippet {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.snap-card-show-more {
+  color: var(--theme-accent);
+  font-weight: 600;
+  font-size: 14px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+/* === Shared Media Zone === */
+.snap-card-media-zone {
+  flex: 0 0 60%;
+  position: relative;
+  overflow: hidden;
+}
+
+.snap-card-gradient-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to bottom, #6B21A8, #A855F7);
+}
+
+.snap-card-image-shimmer {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.04) 25%,
+    rgba(255, 255, 255, 0.08) 50%,
+    rgba(255, 255, 255, 0.04) 75%
+  );
+  background-size: 200% 100%;
+  animation: snap-shimmer 1.5s ease-in-out infinite;
 }
 
 /* === Image Card === */
@@ -1965,53 +2004,7 @@ a {
   overflow: hidden;
 }
 
-.snap-card-see-more {
-  background: none;
-  border: none;
-  color: var(--theme-accent);
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  padding: 4px 0;
-  margin-top: 4px;
-}
 
-.snap-card-text-footer {
-  padding: 16px 20px 24px;
-  max-width: 600px;
-  margin: 0 auto;
-  width: 100%;
-}
-
-/* === Snap Stats Bar === */
-.snap-stats-bar {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 20px;
-  padding: 10px 16px;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, transparent 100%);
-  z-index: 6;
-  pointer-events: none;
-}
-
-.snap-stats-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.85);
-  font-weight: 500;
-}
-
-.snap-stats-item svg {
-  flex-shrink: 0;
-  opacity: 0.8;
-}
 
 /* === Snap Skeleton === */
 @keyframes snap-shimmer {
@@ -2097,49 +2090,6 @@ a {
   }
 }
 
-/* === See More Bottom Sheet === */
-.see-more-sheet-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 200;
-  transition: opacity 0.3s;
-}
-
-.see-more-sheet {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  max-height: 80vh;
-  background: var(--bg-card, #1a1a2e);
-  border-radius: 16px 16px 0 0;
-  z-index: 201;
-  transform: translateY(100%);
-  transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
-  overflow-y: auto;
-  padding: 24px 16px;
-}
-
-.see-more-sheet.open {
-  transform: translateY(0);
-}
-
-.see-more-sheet-handle {
-  width: 36px;
-  height: 4px;
-  border-radius: 2px;
-  background: rgba(255, 255, 255, 0.2);
-  margin: 0 auto 20px;
-}
-
-.see-more-sheet-text {
-  font-size: 15px;
-  color: var(--text-secondary);
-  line-height: 1.7;
-  text-align: left;
-  margin: 0;
-}
 
 /* === Filter Sheet === */
 .filter-sheet-backdrop {

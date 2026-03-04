@@ -1,13 +1,12 @@
-import { useState, useCallback, type MutableRefObject } from "react";
-import type { FeedItem } from "../../types/feed";
+import { useCallback, type MutableRefObject, type ReactNode } from "react";
+import type { FeedItem, FeedStats } from "../../types/feed";
 import { useSwipeGesture } from "../../hooks/useSwipeGesture";
+import { abbreviateNumber } from "../../utils/formatNumber";
 import SnapCardImage from "./SnapCardImage";
 import SnapCardVideo from "./SnapCardVideo";
 import SnapCardText from "./SnapCardText";
-import SnapStatsBar from "./SnapStatsBar";
-import SeeMoreSheet from "./SeeMoreSheet";
 
-const sourceBadgeColors: Record<string, string> = {
+export const sourceBadgeColors: Record<string, string> = {
   reddit: "#FF4500",
   youtube: "#FF0000",
   news: "#7c4dbd",
@@ -37,23 +36,134 @@ export function getCardVariant(item: FeedItem): CardVariant {
   return "text";
 }
 
-interface SnapCardMetaProps {
-  item: FeedItem;
+const MIN_STAT_THRESHOLD = 2;
+
+interface StatEntry {
+  key: string;
+  value: number;
+  icon: ReactNode;
 }
 
-export function SnapCardMeta({ item }: SnapCardMetaProps) {
+function renderStats(stats?: FeedStats): ReactNode[] | null {
+  if (!stats) return null;
+
+  const entries: StatEntry[] = [];
+
+  if (stats.upvotes != null && stats.upvotes >= MIN_STAT_THRESHOLD) {
+    entries.push({
+      key: "upvotes",
+      value: stats.upvotes,
+      icon: (
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
+          <path d="M7 2L2 8h3v4h4V8h3z" />
+        </svg>
+      ),
+    });
+  }
+
+  if (stats.comments != null && stats.comments >= MIN_STAT_THRESHOLD) {
+    entries.push({
+      key: "comments",
+      value: stats.comments,
+      icon: (
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
+          <path d="M2 2h10v7H5l-3 3V2z" />
+        </svg>
+      ),
+    });
+  }
+
+  if (stats.views != null && stats.views >= MIN_STAT_THRESHOLD) {
+    entries.push({
+      key: "views",
+      value: stats.views,
+      icon: (
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
+          <path d="M7 4C4 4 1.5 7 1.5 7s2.5 3 5.5 3 5.5-3 5.5-3S10 4 7 4zm0 5a2 2 0 1 1 0-4 2 2 0 0 1 0 4z" />
+        </svg>
+      ),
+    });
+  }
+
+  if (stats.likes != null && stats.likes >= MIN_STAT_THRESHOLD) {
+    entries.push({
+      key: "likes",
+      value: stats.likes,
+      icon: (
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
+          <path d="M7 12S1.5 8.5 1.5 5.5C1.5 3.5 3 2 4.5 2c1 0 2 .5 2.5 1.5C7.5 2.5 8.5 2 9.5 2c1.5 0 3 1.5 3 3.5C12.5 8.5 7 12 7 12z" />
+        </svg>
+      ),
+    });
+  }
+
+  if (stats.notes != null && stats.notes >= MIN_STAT_THRESHOLD) {
+    entries.push({
+      key: "notes",
+      value: stats.notes,
+      icon: (
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
+          <path d="M7 12S1.5 8.5 1.5 5.5C1.5 3.5 3 2 4.5 2c1 0 2 .5 2.5 1.5C7.5 2.5 8.5 2 9.5 2c1.5 0 3 1.5 3 3.5C12.5 8.5 7 12 7 12z" />
+        </svg>
+      ),
+    });
+  }
+
+  if (entries.length === 0) return null;
+
+  return entries.map((entry) => (
+    <span key={entry.key} className="snap-card-info-stat">
+      {entry.icon}
+      {abbreviateNumber(entry.value)}
+    </span>
+  ));
+}
+
+export function InfoPanel({ item }: { item: FeedItem }) {
+  const snippetContent = (() => {
+    if (item.preview && item.preview.length > 150) {
+      return (
+        <>
+          {item.preview.slice(0, 150)}...{" "}
+          <a
+            href={item.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="snap-card-show-more"
+          >
+            (Show More)
+          </a>
+        </>
+      );
+    }
+    if (item.preview && item.preview.length > 0) {
+      return <>{item.preview}</>;
+    }
+    return (
+      <a
+        href={item.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="snap-card-show-more"
+      >
+        View on {item.sourceName || item.source}
+      </a>
+    );
+  })();
+
   return (
-    <div className="snap-card-meta-block">
-      <h3 className="snap-card-meta-title">{item.title}</h3>
-      <div className="snap-card-meta-row">
+    <div className="snap-card-info-panel">
+      <h3 className="snap-card-info-title">{item.title}</h3>
+      <div className="snap-card-info-meta">
         <span
           className="snap-card-source-dot"
           style={{ background: sourceBadgeColors[item.source] ?? "#555" }}
         />
-        {item.author && (
-          <span className="snap-card-meta-author">{item.author}</span>
-        )}
-        <span className="snap-card-meta-time">{timeAgo(item.timestamp)}</span>
+        <span className="snap-card-info-date">{timeAgo(item.timestamp)}</span>
+        {renderStats(item.stats)}
+      </div>
+      <div className="snap-card-info-snippet">
+        {snippetContent}
       </div>
     </div>
   );
@@ -66,7 +176,6 @@ interface SnapCardProps {
 }
 
 export default function SnapCard({ item, isActive, gestureClaimedRef }: SnapCardProps) {
-  const [seeMoreOpen, setSeeMoreOpen] = useState(false);
   const variant = getCardVariant(item);
 
   const openSourceUrl = useCallback(() => {
@@ -77,56 +186,38 @@ export default function SnapCard({ item, isActive, gestureClaimedRef }: SnapCard
   const { handlers, style, swiping } = useSwipeGesture(openSourceUrl, sourceColor, gestureClaimedRef);
 
   return (
-    <>
-      <div
-        className="snap-card-layout"
-        {...handlers}
-        style={{ background: swiping ? sourceColor : undefined }}
-      >
-        <div className="snap-card-content" style={style}>
-          {/* Source link icon - top right of every card */}
-          <button
-            className="snap-card-source-link"
-            aria-label="Open original"
-            onClick={(e) => {
-              e.stopPropagation();
-              openSourceUrl();
-            }}
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-              <polyline points="15 3 21 3 21 9" />
-              <line x1="10" y1="14" x2="21" y2="3" />
-            </svg>
-          </button>
+    <div
+      className="snap-card-layout"
+      {...handlers}
+      style={{ background: swiping ? sourceColor : undefined }}
+    >
+      <div className="snap-card-content" style={style}>
+        {/* Source link icon - top right of every card */}
+        <button
+          className="snap-card-source-link"
+          aria-label="Open original"
+          onClick={(e) => {
+            e.stopPropagation();
+            openSourceUrl();
+          }}
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+            <polyline points="15 3 21 3 21 9" />
+            <line x1="10" y1="14" x2="21" y2="3" />
+          </svg>
+        </button>
 
-          {variant === "video" && (
-            <SnapCardVideo item={item} isActive={isActive} />
-          )}
-          {variant === "image" && (
-            <SnapCardImage
-              item={item}
-              onSeeMore={() => setSeeMoreOpen(true)}
-            />
-          )}
-          {variant === "text" && (
-            <SnapCardText
-              item={item}
-              onSeeMore={() => setSeeMoreOpen(true)}
-            />
-          )}
-
-          <SnapStatsBar stats={item.stats} />
-        </div>
+        {variant === "video" && (
+          <SnapCardVideo item={item} isActive={isActive} />
+        )}
+        {variant === "image" && (
+          <SnapCardImage item={item} />
+        )}
+        {variant === "text" && (
+          <SnapCardText item={item} />
+        )}
       </div>
-
-      {seeMoreOpen && item.preview && (
-        <SeeMoreSheet
-          text={item.preview}
-          isOpen={seeMoreOpen}
-          onClose={() => setSeeMoreOpen(false)}
-        />
-      )}
-    </>
+    </div>
   );
 }
