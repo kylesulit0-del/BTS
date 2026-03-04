@@ -84,7 +84,7 @@ Plans:
   3. "(Show More)" at the end of the snippet opens the original source URL in a new tab
   4. Text-only posts without media display a branded gradient placeholder in the media zone instead of a blank area
   5. The SeeMoreSheet component is removed (replaced by the "(Show More)" source URL link)
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 Plans:
 - [ ] 15-01-PLAN.md -- Unified InfoPanel, image/text card restructuring, SeeMoreSheet and SnapStatsBar removal
 - [ ] 15-02-PLAN.md -- Video card 60/40 restructuring and visual verification
@@ -109,4 +109,4 @@ Plans:
 | 12. Polish and Animations | v3.0 | 2/2 | Complete | 2026-03-03 |
 | 13. Fixed Header & Sort Bottom Sheet | 2/2 | Complete    | 2026-03-04 | - |
 | 14. Video Touch Overlay | v4.0 | 1/1 | Complete | 2026-03-04 |
-| 15. Media-Centric Card Layout | v4.0 | 0/2 | Not started | - |
+| 15. Media-Centric Card Layout | 1/2 | In Progress|  | - |

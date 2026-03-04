@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-03-04)
 
 **Core value:** Fans see a rich, diverse stream of content from everywhere with engagement stats that help surface the best content, all without leaving the app.
-**Current focus:** v4.0 Enhanced Feed UI & Navigation -- Phase 14: Video Touch Overlay
+**Current focus:** v4.0 Enhanced Feed UI & Navigation -- Phase 15: Media-Centric Card Layout
 
 ## Current Position
 
-Phase: 14 of 15 (Video Touch Overlay)
-Plan: 1 of 1 in current phase (COMPLETE)
-Status: Phase 14 Complete
-Last activity: 2026-03-04 -- Completed 14-01 (Touch overlay with tap play/pause and iOS verification)
+Phase: 15 of 15 (Media-Centric Card Layout)
+Plan: 1 of 2 in current phase (COMPLETE)
+Status: Executing Phase 15
+Last activity: 2026-03-04 -- Completed 15-01 (InfoPanel + two-zone layout for image/text cards)
 
-Progress: [██████████████████████████████████████░░░] 36/36 plans complete (v1-v3), v4.0 plans 13-01 + 13-02 + 14-01 done
+Progress: [████████████████████████████████████████░] 36/36 plans complete (v1-v3), v4.0 plans 13-01 + 13-02 + 14-01 + 15-01 done
 
 ## Performance Metrics
 
@@ -27,6 +27,7 @@ Progress: [███████████████████████
 | 13 | 01 | 1min | 2 | 3 |
 | 13 | 02 | 2min | 2 | 5 |
 | 14 | 01 | 2min | 2 | 2 |
+| 15 | 01 | 3min | 2 | 5 |
 
 ## Accumulated Context
 
@@ -41,6 +42,10 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [14-01] Tap detection uses distance+duration thresholds (10px, 300ms) instead of onClick for mobile
 - [14-01] YouTube controls=0 since native controls unreachable through overlay
 - [14-01] Touch events bubble naturally (no stopPropagation) for parent gesture handlers
+- [15-01] InfoPanel lives in SnapCard.tsx as named export rather than separate file
+- [15-01] Stats rendered inline in metadata row instead of floating SnapStatsBar overlay
+- [15-01] Snippet truncation at 150 chars with (Show More) link to source URL
+- [15-01] Purple gradient (#6B21A8 to #A855F7) for text cards and failed image fallback
 
 ### Pending Todos
 
@@ -53,5 +58,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-04
-Stopped at: Completed 14-01-PLAN.md -- Phase 14 fully complete
-Resume with: /gsd:execute-phase 15 (next phase)
+Stopped at: Completed 15-01-PLAN.md
+Resume with: /gsd:execute-phase 15 (continue with plan 02)

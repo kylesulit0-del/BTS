@@ -17,13 +17,13 @@ Requirements for Enhanced Feed UI & Navigation milestone.
 
 ### Card Layout
 
-- [ ] **CARD-01**: Media asset rendered at top of card, filling ~60% of viewport height
-- [ ] **CARD-02**: Post title displayed bold below media for all card types
-- [ ] **CARD-03**: Metadata row below title showing upload date and available engagement stats (likes, comments, views)
-- [ ] **CARD-04**: Auto-snippet of first 100-150 characters of post description below metadata
-- [ ] **CARD-05**: "(Show More)" link at end of snippet opens source URL in new tab
-- [ ] **CARD-06**: Text-only posts display branded gradient placeholder in 60% media zone
-- [ ] **CARD-07**: Remove SeeMoreSheet component (replaced by source URL link)
+- [x] **CARD-01**: Media asset rendered at top of card, filling ~60% of viewport height
+- [x] **CARD-02**: Post title displayed bold below media for all card types
+- [x] **CARD-03**: Metadata row below title showing upload date and available engagement stats (likes, comments, views)
+- [x] **CARD-04**: Auto-snippet of first 100-150 characters of post description below metadata
+- [x] **CARD-05**: "(Show More)" link at end of snippet opens source URL in new tab
+- [x] **CARD-06**: Text-only posts display branded gradient placeholder in 60% media zone
+- [x] **CARD-07**: Remove SeeMoreSheet component (replaced by source URL link)
 
 ### Gesture & Video
 
@@ -54,13 +54,13 @@ None deferred -- full spec included in v4.0.
 | NAV-03 | Phase 13 | Complete |
 | NAV-04 | Phase 13 | Complete |
 | NAV-05 | Phase 13 | Complete |
-| CARD-01 | Phase 15 | Pending |
-| CARD-02 | Phase 15 | Pending |
-| CARD-03 | Phase 15 | Pending |
-| CARD-04 | Phase 15 | Pending |
-| CARD-05 | Phase 15 | Pending |
-| CARD-06 | Phase 15 | Pending |
-| CARD-07 | Phase 15 | Pending |
+| CARD-01 | Phase 15 | Complete |
+| CARD-02 | Phase 15 | Complete |
+| CARD-03 | Phase 15 | Complete |
+| CARD-04 | Phase 15 | Complete |
+| CARD-05 | Phase 15 | Complete |
+| CARD-06 | Phase 15 | Complete |
+| CARD-07 | Phase 15 | Complete |
 | GEST-01 | Phase 14 | Complete |
 | GEST-02 | Phase 14 | Complete |
 | GEST-03 | Phase 14 | Complete |
