@@ -27,9 +27,9 @@ Requirements for Enhanced Feed UI & Navigation milestone.
 
 ### Gesture & Video
 
-- [ ] **GEST-01**: Transparent touch overlay on video iframes intercepts vertical swipes for feed navigation
-- [ ] **GEST-02**: Taps on video overlay pass through to video player (play/pause)
-- [ ] **GEST-03**: Horizontal swipe gesture continues to work over video cards (open source link)
+- [x] **GEST-01**: Transparent touch overlay on video iframes intercepts vertical swipes for feed navigation
+- [x] **GEST-02**: Taps on video overlay pass through to video player (play/pause)
+- [x] **GEST-03**: Horizontal swipe gesture continues to work over video cards (open source link)
 
 ## Future Requirements
 
@@ -61,9 +61,9 @@ None deferred -- full spec included in v4.0.
 | CARD-05 | Phase 15 | Pending |
 | CARD-06 | Phase 15 | Pending |
 | CARD-07 | Phase 15 | Pending |
-| GEST-01 | Phase 14 | Pending |
-| GEST-02 | Phase 14 | Pending |
-| GEST-03 | Phase 14 | Pending |
+| GEST-01 | Phase 14 | Complete |
+| GEST-02 | Phase 14 | Complete |
+| GEST-03 | Phase 14 | Complete |
 
 **Coverage:**
 - v4.0 requirements: 15 total
