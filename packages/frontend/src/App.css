@@ -1845,7 +1845,8 @@ a {
 .snap-card-video {
   width: 100%;
   height: 100%;
-  position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 .snap-card-video-facade {
@@ -1875,7 +1876,7 @@ a {
 
 .snap-card-video-mute-btn {
   position: absolute;
-  bottom: 80px;
+  bottom: 12px;
   right: 12px;
   background: rgba(0, 0, 0, 0.6);
   border: none;
@@ -1906,17 +1907,6 @@ a {
   height: 100%;
   background: var(--theme-primary, #fff);
   transition: width 0.1s linear;
-}
-
-.snap-card-video-overlay {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 40px 16px 20px;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.4) 60%, transparent 100%);
-  z-index: 5;
-  pointer-events: none;
 }
 
 /* Touch overlay - captures events from iframe */
