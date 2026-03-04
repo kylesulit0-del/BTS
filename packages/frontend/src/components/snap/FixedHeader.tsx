@@ -17,10 +17,12 @@ export default function FixedHeader({ feedState, onSortClick, onFilterClick }: F
       <span className="fixed-header-brand">Army Feed</span>
       <div className="fixed-header-actions">
         <button className="header-icon-btn" onClick={onSortClick} aria-label="Sort">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-            <path d="M3 6h18" />
-            <path d="M6 12h12" />
-            <path d="M9 18h6" />
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M11 5h10" />
+            <path d="M11 9h7" />
+            <path d="M11 13h4" />
+            <path d="M3 17l3 3 3-3" />
+            <path d="M6 18V4" />
           </svg>
           {feedState.sort !== "recommended" && <span className="header-icon-dot" />}
         </button>
