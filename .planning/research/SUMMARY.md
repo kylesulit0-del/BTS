@@ -1,203 +1,190 @@
 # Project Research Summary
 
-**Project:** BTS Army Feed v3.0 — Immersive Feed Experience
-**Domain:** TikTok-style vertical snap feed with sort/filter controls, content virtualization, and config-driven theming
-**Researched:** 2026-03-03
+**Project:** BTS Army Feed v4.0 — Enhanced Feed UI
+**Domain:** Mobile vertical feed UI enhancement (touch overlays, fixed header, unified card layout, bottom sheet extraction)
+**Researched:** 2026-03-04
 **Confidence:** HIGH
 
 ## Executive Summary
 
-This milestone converts the existing BTS fan content aggregation PWA from a list/swipe view into a full-screen vertical snap feed — the same interaction model used by TikTok, YouTube Shorts, and Instagram Reels, but applied to mixed content types (video, image, text, news) and extended with explicit sort/filter controls. The research is anchored to the actual codebase: the existing `SwipeFeed.tsx` already uses IntersectionObserver + CSS scroll-snap + video autoplay patterns that directly transfer to the new architecture. The core recommendation is CSS `scroll-snap-type: y mandatory` for scroll physics (native, 60fps, compositor-threaded), `motion` for card entry/exit animations, `useReducer` + `useSearchParams` for filter/sort state with URL sync, and a hand-rolled 3-item DOM window for virtualization instead of TanStack Virtual (which has a documented incompatibility with CSS scroll-snap).
+BTS Army Feed v4.0 is a frontend-only milestone that enhances the existing v3.0 snap feed without touching the server or adding any new dependencies. Every feature builds directly on proven infrastructure: the `useVerticalPaging` programmatic touch system, `useSwipeGesture` axis-locked gesture arbitration, `FilterSheet` bottom sheet pattern, and the 60/40 `SnapCardImage` layout. The recommended approach is zero new npm packages — React 19, TypeScript, vanilla CSS flexbox, and browser touch APIs cover everything. The constraint is real: v3.0 shipped successfully without Motion, Zustand, Hammer.js, or any gesture library, and that architecture remains correct for v4.0.
 
-The recommended implementation order is: define the API contract and shared types first, then build the snap feed container and card components, then layer in sort/filter controls, then add polish (animations, auto-hide, haptics). This order matters because the sort API endpoint must exist before the sort UI can be correctly tested — client-side sorting on paginated data produces wrong results and should never be used as a placeholder. The feature flag (`feedMode: 'snap' | 'list'`) should be implemented in Phase 1 as insurance; the old `SwipeFeed.tsx` should not be deleted until the snap feed is verified on physical iOS and Android devices.
+The four features of this milestone — fixed always-visible header, sort bottom sheet, media-centric unified card layout, and transparent touch overlay for video iframes — have a clear dependency order. The fixed header must come first because it changes page geometry that all other features live within. The touch overlay is the most technically complex piece and must be isolated and tested on physical iOS before card layout changes restructure the DOM around it. The card layout refactor touches the most files but carries the lowest risk because `SnapCardImage` already demonstrates the target 60/40 pattern in production.
 
-The two highest-risk areas are: (1) iframe lifecycle management during virtualization — each TikTok embed costs ~15MB of bandwidth and must never auto-mount, YouTube embeds should exist in the adjacent slot only as thumbnails, and at most ONE iframe should be in the DOM at any time; (2) the Framer Motion + CSS scroll-snap rendering conflict, which produces cross-browser flickering if Motion is used for the scroll container itself. Motion must be limited to content animations within cards, not the scroll physics layer.
+The primary risk is the touch overlay over cross-origin iframes. This is a well-documented problem with a confirmed solution (transparent div capturing all touches, tap detection via postMessage, no pointer-events toggling mid-gesture), but iOS Safari's touch-target-lock model means it will appear to work in Chrome DevTools and fail on a physical iPhone if implemented incorrectly. Architecture research confirms that DOM event bubbling naturally carries overlay touch events up to `containerRef` where `useVerticalPaging` already listens — no synthetic event forwarding needed. The critical constraint: the overlay must permanently capture all touches (`pointer-events: auto` always on) and handle taps via `togglePlayPause` postMessage rather than attempting iframe passthrough.
 
 ## Key Findings
 
 ### Recommended Stack
 
-The existing stack (React 19, Vite 7, TypeScript, Fastify, SQLite/Drizzle, PWA) requires only two new frontend dependencies: `motion@^12.34.3` (the renamed successor to `framer-motion`, same API, React 19 confirmed) and `zustand@^5.0.11` (1.16KB, selector-based subscriptions prevent re-render cascades). No virtualization library is needed — TanStack Virtual and react-window both conflict with CSS scroll-snap. No theming library is needed — CSS custom properties already in use via `applyTheme.ts`, extended with a new `tokens` object in `ThemeConfig`. No additional state library beyond React's built-in `useReducer` is needed for the primary state management approach.
+No new dependencies for v4.0. The entire milestone uses the existing stack: React 19 hooks (`useRef`, `useCallback`, `createPortal`), TypeScript, vanilla CSS custom properties and flexbox, and browser touch APIs (`touchstart`, `touchmove`, `touchend`). Every proposed library alternative was rejected — Hammer.js conflicts with the existing gesture arbitration system, Motion/react-spring violate the CSS-animations-only project constraint, Zustand would require rewriting the state layer during a UI-focused milestone, and Radix UI's dialog adds a dependency for a pattern already implemented in ~80 lines.
 
-**Core technologies:**
-- `CSS scroll-snap-type: y mandatory` — snap scroll physics, native compositor-threaded, zero JS — browsers do this better than any library
-- `motion@^12.34.3` — card entry/exit animations, `AnimatePresence`, `useScroll` for progress indicator — NOT for scroll physics
-- `useReducer` + `useSearchParams` in `useFeedState` hook — global filter/sort state with URL sync, no external library needed for page-local state
-- Manual 3-item DOM window with IntersectionObserver — virtualization without library conflict, proven pattern already in `SwipeFeed.tsx`
-- `100svh` (small viewport height) — stable mobile height unit, no layout jumps when address bar animates; `100dvh` causes snap jitter on iOS
+See: `.planning/research/STACK.md`
 
-**What NOT to add:** TanStack Virtual (scroll-snap conflict documented in GitHub issue #478), react-window (unmaintained + conflict), framer-motion (use `motion` instead), styled-components, Redux, @tanstack/react-query for UI state, React Context for filter state (re-renders all consumers).
+**Core technologies (unchanged from v3.0):**
+- React 19 + TypeScript: UI and type safety — already in production
+- Vite 7 + vite-plugin-pwa: Build tooling — unchanged
+- CSS flexbox + custom properties: All layout — zero new classes needed from a framework
+- `TouchEvent` APIs: Gesture handling — already used by `useVerticalPaging` and `useSwipeGesture`
+- `createPortal`: Bottom sheet rendering outside scroll context — already used by `FilterSheet`
 
 ### Expected Features
 
-The feed must deliver the TikTok/Shorts interaction model while adding user controls that no major short-form platform provides. All major filter/sort capabilities are largely already implemented in the current codebase — the work is architectural reorganization plus new presentation.
+All features are incremental improvements to the existing snap feed. Every new component has a direct analog already in the codebase.
 
-**Must have (v3.0 core — table stakes):**
-- Full-viewport vertical snap scrolling — core TikTok/Shorts pattern, missing this breaks the immersive contract
-- Current item detection via IntersectionObserver — foundation for video autoplay, virtualization, position tracking
-- Adaptive card layouts (3 variants: video, image, text) — content types differ too much for a single layout
-- Unified sort/filter control bar — replaces the current 3-row stacked filter UI
-- Sort options: Recommended, Newest, Most Popular, Most Discussed — all require server-side sort API endpoint
-- 3-item virtualized DOM window — prevents iframe memory explosion on mobile
-- Collapsed text with "See More" modal — mandatory snap requires content bounded to card height
-- Engagement stats overlay — right-side vertical bar matching platform conventions
-- Loading/empty states — full-viewport skeleton and filtered-empty feedback
+See: `.planning/research/FEATURES.md`
 
-**Should have (v3.x — polish, add after core works):**
-- `motion` card entrance/exit animations — polish layer on top of working snap feed
-- Auto-hide control bar on scroll-down — maximize immersive space
-- Config feature flag (`feedMode: 'snap' | 'list'`) — white-label flexibility
-- Haptic feedback on snap (`navigator.vibrate(10)`) — Android-only, negligible code
-- Global filter/sort state persistence to localStorage
-- Web Share API on each card
+**Must have (table stakes for this milestone):**
+- Fixed header with "Army Feed" branding + Sort/Filter buttons — replaces auto-hide `SnapControlBar`
+- Sort bottom sheet matching `FilterSheet` design language — removes inline sort tabs from control bar
+- Media-centric unified card layout (~60% media / ~40% info panel) — all card types consistent
+- Auto-snippet (first ~150 chars, CSS `line-clamp` primary, JS word-boundary fallback)
+- Touch overlay for video iframe gesture passthrough — critical bug fix for video cards
+- "(Show More)" opens original source URL in new tab — replaces `SeeMoreSheet` trigger
+- Bottom sheet visual consistency — Sort and Filter use shared `BottomSheet` wrapper
 
-**Defer (v4+):**
-- Extended theming tokens (full semantic + component token system)
-- Gesture-based quick filters (long-press)
-- Content preview expansion to detail view
-- Preload optimization for next 3 thumbnail images
+**Should have (differentiators, implement if time permits):**
+- Sort persistence visual indicator (dot on Sort button when non-default sort is active)
+- Source-colored header accent line (picks up current card's source color)
+- Header scroll-aware transparency (index 0 = semi-transparent, index > 0 = opaque)
 
-**Anti-features to avoid:** Framer Motion drag navigation (conflicts with native scroll), infinite scroll auto-fetch (wrong model for snap), pull-to-refresh (conflicts with overscroll), horizontal swipe actions (conflicts with browser back/forward), dark/light mode toggle (doubles CSS surface area, app is dark-first).
+**Defer to v5+:**
+- Reusable `BottomSheet` component as a formal shared primitive (refactor, not user-facing)
+- Smart tap-through refinements (distinguishing light taps from holds for iframe)
+- Pull-to-refresh (conflicts with circular paging at index 0)
+- Dark/light mode toggle (doubles CSS testing surface; dark-first is correct)
 
 ### Architecture Approach
 
-The existing `News.tsx` page owns all state and renders either SwipeFeed or a card list. The v3.0 architecture lifts filter/sort state into a `useFeedState` hook (`useReducer` + `useSearchParams` for URL sync), introduces a new `SnapFeed` component tree, and absorbs the separate `FeedFilter` and `BiasFilter` components into a unified `FeedControlBar`. The FeedControlBar sits as a sibling ABOVE the SnapFeed — not inside the scroll container — so it stays visible during scrolling. The existing `useFeed` hook gains a `loadMore`/`hasMore` interface and accepts the full `FeedState` object.
+The v4.0 architecture is a restructuring of existing components, not a new architecture. The core insight from the codebase audit: `useVerticalPaging` listens on `containerRef` (the `.snap-feed` div), and any touch event on a child element bubbles up naturally — UNLESS the touch originates inside a cross-origin iframe, which creates a separate browsing context that does not propagate events. The touch overlay fixes this by placing a regular div (not an iframe) in the touch path so events can bubble normally.
 
-**Build order (dependency-aware):**
-1. Shared types (`SortMode`, `FeedQuery`) + server sort endpoint — API contract must exist before sort UI
-2. `useFeedState` hook + modified `useFeed` — state foundation before components
-3. `SnapSlide`, `CardMedia`, `CardOverlay`, `CardActions`, `SnapCard` — leaf-to-root build order
-4. `SnapFeed` — assembles components, owns virtualization and IntersectionObserver
-5. `SortSelector`, `FeedControlBar` — controls layer
-6. `FeedPage` rewrite — wires everything together
-7. Polish: CSS, VideoEmbed `isActive` prop, feature flags, theme tokens, Motion animations
+See: `.planning/research/ARCHITECTURE.md`
 
-**Major components (8 new, 4 modified, 2 deprecated):**
-1. `SnapFeed` — scroll-snap container, 3-item virtualization, IO-based index tracking
-2. `SnapSlide` — 100svh slide wrapper with snap alignment
-3. `SnapCard` — full-screen card layout (media ~60%, overlay ~40%)
-4. `CardMedia` — video/image/placeholder rendering, iframe lifecycle control
-5. `CardOverlay` — gradient overlay with source badge, title, truncated text, stats
-6. `CardActions` — source link icon, share button
-7. `FeedControlBar` — collapsible sort/filter bar, sibling above SnapFeed
-8. `useFeedState` — useReducer + useSearchParams, replaces scattered useState in News.tsx
+**Major components (new or replaced):**
+1. `SnapHeader` — replaces `SnapControlBar`; in-flow flex child (not absolute overlay) so feed height auto-adjusts via `flex: 1`
+2. `BottomSheet` — shared wrapper extracted from `FilterSheet`; encapsulates portal + backdrop + drag-dismiss + body scroll lock
+3. `SortSheet` — thin content wrapper around `BottomSheet`; 5 radio-style sort options; dispatches existing `SET_SORT` action
+4. Touch overlay div in `SnapCardVideo` — captures all touch on video area; tap detection via postMessage; swipe events bubble to `containerRef` naturally
+5. `SnapCard` restructure — unified two-zone layout (`.snap-card-media-zone` + `.snap-card-info-zone`) shared across all card variants
+6. `SnapCardSnippet` — auto-truncated preview; "(Show More)" opens source URL
 
-**Deprecated:** `SwipeFeed.tsx` (replaced by SnapFeed), inline content type pills in News.tsx (absorbed into FeedControlBar). Do not delete until snap feed is device-verified.
+**Deleted:**
+- `useControlBarVisibility.ts` — no longer needed (header is always visible)
+- `snap-reveal-zone` div — invisible 44px tap target that would conflict with header buttons if left in place
 
 ### Critical Pitfalls
 
-1. **Framer Motion + CSS scroll-snap = cross-browser flickering** — Use CSS scroll-snap for scroll physics ONLY. Use Motion only for card content animations (entry, exit, overlays), never on the scroll container. Confirmed in Framer Motion GitHub issues #2315 and #342. Test on Chrome AND iOS Safari before committing to any approach. (Phase 1)
+See: `.planning/research/PITFALLS.md`
 
-2. **100vh on mobile includes hidden browser chrome** — Use `height: 100svh` (small viewport height) with `100vh` fallback. Never `100dvh` for snap cards — it resizes during address bar animation and causes snap jitter on iOS. `100dvh` has a 2025 regression on iOS Safari (Apple Developer Forums). (Phase 1)
+1. **Touch overlay captures all events including taps** — Handle taps via `postMessage` to `togglePlayPause`, never attempt iframe event passthrough. Overlay permanently captures all touches (`pointer-events: auto` always on). No pointer-events toggling.
 
-3. **Iframe destroy/recreate on virtualization causes bandwidth explosion** — At most ONE iframe in the DOM at any time. TikTok embeds NEVER auto-mount — tap-to-load facade only (~15MB per auto-load). YouTube adjacent slot shows thumbnail, not iframe. Extend `VideoEmbed.tsx` with a `thumbnailOnly` mode. (Phase 2)
+2. **iOS Safari touch-target lock breaks pointer-events toggling mid-gesture** — Once `touchstart` fires on an element, iOS Safari locks the entire sequence to that element. Changing `pointer-events` during an active touch does nothing. Build the overlay as a unified gesture handler from the start. Test on physical iPhone — Chrome DevTools and Simulator do not reproduce this behavior.
 
-4. **Sort must be server-side, not client-side** — Sorting 20 paginated recommended items client-side produces wrong results (subset != full dataset). The sort API endpoint (`?sort=newest|popular|discussed`) must be built before shipping sort UI. Cache per sort mode with sort-specific localStorage keys. (Phase 1 API contract)
+3. **Touch overlay breaks existing right-swipe gesture** — The overlay adds a third participant to the two-party `gestureClaimedRef` arbitration. For video cards, the overlay must REPLACE the `useSwipeGesture` handler (not layer on top), calling `openSourceUrl()` directly for right swipes and delegating vertical swipes to paging.
 
-5. **Scroll position lost on filter change** — Store current item ID (not array index) in state. On filter apply, find the saved item in the filtered array and scroll to it. "See More" must open a modal/drawer overlay, NOT expand content in-place (in-place expansion changes card height, breaking mandatory snap). (Phase 1 design)
+4. **Fixed header changes viewport geometry for all card heights** — Use in-flow flex layout (`snap-header` as `flex: 0 0 auto`, `snap-feed` as `flex: 1`) NOT `position: absolute`. `useVerticalPaging` reads `containerRef.clientHeight` dynamically and auto-adjusts if the container is correctly sized by flexbox.
 
-6. **Removing old views without rollback** — Implement `feedMode` feature flag FIRST. Build SnapFeed as a NEW component alongside SwipeFeed. Only delete SwipeFeed after snap feed is verified on physical devices. (Phase 1)
+5. **Zombie auto-hide code creates ghost tap targets** — `useControlBarVisibility`, `snapIndex`/`setSnapIndex` state, `snap-reveal-zone` div, and related CSS must all be removed in the SAME commit as adding the fixed header. The reveal zone is an invisible 44px tap target that silently intercepts taps on the new header buttons.
 
 ## Implications for Roadmap
 
-Based on research, suggested phase structure:
+Research provides a clear three-phase dependency order. Architecture research explicitly identifies this build sequence as dependency-driven, confirmed by FEATURES.md ordering rationale and PITFALLS.md phase warnings.
 
-### Phase 1: Foundation, API Contract, and Feature Flag
+### Phase 1: Fixed Header + Sort Bottom Sheet
 
-**Rationale:** Everything downstream depends on the API sort contract and shared type definitions. State management architecture must be decided before any UI is built. Feature flags enable safe parallel development and preserve rollback. Card layout constraints (max heights, "See More" as modal) must be designed before component build begins. Sort API endpoint must exist before sort UI can be correctly tested.
-**Delivers:** Shared types, server sort endpoint, `useFeedState` hook, updated `useFeed` with loadMore/hasMore, `feedMode` feature flag routing, and card dimension constraint decisions
-**Addresses:** Sort options (API contract), filter state management, feature flag for snap vs list mode
-**Avoids:** Client-side sort mistake (Pitfall 9 in PITFALLS.md), scroll position loss (Pitfall 4), no rollback path (Pitfall 7), Context re-render cascade (Pitfall 5)
-**Includes:**
-- `SortMode` type in shared package, `sort` query param on `GET /api/feed` with 5 sort strategies
-- `useFeedState` hook (useReducer + useSearchParams, URL-synced)
-- `useFeed` updated to accept FeedState + loadMore/hasMore + sort-keyed localStorage cache
-- `feedMode` config feature flag in GroupConfig
-- Card dimension rules stubbed in CSS (100svh, content height caps per content type)
+**Rationale:** Pure UI-layer changes with no gesture system involvement. Independent of card layout. The header establishes the page geometry that phases 2 and 3 depend on. Sort sheet validates the shared `BottomSheet` extraction before card layout restructuring touches more files.
 
-### Phase 2: Snap Feed Core
+**Delivers:** Always-visible header with branding and action buttons; Sort bottom sheet matching Filter design; `BottomSheet` shared component; page layout settled (header height baked in for downstream phases).
 
-**Rationale:** The snap feed container and card components are the core deliverable. Build leaf-to-root (CardMedia before SnapCard before SnapFeed) to isolate dependencies. The virtualization strategy (3-item window with iframe lifecycle) is the technical centerpiece and needs full attention before adding controls on top. CSS scroll-snap and IntersectionObserver patterns transfer directly from existing `SwipeFeed.tsx`.
-**Delivers:** Functional snap feed replacing SwipeFeed — full-viewport snapping, adaptive card layouts (video/image/text variants), 3-item virtualization, video autoplay integration, TikTok tap-to-load facade, loading/empty states
-**Uses:** CSS scroll-snap, `100svh`, IntersectionObserver (existing pattern from SwipeFeed.tsx), modified VideoEmbed with `isActive` + `thumbnailOnly` props
-**Implements:** SnapFeed, SnapSlide, SnapCard, CardMedia, CardOverlay, CardActions
-**Avoids:** Framer Motion + scroll-snap conflict (Pitfall 1), 100vh mobile issue (Pitfall 2), iframe remount bandwidth explosion (Pitfall 3), TikTok embed catastrophe (Pitfall 8), mixed content heights breaking mandatory snap (Pitfall 6)
+**Addresses:** Fixed header, Sort bottom sheet, bottom sheet consistency features.
 
-### Phase 3: Sort and Filter Controls
+**Avoids:** Pitfalls 3 (header viewport calculation), 4 (zombie auto-hide code), 6 (bottom sheet inconsistency), 9 (dual sort controls). All must be resolved in this phase.
 
-**Rationale:** Controls depend on the snap feed being stable. The FeedControlBar sits above SnapFeed and dispatches to `useFeedState` — it can only be built after the state hook and snap feed container exist. Sort UI can now be correctly built since the API endpoint exists from Phase 1.
-**Delivers:** Unified FeedControlBar replacing FeedFilter + BiasFilter + inline content type pills — sort picker, source/member/content type filter chips, collapsed/expanded states, active filter count badge, scroll position preservation on filter change
-**Implements:** FeedControlBar, SortSelector, FilterChips (absorbs FeedFilter and BiasFilter)
-**Avoids:** Sort results being misleading (API contract complete from Phase 1), scroll position reset on filter change (position restoration designed in Phase 1)
+**Test checkpoint:** Header always visible through 10+ cards. Sort sheet opens/closes with matching animation to Filter sheet. Paging disabled when either sheet open. Vertical swipe navigation unaffected.
 
-### Phase 4: Polish and Config Extensions
+### Phase 2: Touch Overlay for Video Cards
 
-**Rationale:** Animation polish, auto-hide control bar, haptics, and theming tokens are non-critical enhancements that can only be added after a working, stable snap feed exists. Motion animations should never be added to an unstable feed — the cross-browser testing burden is significant. Accessibility can be layered on but the foundational ARIA structure should be completed here.
-**Delivers:** Card entrance/exit animations with Motion AnimatePresence, auto-hide control bar on scroll, haptic feedback (Android), extended ThemeConfig tokens applied via applyTheme.ts, global state persistence to localStorage, Web Share API, ARIA attributes (`role="feed"`, `role="article"`, `aria-posinset`), keyboard navigation (arrow keys between cards)
-**Uses:** `motion@^12.34.3` — installed here, not in Phase 2, to keep Phase 2 focused on native CSS patterns
-**Avoids:** ARIA/keyboard accessibility gaps (Pitfall 10), adding Motion before snap feed is stable
+**Rationale:** Touches the gesture system (`useVerticalPaging`, `useSwipeGesture`, `gestureClaimedRef`) and must be isolated before card DOM is restructured in Phase 3. Must be tested on physical iOS device with loaded YouTube iframe — cannot be validated in desktop browsers.
+
+**Delivers:** Vertical swipe works on video cards (the critical bug fix); tap toggles play/pause; right-swipe opens source URL on video cards.
+
+**Addresses:** Video gesture fix (touch overlay) feature.
+
+**Avoids:** Pitfalls 1 (overlay steals all events), 2 (iOS pointer-events mid-gesture), 5 (overlay breaks right-swipe).
+
+**Test checkpoint:** Can swipe up/down past playing YouTube video on physical iPhone. Tapping pauses/resumes. Mute button accessible. Right-swipe opens source URL on video cards (same as image/text cards).
+
+### Phase 3: Media-Centric Card Layout + Snippets
+
+**Rationale:** Largest visual change; touches all three card variants and shared `SnapCard` wrapper. Phases 1 and 2 must be stable first because this changes the card DOM structure. The touch overlay from Phase 2 must be integrated into the new 60% media zone structure.
+
+**Delivers:** Unified two-zone layout across video/image/text cards; auto-snippet on all cards; "(Show More)" opens source URL; `SnapStatsBar` inline in info panel; consistent metadata rendering.
+
+**Addresses:** Media-centric card layout, auto-snippet, consistent video card metadata, "(Show More)" behavior, engagement stats display.
+
+**Avoids:** Pitfalls 7 (text-only card empty media area — keep `SnapCardText` layout as-is), 8 (video aspect ratio at 60% height — use responsive `aspect-ratio`), 10 (snippet truncation breaking Korean text — use CSS `line-clamp` as primary).
+
+**Test checkpoint:** All three card types show media-top / info-bottom. Snippets truncate cleanly including Korean text. "(Show More)" opens source URL in new tab. Stats display inline in info zone. Touch overlay still works within new media zone structure.
 
 ### Phase Ordering Rationale
 
-- API contract before UI is non-negotiable — sort UI without server-side sort produces wrong results that users notice
-- Feature flag before snap feed enables safe shipping — old views remain functional fallbacks during development
-- Leaf-to-root component build order (CardMedia -> CardOverlay -> SnapCard -> SnapFeed) isolates dependencies and makes each component independently testable
-- Motion dependency deferred to Phase 4 — adding it in Phase 2 risks the scroll-snap + Motion conflict derailing the core snap feed work
-- State management hook built in Phase 1 before any components — prevents state shape rework mid-build
+- Phase 1 before Phase 2: The header must be in place so the feed's `clientHeight` is correct when Phase 2 tests gesture distances. Testing gesture behavior against wrong container dimensions produces misleading results.
+- Phase 2 before Phase 3: The touch overlay attaches to `SnapCardVideo` internals. Phase 3 restructures those internals (moves iframe into `.snap-card-media-zone`). Building the overlay first lets it be carried into the new structure cleanly.
+- Phase 3 last: Most files changed, most potential for visual regressions. Stable gestures and settled header geometry reduce variables during the largest change.
 
 ### Research Flags
 
-Phases likely needing deeper research during planning:
-- **Phase 2 (iframe lifecycle + virtualization):** The interaction between IntersectionObserver thresholds and CSS scroll-snap settle timing is the highest-complexity part of this milestone. The existing `useVideoAutoplay.ts` pattern is a starting point, but adding the virtualization window creates new failure modes (IO fires during snap animation, element enters/exits/re-enters as snap settles). Recommend a focused spike on the IntersectionObserver debounce pattern before full implementation.
-- **Phase 2 (TikTok facade):** The tap-to-load facade for TikTok needs a confirmed approach — verify that server-side oEmbed data includes a usable static thumbnail before committing to the facade pattern.
+Phases likely needing deeper review during planning:
 
-Phases with standard patterns (skip research-phase):
-- **Phase 1 (API contract):** Adding a `sort` query param to an existing Drizzle ORM query is a well-understood pattern. No research needed.
-- **Phase 1 (useFeedState hook):** `useReducer` + `useSearchParams` is a standard React pattern with abundant documentation.
-- **Phase 3 (FeedControlBar):** Filter/sort UI with horizontal scrollable chips is a mature mobile UX pattern. Well-documented.
-- **Phase 4 (Motion animations):** `AnimatePresence` + `whileInView` animations are the primary documented use case for Motion. Standard patterns apply.
+- **Phase 2 (Touch Overlay):** The `gestureClaimedRef` three-party protocol needs explicit design before implementation. PITFALLS.md provides the pattern (overlay replaces swipe handler for video cards, not layers on top) but the exact callback interface warrants careful spec work in the phase plan before coding starts.
+- **Phase 2 (Touch Overlay):** Physical device testing is a hard gate. Cannot validate iOS Safari touch-target lock behavior in any simulator or browser DevTools.
+- **Phase 3 (Video aspect ratio):** Two approaches identified (fixed 60% height vs responsive `aspect-ratio`). The responsive approach is better but more complex. Needs a concrete decision before implementation begins.
+
+Phases with standard patterns (no additional research needed):
+
+- **Phase 1 (Fixed Header + Sort Sheet):** Pure CSS flexbox, `createPortal`, and `useReducer` dispatch. `BottomSheet` extraction is a direct refactor of existing `FilterSheet` code. All patterns fully established in the codebase.
+- **Phase 3 (Card Layout):** The 60/40 split already works in production in `SnapCardImage`. Extension to other card types is CSS restructuring. `SnapCardSnippet` is a ~30-line component using `line-clamp`. No unknowns.
 
 ## Confidence Assessment
 
 | Area | Confidence | Notes |
 |------|------------|-------|
-| Stack | HIGH | Two new dependencies (motion, zustand) are documented, widely used, confirmed compatible with React 19. Decision NOT to use TanStack Virtual backed by documented GitHub issues #478 and #267. |
-| Features | HIGH | CSS scroll-snap and IntersectionObserver are W3C standards. Feature set researched against competitor UX analysis (TikTok, Shorts, Reels). Most features are already partially implemented in the codebase. |
-| Architecture | HIGH | Codebase fully audited. Existing patterns (IO for index tracking, localStorage caching, dual-mode API) directly inform the new architecture. Build order derived from actual component dependencies. |
-| Pitfalls | HIGH | Most pitfalls backed by specific GitHub issues (Motion #2315, TanStack Virtual #478), MDN spec documentation, and measured performance data (TikTok embed costs from Justin Ribeiro). Codebase audit confirms which pitfalls are live risks. |
+| Stack | HIGH | Zero new dependencies. All technologies in production in v3.0. No speculation. |
+| Features | HIGH | All features build on existing v3.0 patterns. FEATURES.md grounded in full codebase audit. |
+| Architecture | HIGH | Based on full source read of all relevant files. DOM event bubbling behavior is a web platform standard. |
+| Pitfalls | HIGH | Touch-action/iframe behavior confirmed via W3C spec Issue #325. iOS touch-target lock documented in Apple Safari Web Content Guide. |
 
 **Overall confidence:** HIGH
 
 ### Gaps to Address
 
-- **Zustand vs useReducer:** STACK.md and PITFALLS.md recommend Zustand; ARCHITECTURE.md recommends useReducer + useSearchParams and explicitly lists Zustand as an anti-pattern for page-local state. This summary sides with ARCHITECTURE.md (useReducer, no external dependency). Confirm this decision at the start of Phase 1 planning. If cross-route state sharing becomes a requirement in future phases, Zustand becomes justified.
-- **`100svh` vs `100dvh`:** STACK.md specifies `100dvh`; PITFALLS.md warns against `100dvh` and recommends `100svh`. PITFALLS.md is correct based on cited sources (Apple Developer Forums 2025 dvh regression). Use `100svh` with `100vh` fallback. This discrepancy should be explicitly called out in Phase 1.
-- **"See More" implementation mode:** Research is unanimous that "See More" must open a modal/drawer, NOT expand content in-place (in-place expansion changes card height, breaks mandatory scroll-snap). This constraint must be documented as a hard requirement in Phase 2 card design.
-- **TikTok oEmbed thumbnail availability:** Server already fetches oEmbed data, but whether that reliably includes a usable static thumbnail for the tap-to-load facade needs verification during Phase 2 planning.
+- **Text-only card treatment in Phase 3:** Research recommends keeping `SnapCardText` layout as-is (not forcing a fake media area for text-only posts). This is a design decision that should be explicitly confirmed before Phase 3 implementation begins.
+- **`SeeMoreSheet` fate:** The "(Show More)" change makes `SeeMoreSheet` unused for card content. Research assumes it becomes dead code. Confirm whether to delete it or keep it for potential future use before Phase 3.
+- **Video aspect ratio handling in media zone:** Research identifies two approaches. The responsive `aspect-ratio` approach is better but more complex than a fixed 60% height. Needs a concrete decision before Phase 3 card layout work begins.
+- **Touch overlay on iOS — physical device required:** No workaround exists for Pitfall 2 validation. The phase plan for Phase 2 should include a mandatory real-device test gate before Phase 3 begins.
 
 ## Sources
 
 ### Primary (HIGH confidence)
-- MDN: scroll-snap-type, Basic concepts of scroll snap — CSS scroll snap specification behavior
-- Motion.dev docs: React motion component, scroll animations, gestures, upgrade guide — motion@^12.34.3 API
-- Framer Motion GitHub Issue #2315, #342 — confirmed cross-browser scroll-snap + Motion conflict
-- TanStack Virtual GitHub Issue #478, #267 — confirmed CSS scroll-snap incompatibility
-- Apple Developer Forums thread 803987 — 2025 dvh regression on iOS Safari
-- Codebase audit: SwipeFeed.tsx, VideoEmbed.tsx, useVideoAutoplay.ts, useFeed.ts, News.tsx, FeedFilter.tsx, BiasFilter.tsx, api.ts, config/types.ts
+
+- Direct codebase audit: `useVerticalPaging.ts`, `useSwipeGesture.ts`, `useSnapFeed.ts`, `SnapFeed.tsx`, `SnapCard.tsx`, `SnapCardVideo.tsx`, `SnapCardImage.tsx`, `SnapCardText.tsx`, `SnapControlBar.tsx`, `FilterSheet.tsx`, `SeeMoreSheet.tsx`, `SnapStatsBar.tsx`, `useControlBarVisibility.ts`, `useFeedState.ts`, `useSnapVideo.ts`, `News.tsx`, `App.css`
+- [W3C Pointer Events Issue #325](https://github.com/w3c/pointerevents/issues/325) — confirms `touch-action` does NOT cascade into embedded browsing contexts
+- [MDN: touch-action CSS property](https://developer.mozilla.org/en-US/docs/Web/CSS/touch-action) — pan-y, none, manipulation values and behavior
+- [MDN: pointer-events CSS property](https://developer.mozilla.org/en-US/docs/Web/CSS/pointer-events) — none/auto for overlay behavior
+- [MDN: Using Touch Events](https://developer.mozilla.org/en-US/docs/Web/API/Touch_events/Using_Touch_Events) — touchstart/move/end event handling
+- [Apple Safari Web Content Guide: Handling Events](https://developer.apple.com/library/archive/documentation/AppleApplications/Reference/SafariWebContent/HandlingEvents/HandlingEvents.html) — iOS touch-target lock model
+- [NN/g: Bottom Sheets UX Guidelines](https://www.nngroup.com/articles/bottom-sheet/) — shared component extraction patterns
+- [Material Design 3: Bottom Sheets](https://m3.material.io/components/bottom-sheets/overview) — bottom sheet design patterns
 
 ### Secondary (MEDIUM confidence)
-- Zustand npm + TypeScript guide — v5.0.11 API and React 19 compatibility
-- Justin Ribeiro: TikTok embed performance measurements (500KB JS + 4MB thumbnails + 10MB video per embed)
-- Mux blog: Building TikTok-style video feed — three-system architecture for video feeds
-- DEV.to: TikTok/YouTube Shorts snap infinite scroll in React — IntersectionObserver + scroll-snap pattern
-- DeveloperWay: React State Management 2025 — Zustand recommendation for filter state
-- CSS-Tricks: Practical CSS Scroll Snapping
-- Medium: Understanding mobile viewport units (svh/lvh/dvh)
 
-### Tertiary (MEDIUM-LOW confidence)
-- Alvaro Trigo: Why not to use CSS scroll snap — limitations with variable heights (useful as pitfall reference)
-- react-lite-youtube-embed npm — facade pattern for YouTube (validates thumbnail-only approach)
+- [Steven Waller: Prevent iFrames from eating touch events in iOS](https://stevenwaller.io/articles/prevent-iframes-from-eating-touch-events-in-ios/) — webkit-specific iframe touch behavior
+- [Slick Carousel Issue #564](https://github.com/kenwheeler/slick/issues/564) — community post-mortem on iframe swipe blocking in carousels
+- [GitHub Gist: iframe overlay for mobile scrolling](https://gist.github.com/datchley/6793842) — overlay pattern documentation
+- [web.dev: Large, small, dynamic viewport units](https://web.dev/blog/viewport-units) — svh/dvh for fixed header calculations
+- [CSS-Tricks: The trick to viewport units on mobile](https://css-tricks.com/the-trick-to-viewport-units-on-mobile/) — mobile viewport height pitfalls
+- [CSS-Tricks: pointer-events](https://css-tricks.com/almanac/properties/p/pointer-events/) — practical overlay patterns
 
 ---
-*Research completed: 2026-03-03*
+*Research completed: 2026-03-04*
 *Ready for roadmap: yes*

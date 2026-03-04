@@ -1,244 +1,229 @@
-# Feature Research
+# Feature Landscape
 
-**Domain:** Immersive vertical snap feed, sort/filter controls, content virtualization, and config-driven theming for fan content aggregation PWA
-**Researched:** 2026-03-03
-**Confidence:** HIGH (CSS scroll-snap and Intersection Observer are mature web standards; sort/filter UX patterns well-established; virtualization libraries actively maintained)
+**Domain:** Enhanced feed UI -- media-centric cards, fixed header navigation, touch overlay for iframe gesture passthrough, sort bottom sheet
+**Researched:** 2026-03-04
+**Confidence:** HIGH (patterns well-established in mobile feed apps; iframe touch overlay is a known solution to a documented problem; all features build on existing v3.0 infrastructure)
 
-## Feature Landscape
+## Context: What Already Exists
 
-### Table Stakes (Users Expect These)
+The v3.0 snap feed is fully implemented with:
+- TikTok-style vertical snap via programmatic `useVerticalPaging` (touch-driven translateY, NOT CSS scroll-snap)
+- 3-item DOM virtualization window (`useSnapFeed`)
+- Adaptive card layouts: `SnapCardVideo` (full-bleed iframe), `SnapCardImage` (60% image hero + metadata panel), `SnapCardText` (centered reading layout)
+- Sort tabs inline in `SnapControlBar` (Rec/New/Old/Pop/Disc)
+- Filter bottom sheet (`FilterSheet`) with multi-select tabs (Source/Member/Type)
+- Video autoplay/pause with single-iframe pattern (`useSnapVideo`)
+- Engagement stats bar (`SnapStatsBar`) with SVG icons
+- See More bottom sheet (`SeeMoreSheet`) for long text
+- Right-swipe gesture to open source URL (`useSwipeGesture`)
+- Auto-hide control bar based on index change (`useControlBarVisibility`)
+- Feed state persistence in localStorage (`useFeedState`)
 
-Features users of a TikTok/Shorts-style feed expect. Missing any of these breaks the immersive experience.
+The v4.0 milestone enhances this foundation. Features below are scoped to ONLY what is new.
 
-| Feature | Why Expected | Complexity | Notes |
-|---------|--------------|------------|-------|
-| **Full-viewport vertical snap scrolling** | Core TikTok/Shorts/Reels pattern -- one post fills the screen, swipe to advance. Users exposed to this in every short-form app since 2020. Without snap, the feed feels like a basic list. | MEDIUM | CSS `scroll-snap-type: y mandatory` on container with `height: 100dvh` children. Use `dvh` (dynamic viewport height) not `vh` to handle mobile address bar. `scroll-snap-align: start` on each item. Pure CSS handles the physics -- no JS animation library needed for the snap itself. **Existing `SwipeFeed.tsx` already uses IntersectionObserver for index tracking** -- same pattern applies, just with full-viewport items. |
-| **Current item detection** | Need to know which item is "active" for video autoplay/pause, analytics, and UI state (progress indicator). | LOW | IntersectionObserver with `threshold: 0.5` -- exactly what `SwipeFeed.tsx` already does. The existing pattern works. For browsers supporting it, `scrollsnapchange` event (Chrome 129+, Edge 129+) provides native snap target detection, but **not cross-browser** (no Firefox/Safari). Use IntersectionObserver as primary, snap events as progressive enhancement. |
-| **Video autoplay on visible, pause on scroll away** | Every short-form feed autoplays video when snapped into view and pauses when scrolled past. Users would be confused by a static video thumbnail in a snap feed. | LOW | **Already implemented** in `VideoEmbed.tsx` + `useVideoAutoplay.ts` hook. Uses IntersectionObserver to mount/unmount iframe when in/out of viewport. The existing system handles YouTube Shorts and TikTok iframes with mute-by-default and unmute button. No changes needed to the autoplay mechanism itself -- just ensure the snap feed container is the IntersectionObserver root. |
-| **Sort controls** | Users need to change feed ordering. "Recommended" (default blend algorithm) is good for discovery, but sometimes you want newest content, or the most popular. Without sort, users feel trapped in an opaque algorithm. | LOW | Dropdown or segmented control with options: Recommended (default, blend score), Newest (publishedAt DESC), Most Popular (engagement score DESC), Most Discussed (comment count DESC). API already supports `page` and `limit` params. Add `sort` query param to API (`GET /api/feed?sort=newest`). Client-side: single state variable, re-fetch on change. |
-| **Filter by source** | "Show me only Reddit" or "Show me only YouTube." Users already have this via `FeedFilter.tsx` source tabs. Must carry forward into snap feed. | LOW | **Already implemented** in `FeedFilter.tsx`. Maps config sources to filter tabs. Current implementation passes `filter` state to `useFeed` hook which filters client-side or via API `source` param. Just needs visual redesign to fit the snap feed control bar. |
-| **Filter by member** | "Show me only Jimin content." Users already have this via `BiasFilter.tsx` member chips. Must carry forward. | LOW | **Already implemented** in `BiasFilter.tsx` + `useBias.ts`. Keyword-based matching against member aliases. Same hook, new visual treatment in the control bar. |
-| **Filter by content type** | "Show me only fan art" or "Show me only videos." Users already have content type pills in `News.tsx`. | LOW | **Already implemented** as content type pills in `News.tsx`. LLM-classified `contentType` field on each item. Same filtering logic, integrated into unified control bar. |
-| **Collapsed long text with "See More"** | Full-viewport cards have limited space. Long Reddit post titles, news article descriptions, Tumblr text posts can overflow. Need truncation with expansion capability. | LOW | CSS `display: -webkit-line-clamp` for multi-line truncation (3-4 lines max). Gradient fade overlay at bottom of text area. "See More" button expands text within the card without navigating away. When expanded, card scrolls internally (but snap still works on the parent container). Standard pattern in every social feed app. |
-| **Source link to original content** | Users need to reach the original Reddit post, YouTube video page, news article. The feed is a discovery surface, not a replacement for the source. | LOW | **Already exists** as "View original" link in `FeedCard.tsx` and "Read More" in `SwipeFeed.tsx`. In snap feed, use a small icon button (external link icon) positioned consistently -- bottom-right corner or in the action bar area. Opens in new tab. |
-| **Loading states and skeleton screens** | First load, filter changes, and sort changes need visual feedback. Empty screen while loading breaks trust. | LOW | **Already implemented** in `SkeletonCard.tsx`. Adapt to full-viewport snap card skeleton. Single skeleton card filling the viewport with shimmer animation. |
-| **Empty state for no results** | When filters produce zero results, users need clear feedback and a path to recovery ("Try removing filters"). | LOW | **Already implemented** in `News.tsx` empty state. Same pattern, adapted for snap feed viewport. |
+## Table Stakes
 
-### Differentiators (Competitive Advantage)
+Features that the active requirements demand. Without these, the milestone is incomplete.
 
-Features that make this feed feel premium compared to "just scrolling Reddit" or a basic RSS reader.
+| Feature | Why Expected | Complexity | Dependencies on Existing | Notes |
+|---------|--------------|------------|--------------------------|-------|
+| **Fixed header with branding and action buttons** | Current `SnapControlBar` auto-hides on index change and overlays card content. Users need persistent top-level navigation with "Army Feed" branding (left) and Sort/Filter buttons (right) that never disappear. Every major feed app (Instagram, Twitter/X, YouTube) has a fixed header. | LOW | Replaces or restructures `SnapControlBar`. The auto-hide sort-tabs bar becomes separate from the always-visible header. `snap-page` layout needs a fixed header row before `SnapFeed`. | Fixed header occupies ~48-56px. Cards below it need `height: calc(100svh - headerHeight)` instead of full viewport. The existing `SnapControlBar` sort tabs currently sit at the top and auto-hide -- those tabs migrate to the new Sort bottom sheet. |
+| **Sort bottom sheet (matching Filter sheet design)** | Sort tabs are currently inline pill buttons in the control bar. The requirement is to move sort selection into a bottom sheet that matches the Filter sheet's slide-up design language. This creates visual consistency -- both Sort and Filter use the same interaction pattern. | LOW | Reuses `FilterSheet` component patterns: `createPortal`, backdrop click-to-close, drag-to-dismiss handle, swipe-down-to-close gesture. Same CSS class structure with minor content changes. | Sort sheet shows 5 radio-style options (Recommended/Newest/Oldest/Popular/Most Discussed) instead of multi-select toggles. Single-select behavior (selecting one deselects others). Sheet closes automatically on selection. |
+| **Media-centric card layout: ~60% media top** | Current `SnapCardImage` already uses `flex: 0 0 60%` for the image hero. But video cards (`SnapCardVideo`) take 100% of the viewport with metadata overlaid at the bottom over a gradient. The requirement is CONSISTENT layout across all card types: media always occupies the top ~60%, with title, metadata, snippet, and Show More below. Even video-only posts should show title + metadata in a dedicated panel, not just an overlay. | MEDIUM | Refactors `SnapCardVideo` to match `SnapCardImage` layout pattern. The iframe/facade goes in the top 60%, and a bottom panel shows `SnapCardMeta`, auto-snippet, and stats. `SnapCardText` also needs adjustment to be consistent (perhaps showing a placeholder gradient or source branding image in the top 60%). | The key tension: video cards currently put the iframe at 100% height with overlaid text. Moving to 60% height means shorter video players. For YouTube Shorts (9:16 aspect ratio), a ~60% viewport height on a phone gives roughly 390px of height, which is sufficient for playback. The iframe controls remain functional at this size. |
+| **Auto-snippet: first 100-150 characters of post description** | Cards currently show `item.preview` text only when it exists and only on image/text cards. The requirement is that EVERY card shows a text snippet (first 100-150 characters of the post description) below the title, providing context even for video-only posts. | LOW | Uses existing `item.preview` field. Truncation is JS-side: `preview?.slice(0, 150)` with word-boundary-aware truncation. CSS `line-clamp: 2` or `line-clamp: 3` for visual truncation. The existing `snap-card-text-body` class already has `-webkit-line-clamp: 5` -- reduce to 2-3 lines for the snippet. | If `item.preview` is undefined/empty, the snippet section is simply omitted (graceful degradation). No need to generate snippets from titles. Word-boundary truncation: find the last space before character 150 to avoid mid-word cuts, append ellipsis. |
+| **Consistent card layout for video-only posts** | Current video cards show only the video iframe + overlaid title/meta. The requirement is that title + metadata are ALWAYS present in a dedicated panel below the media area, even for video-only posts. | LOW | Part of the media-centric card layout refactor. `SnapCardVideo` gets a bottom panel identical to `SnapCardImage`'s `snap-card-image-panel`. Same `SnapCardMeta` component, same snippet display, same stats bar position. | This is really the same feature as the media-centric layout -- listed separately because the requirement spec calls it out explicitly. |
+| **Engagement stats showing available per-source data** | `SnapStatsBar` currently shows upvotes, comments, views, likes with minimum threshold. The requirement emphasizes showing date alongside available per-source engagement data. Stats bar should show whatever data is available rather than requiring a minimum set. | LOW | Extends `SnapStatsBar` to include a date/time display. Each source provides different stats: Reddit (upvotes, comments), YouTube (views, likes, comments), news/RSS (may have none), Tumblr (notes), Bluesky (likes). The stats bar already handles optional fields gracefully. | Consider lowering or removing `MIN_STAT_THRESHOLD` (currently 2) so stats show even at low counts. Add the post date (from `item.timestamp` via existing `timeAgo()`) as a stat-like entry in the bar. |
+| **"(Show More)" link opens original source URL** | Current "See More" button opens the `SeeMoreSheet` bottom sheet with expanded preview text. The requirement changes this: "(Show More)" should open the original source URL in a new tab, acting as a discovery link to the full content. | LOW | Changes `onSeeMore` callback in `SnapCardImage` and `SnapCardText` from opening `SeeMoreSheet` to calling `window.open(item.url, '_blank', 'noopener')`. Same as the existing `snap-card-source-link` button behavior. May make `SeeMoreSheet` obsolete or optional. | Design decision: keep the top-right external link icon AND the "(Show More)" text link? Or consolidate? Recommendation: keep both. The icon is for users who know the convention; the "(Show More)" text is for discoverability. Both do the same thing. |
+| **Video gesture fix: transparent touch overlay** | Current `SnapCardVideo` renders an iframe that captures ALL touch events. When a user tries to swipe vertically to advance to the next card while touching the iframe, the iframe eats the touch event and `useVerticalPaging` never fires. This is THE critical bug for video cards. | MEDIUM | The `useVerticalPaging` hook attaches `touchstart`/`touchmove`/`touchend` listeners to `containerRef` (the `.snap-feed` div). When touches land on the iframe, they never bubble up to the container. The transparent overlay intercepts touches and decides whether to pass them through to the iframe (for play/pause taps) or handle them as vertical swipe gestures. | See detailed implementation notes below in "Touch Overlay Deep Dive" section. |
+| **Bottom sheet consistency: Sort and Filter share design** | Current `FilterSheet` has a specific visual design (handle, backdrop, tabs, chip grid, clear button, swipe-to-dismiss). The new Sort sheet must match exactly -- same border radius, same backdrop opacity, same spring animation curve, same dismiss threshold. | LOW | Extract shared bottom sheet shell into a reusable component or ensure Sort sheet copies the exact CSS classes from `FilterSheet`. Both sheets use `createPortal` to render into `document.body`. | The existing `cubic-bezier(0.32, 0.72, 0, 1)` spring easing, 80px dismiss threshold, and drag-to-close gesture are already coded in `FilterSheet`. The Sort sheet reuses this. |
 
-| Feature | Value Proposition | Complexity | Notes |
-|---------|-------------------|------------|-------|
-| **Virtualized rendering (3-item window)** | Only mount current + previous + next items in the DOM. A feed with 100+ items, each potentially containing an iframe video embed, would destroy performance without virtualization. This is what makes the snap feed usable on mobile over 5G. | MEDIUM | Two approaches: (1) **CSS scroll-snap + manual mount/unmount** -- keep the scroll container with all placeholders but only render content for items within a 3-item window around the current index. Simpler, works with native CSS snap. (2) **TanStack Virtual** -- headless virtualization that only renders visible items. More robust for large lists but requires careful integration with scroll-snap. **Recommend approach 1** because TanStack Virtual's dynamic sizing and scroll-snap interaction is underexplored territory. Manual 3-item windowing with IntersectionObserver is proven in the existing codebase and gives full control. Mount empty `div` placeholders with correct height (`100dvh`) for all items, render actual content only for `[current-1, current, current+1]`. |
-| **Unified sort/filter control bar** | Single compact bar replacing the current 3-row filter layout (source tabs + content type pills + bias filter). Consolidates all controls into a slim, persistent overlay that doesn't waste viewport space. | MEDIUM | Horizontally scrollable pill/chip bar anchored to top of viewport (below status bar on mobile). Sections: Sort dropdown (leftmost), Source pills, Content Type pills, Member chips. Active filters highlighted. Filter count badge when filters are applied but collapsed. The bar should auto-hide on scroll-down and reappear on scroll-up (or tap top of screen) to maximize immersive space. |
-| **Framer Motion entrance/exit animations** | Cards animate in with subtle slide-up and fade. When filter changes, outgoing cards exit smoothly. Creates a polished, app-like feel that basic CSS snap alone cannot achieve. | MEDIUM | `AnimatePresence` wrapper around the feed. `motion.div` cards with `initial`, `animate`, `exit` props. Entrance: `y: 50, opacity: 0` -> `y: 0, opacity: 1`. Exit: `opacity: 0, scale: 0.95`. Spring physics for natural deceleration. **Framer Motion (now just "Motion") is a new dependency** -- currently not in `package.json`. ~30KB gzipped. Worth it for the polish. Use `layoutId` for smooth card transitions when filters change. |
-| **Adaptive card layouts per content type** | Video content gets a full-bleed player. Image posts (fan art, memes) get a large image with text overlay at bottom. Text posts (discussions, news) get a reading-focused layout with larger typography. Not all content deserves the same card. | MEDIUM | 3 layout variants driven by `contentType` + `videoType` fields: (1) **Video layout**: full-viewport embedded player (YouTube Shorts/TikTok iframe) with title/meta overlay at bottom, semi-transparent gradient. (2) **Image layout**: large background image with title/meta overlaid at bottom, gradient fade. (3) **Text layout**: centered title, preview text, source branding, engagement stats. All layouts share the same outer container (100dvh snap child) but differ internally. |
-| **Global filter/sort state persistence** | When you scroll to item 47, apply a "YouTube only" filter, the feed re-renders with only YouTube items and you start from the top of the filtered list. When you remove the filter, you return to the full feed. Filters and sort persist across the session and survive page refreshes. | LOW | Store filter/sort state in `localStorage` (same pattern as existing bias storage in `useBias.ts`). On filter change: re-fetch or re-filter the local cache, reset scroll position to top. Key UX decision: **do not try to maintain scroll position across filter changes** -- it creates jarring jumps. Always reset to item 0 when filters change. |
-| **Engagement stats overlay** | Upvotes, comments, views displayed as a compact vertical action bar (like TikTok's right-side column). Tap-friendly icons with abbreviated numbers. Feels native to the immersive format. | LOW | Vertical stack of icon+count positioned at bottom-right of each card. Reuse existing `abbreviateNumber()` utility from `formatNumber.ts`. SVG icons already exist in `FeedCard.tsx`. Just re-layout for vertical orientation. Add share button (Web Share API with clipboard fallback) for social spreading. |
-| **Config feature flag: snap vs list mode** | Not all fandoms want the snap feed. Some prefer a traditional scrolling list. Config `features.feedMode: 'snap' | 'list'` controls which view renders. Supports the clone-and-swap white-label model. | LOW | Add `features` object to `GroupConfig` type in `config/types.ts`. `features.feedMode` defaults to `'snap'`. `News.tsx` conditionally renders `SnapFeed` or `FeedList` based on config. The existing `viewMode` toggle in `News.tsx` can become an override when config allows both. |
-| **Styling tokens in config for white-label theming** | Current `ThemeConfig` has 3 colors (`primaryColor`, `accentColor`, `darkColor`). Not enough for full white-label theming. Need spacing, border radius, font family, gradient definitions to truly differentiate clones. | MEDIUM | Extend `ThemeConfig` with a `tokens` object containing CSS custom property overrides. Apply via `applyTheme.ts` which already sets CSS variables. Layers: (1) **Global primitives** -- `--color-purple-600: #562B8B` (2) **Semantic tokens** -- `--color-primary: var(--color-purple-600)`, `--surface-bg: #0a0a0a` (3) **Component tokens** -- `--card-bg: var(--surface-bg)`, `--filter-pill-bg: rgba(255,255,255,0.1)`. Config only needs to override semantic layer. Component layer derives automatically. |
-| **Haptic feedback on snap** | Subtle vibration on each snap for supported devices. Reinforces the physical feel of "clicking into place." | LOW | `navigator.vibrate(10)` on snap detection (IntersectionObserver callback). Gated behind `navigator.vibrate` feature detection. iOS Safari does not support Vibration API, so this is Android-only enhancement. Negligible code, noticeable polish. |
+## Differentiators
 
-### Anti-Features (Commonly Requested, Often Problematic)
+Features that would elevate the experience beyond table stakes but are not strictly required.
 
-| Feature | Why Requested | Why Problematic | Alternative |
-|---------|---------------|-----------------|-------------|
-| **Framer Motion drag-based navigation** | "Use drag gestures instead of scroll for swipe-to-advance, like a real app" | Conflicts with native scroll. Framer Motion's `drag="y"` hijacks touch events, breaking native scroll momentum, rubber-band overscroll, and scroll-snap physics. GitHub issue #185 on Motion repo documents scroll/drag conflict. Creates an uncanny valley where the feed scrolls worse than native. | Use native CSS scroll-snap for navigation. Use Framer Motion only for entrance/exit animations and micro-interactions (card reveal, filter transitions). Let the browser handle scroll physics -- it does it better than any JS library. |
-| **Infinite scroll with auto-fetch** | "Load more items automatically as I scroll near the bottom" | In a snap feed where each item is 100dvh, the user snaps one item at a time. Traditional infinite scroll (fetch when near bottom) fires too late -- user is already at the last item. Also, the current API returns the full ranked feed in one response (no cursor-based pagination for incremental loading). Infinite scroll also prevents users from reaching the footer/nav. | **Prefetch strategy**: fetch all items upfront (current behavior), render them in the virtualized window. If the feed grows beyond 200+ items, implement explicit "Load more" at the end of the feed. The API already supports `page` param for this. But with 30-day content windowing and LLM filtering, total item counts should stay manageable (<300 items). |
-| **Pull-to-refresh** | "Pull down to refresh like a native app" | Conflicts with scroll-snap behavior. When the user is at item 0 and pulls down, the browser wants to do overscroll/bounce, not trigger a custom refresh. Implementing pull-to-refresh with scroll-snap requires intercepting touch events, fighting the browser, and creating inconsistent behavior. | Refresh button in the control bar. Alternatively, auto-refresh when the user returns to the feed tab after 5+ minutes (background timer + visibility API). The existing `useFeed.refresh()` function handles cache invalidation. |
-| **Horizontal swipe for actions** | "Swipe left to dismiss, swipe right to save" | Adds horizontal gesture handling that conflicts with the browser's back/forward swipe gestures (iOS Safari, Android Chrome). Creates confusion: did I mean to go back a page or dismiss a card? | Use explicit tap targets for actions. "View original" button, share button, member chip tap. Vertical snap for navigation, taps for actions. Clear gesture vocabulary. |
-| **Complex animation sequences per card** | "Each card should have a unique entry animation based on content type" | Performance death on mid-range phones. Multiple simultaneous Framer Motion animations while scrolling causes jank. GPU memory pressure from composited layers. Battery drain from constant animation. | One simple, consistent entrance animation for all cards (fade + slide-up). Let the content itself be the visual variety (video vs image vs text layouts). Subtlety over spectacle. |
-| **Full-screen video player mode** | "Tap video to go full-screen with controls" | iframe-embedded YouTube/TikTok players already have their own fullscreen buttons. Building a custom fullscreen player layer on top of third-party iframes creates double-controls confusion and iframe sandboxing issues. | Let the embedded player's native fullscreen button handle this. YouTube iframe API supports fullscreen. TikTok player has its own controls. The snap feed IS the full-screen experience for non-video content. |
-| **Offline feed caching (Service Worker)** | "Let me browse the feed without internet" | The feed content is third-party URLs, thumbnails from CDNs, and iframe video embeds. Caching the feed JSON is trivial, but the content itself (images, videos) cannot be meaningfully cached offline. Users would see cards with broken images and non-playing videos. | Cache the feed JSON in localStorage (already done, 5-min TTL in `useFeed.ts`). Show cached items when offline with a "You're offline -- content may be stale" banner. Do not try to cache media assets. |
-| **Dark/light mode toggle** | "Let me switch between dark and light themes" | The app is designed dark-first (matching TikTok/Shorts aesthetic). Adding a light mode doubles the CSS surface area and requires testing every component in both modes. Fan apps in this space are universally dark. | Ship dark mode only. The `ThemeConfig` token system supports a future light mode if demand materializes, but do not build it now. |
+| Feature | Value Proposition | Complexity | Dependencies on Existing | Notes |
+|---------|-------------------|------------|--------------------------|-------|
+| **Smart touch overlay with tap-through** | Beyond just blocking iframe touches for swipes, a smart overlay can detect TAP vs SWIPE intent. Taps pass through to the iframe (for play/pause), while vertical swipes are intercepted for paging. This gives users the best of both worlds: they can still interact with the video AND swipe past it. | MEDIUM | Builds on the touch overlay feature. Uses the same dead zone and axis lock logic already in `useVerticalPaging` (10px dead zone, 1.5x axis lock ratio). After axis determination: if vertical, handle paging; if tap (no movement beyond dead zone), programmatically dispatch a click event to the iframe or toggle play via YouTube IFrame API. | This is the difference between "video cards work" (basic overlay) and "video cards feel native" (smart overlay). Without tap-through, users cannot pause/play videos by tapping, which is a TikTok table-stake. |
+| **Reusable BottomSheet component** | Extract shared bottom sheet infrastructure (portal, backdrop, handle, swipe-to-dismiss, body scroll lock) into a generic `<BottomSheet>` component. Sort, Filter, and See More sheets all become thin content wrappers. | LOW | Refactors `FilterSheet`, `SeeMoreSheet`, and the new Sort sheet to share a common shell. Currently each sheet duplicates the portal/backdrop/swipe-dismiss logic. | Reduces ~60 lines of duplicated code across 3 components. Makes adding future sheets trivial. |
+| **Header scroll-aware transparency** | Fixed header starts semi-transparent when at the top of the feed, becomes fully opaque when the user is deeper in. Creates a more immersive feel at launch while maintaining readability during browsing. | LOW | New CSS logic on the header component, driven by the `currentIndex` from `useSnapFeed`. Index 0 = semi-transparent header, index > 0 = opaque header. | Simple conditional class toggle. No scroll listener needed since the app tracks index, not scroll position. |
+| **Source-colored header accent** | The fixed header subtly picks up the source color of the current card (Reddit orange, YouTube red, Bluesky blue) as an underline or tint. Reinforces source identity without overwhelming the UI. | LOW | Uses the existing `sourceBadgeColors` map in `SnapCard.tsx`. Passes `currentItem.source` up to the header component. A thin 2px accent line at the bottom of the header changes color with CSS transition. | Delightful detail that costs almost nothing to implement. |
+| **Sort persistence with visual indicator** | When a non-default sort is active, the Sort button in the header shows a visual indicator (dot, highlight, or label) so users know they are not seeing the default "Recommended" feed. | LOW | Reads `feedState.sort` from `useFeedState`. If sort !== "recommended", render a badge or dot on the Sort button. Same pattern as the existing `filter-badge` on the filter icon. | Prevents confusion: "Why does my feed look different?" -- because you changed the sort order last session and it persisted. |
+| **Swipe-down from first card to show header controls** | When the user is on card 0 and swipes down (where there is no previous card), reveal the header/control area with a pull-down gesture instead of doing nothing. | LOW | `useVerticalPaging` currently handles "swipe down at index 0" by wrapping to the last item (circular loop). Could instead trigger header reveal or suppress the circular navigation at the boundary. | This is a nice touch but conflicts with the current circular-loop behavior. If implementing, make the loop optional via a config flag. |
+
+## Anti-Features
+
+Features to explicitly NOT build in this milestone.
+
+| Anti-Feature | Why It Seems Appealing | Why Avoid | What to Do Instead |
+|--------------|------------------------|-----------|-------------------|
+| **Full-screen video mode** | "Let users expand video to fill the entire viewport" | The iframe already has its own fullscreen button (YouTube/TikTok player controls). Building a custom full-screen layer on top of third-party iframes creates double-controls confusion and iframe sandboxing issues. Also conflicts with the media-centric layout goal of ALWAYS showing metadata. | Let the embedded player's native fullscreen button handle this. The 60% media area is the primary viewing experience. |
+| **Custom video controls overlay** | "Replace iframe player controls with our own play/pause/seek" | YouTube and TikTok iframes are cross-origin. Cannot access their DOM or reliably control playback beyond the postMessage API (which is limited and varies by platform). Custom controls would fight the iframe's own controls, creating UX confusion. | Use the iframe's native controls. For play/pause, the touch overlay tap-through handles it. For mute/unmute, the existing `snap-card-video-mute-btn` works via YouTube IFrame API postMessage. |
+| **Horizontal swipe between cards** | "Swipe left/right to navigate between cards as an alternative to vertical swiping" | The right-swipe gesture is already claimed for "open source URL". Adding left-swipe or changing horizontal semantics creates gesture conflicts with `useSwipeGesture`. Also contradicts the vertical-first feed paradigm. | Keep vertical swiping as the only navigation axis. Right-swipe opens source. Horizontal is not a navigation direction in a vertical feed. |
+| **Animated header transitions** | "Header should animate in/out with spring physics" | The header is FIXED -- it does not move. Adding animation to a persistent element creates visual noise. The Sort/Filter bottom sheets already provide animation for interactive elements. | Static fixed header. Animate the sheets, not the chrome. |
+| **Pull-to-refresh** | "Pull down at the top to refresh the feed" | Conflicts with the programmatic paging system. The `useVerticalPaging` hook interprets down-swipes as "go to previous card." At card 0, the circular loop wraps to the last card. Intercepting pull-to-refresh would require disabling circular navigation AND fighting overscroll behavior. | Refresh button in the header or auto-refresh on visibility change after 5+ minutes. The existing `useFeed.refresh()` handles this. |
+| **Collapsible header** | "Hide the header when scrolling down to maximize content area" | The current `SnapControlBar` already auto-hides, and the requirement explicitly asks for a FIXED header that is ALWAYS visible. Collapsing defeats the purpose. | Fixed header, always visible. The 48-56px cost is acceptable -- the media area at ~60% viewport still gives 350-400px of media height on a typical phone. |
+| **Dark/light mode toggle** | "Let users switch themes" | The app is dark-first (matching TikTok/Shorts aesthetic). Adding light mode doubles CSS testing surface. The `--bg-primary: #0d0d0d` and gradient backgrounds are designed for dark. | Ship dark mode only. Existing theme token system supports future light mode if needed. |
+
+## Touch Overlay Deep Dive
+
+The video gesture fix is the most technically complex feature in this milestone. Here is the detailed analysis.
+
+### The Problem
+
+When `SnapCardVideo` renders a YouTube/TikTok iframe, the iframe creates a cross-origin browsing context. Touch events that land on the iframe are captured by the iframe's document and do NOT bubble up to the parent page. This means:
+
+1. `useVerticalPaging`'s `touchstart`/`touchmove`/`touchend` listeners on the `.snap-feed` container never fire when the user touches the video area.
+2. The user cannot swipe to the next/previous card when touching the video.
+3. This is not a bug in the app code -- it is fundamental browser behavior for cross-origin iframes.
+
+### The Solution: Transparent Touch Overlay
+
+Place an absolutely-positioned transparent `<div>` over the iframe that captures all touch events. The overlay decides what to do with each gesture:
+
+```
+User touches video area
+  --> Touch hits the overlay (not the iframe)
+  --> Overlay's touch handlers run
+  --> Is this a vertical swipe? --> Forward to useVerticalPaging
+  --> Is this a tap? --> Pass through to iframe (toggle play/pause)
+  --> Is this a horizontal swipe? --> Forward to useSwipeGesture (open source)
+```
+
+### Implementation Strategy
+
+1. **Overlay div**: `position: absolute; inset: 0; z-index: 2;` placed OVER the iframe inside `SnapCardVideo`.
+2. **Touch event interception**: The overlay has its own `touchstart`/`touchmove`/`touchend` handlers.
+3. **Gesture classification**: Same dead zone (10px) and axis lock (1.5x ratio) logic from `useVerticalPaging`.
+4. **Vertical swipe passthrough**: When a vertical swipe is detected, the overlay updates the same refs/state that `useVerticalPaging` uses. Effectively, the overlay becomes a proxy touch source for the paging system.
+5. **Tap detection**: If the touch starts and ends without exceeding the dead zone, treat it as a tap. Use YouTube IFrame API `postMessage` to toggle play/pause, or set `pointer-events: none` on the overlay momentarily to let the tap fall through to the iframe.
+6. **CSS `touch-action: none`**: Set on the overlay div so the browser does not try to handle the touch gesture itself (no scrolling, no zooming).
+
+### Integration with Existing Gesture System
+
+The `gestureClaimedRef` pattern already coordinates between `useVerticalPaging` (vertical) and `useSwipeGesture` (horizontal). The touch overlay participates in this same coordination:
+
+- Overlay detects vertical intent --> sets `gestureClaimedRef.current = "vertical"` and forwards touch data to paging
+- Overlay detects horizontal intent --> sets `gestureClaimedRef.current = "horizontal"` and lets `useSwipeGesture` handle it
+- Overlay detects tap --> neither axis claimed, pass through to iframe
+
+### Known Limitation
+
+When the overlay is active (which is always, for video cards), the user cannot directly interact with the iframe's UI (progress bar scrubbing, quality settings, etc.). This is acceptable because:
+- YouTube Shorts iframe has minimal controls in the embedded player
+- The mute/unmute button is OUTSIDE the overlay (existing `snap-card-video-mute-btn` sits at z-index 10)
+- Play/pause is handled via tap-through
+- Full-screen access works via the YouTube player's fullscreen button IF tap-through is implemented
 
 ## Feature Dependencies
 
 ```
-[CSS Scroll-Snap Feed Container]
-    +---required-by---> [Current Item Detection (IntersectionObserver)]
-    +---required-by---> [Virtualized 3-Item Window]
-    +---required-by---> [Haptic Feedback on Snap]
+[Fixed Header]
+    +---replaces---> SnapControlBar auto-hide sort tabs (sort tabs move to Sort sheet)
+    +---contains---> Sort button (opens Sort sheet)
+    +---contains---> Filter button (opens existing FilterSheet)
+    +---requires---> snap-page layout restructure (header + feed area)
 
-[Current Item Detection]
-    +---required-by---> [Video Autoplay/Pause] (already implemented, needs integration)
-    +---required-by---> [Engagement Stats Overlay] (knows which card is active)
+[Sort Bottom Sheet]
+    +---requires---> Fixed Header Sort button
+    +---reuses----> FilterSheet patterns (portal, backdrop, handle, swipe-dismiss)
+    +---dispatches-> useFeedState SET_SORT action
+    +---closes-on--> selection (auto-dismiss)
 
-[Adaptive Card Layouts]
-    +---required-by---> [Collapsed Text with "See More"]
-    +---required-by---> [Video Layout] (full-bleed player)
-    +---required-by---> [Image Layout] (background image + text overlay)
-    +---required-by---> [Text Layout] (reading-focused)
+[Media-Centric Card Layout]
+    +---refactors--> SnapCardVideo (iframe moves to top 60%, metadata panel below)
+    +---refactors--> SnapCardText (consistent with image/video layout)
+    +---preserves--> SnapCardImage (already 60/40 split, minimal changes)
+    +---contains---> Auto-snippet display
+    +---contains---> "(Show More)" source link
 
-[Sort/Filter Control Bar]
-    +---requires-------> [Sort API param] (backend change: add sort to GET /api/feed)
-    +---requires-------> [Filter state management] (existing useFeed + useBias hooks)
-    +---required-by---> [Global Filter/Sort State Persistence]
-    +---required-by---> [Auto-hide on scroll / show on scroll-up]
+[Touch Overlay]
+    +---requires---> Media-Centric Layout (overlay sits in the 60% media area)
+    +---integrates-> useVerticalPaging (forwards vertical swipe data)
+    +---integrates-> useSwipeGesture via gestureClaimedRef (axis coordination)
+    +---uses-------> useSnapVideo (tap-to-toggle play/pause via postMessage)
 
-[Framer Motion (new dependency)]
-    +---required-by---> [Card Entrance/Exit Animations]
-    +---required-by---> [Filter Transition Animations]
-
-[Config Feature Flags]
-    +---requires-------> [GroupConfig type extension]
-    +---required-by---> [Snap vs List Mode Toggle]
-    +---required-by---> [Styling Tokens / White-label Theming]
-
-[ThemeConfig Token Extension]
-    +---requires-------> [applyTheme.ts refactor] (apply semantic + component tokens as CSS vars)
-    +---required-by---> [White-label Theming]
-
-[Sort API Param] --conflicts-- [Client-side sorting fallback]
-    (When API unavailable, client-side must sort locally with same logic)
+[Bottom Sheet Consistency]
+    +---normalizes-> Sort sheet + Filter sheet + See More sheet visuals
+    +---optional---> Extract shared BottomSheet component
 ```
 
-### Dependency Notes
+### Ordering Rationale
 
-- **Scroll-snap container is the foundation.** Everything else (virtualization, item detection, video autoplay) depends on the snap feed container existing with correct CSS. Build this first.
-- **Current item detection reuses existing pattern.** The IntersectionObserver logic in `SwipeFeed.tsx` is directly transferable. Not a new capability, just a re-integration.
-- **Sort API param is a backend change.** The existing `GET /api/feed` endpoint supports `page`, `limit`, `source`, `contentType` params. Adding `sort` is a simple query modification to the Drizzle ORM query in the server. Client-side fallback needs matching sort logic.
-- **Framer Motion is the only new dependency.** Everything else (scroll-snap, IntersectionObserver, CSS custom properties) is native web platform. Motion adds entrance/exit polish but the feed works without it.
-- **Config extensions are additive.** New `features` and extended `tokens` on `ThemeConfig` are backward-compatible additions to `GroupConfig`. Existing configs continue to work with defaults.
-- **Virtualization depends on item detection.** The 3-item window needs to know the current index to calculate which items to render. Item detection must work before virtualization can activate.
+1. **Fixed Header first** -- changes the page layout, all other features fit within the new layout
+2. **Sort Bottom Sheet second** -- the header needs the Sort button to be functional
+3. **Media-Centric Card Layout third** -- restructures card internals, auto-snippet, Show More behavior
+4. **Touch Overlay fourth** -- requires the 60% media area from the card layout refactor
+5. **Bottom Sheet Consistency** -- polish pass, can happen alongside or after other features
 
-## MVP Definition
+## MVP Recommendation
 
-### Launch With (v3.0 Core)
+### Must Ship (This Milestone)
 
-The minimum to deliver a working immersive snap feed that replaces the existing list/swipe views.
+1. **Fixed header** with "Army Feed" branding + Sort/Filter buttons
+2. **Sort bottom sheet** matching Filter sheet design
+3. **Media-centric card layout** with consistent 60/40 split across all card types
+4. **Auto-snippet** (first ~150 chars, word-boundary truncated)
+5. **Touch overlay** for video iframe gesture passthrough (basic: vertical swipe + tap)
+6. **"(Show More)" opens source URL** in new tab
+7. **Bottom sheet visual consistency** across Sort and Filter
 
-- [ ] **Snap feed container** -- `scroll-snap-type: y mandatory`, 100dvh children, replaces SwipeFeed + list view in News.tsx
-- [ ] **Current item detection** -- IntersectionObserver tracking active index, video autoplay/pause integration
-- [ ] **Adaptive card layouts** -- video, image, and text variants based on content type
-- [ ] **Collapsed text with "See More"** -- line-clamp truncation with expand toggle
-- [ ] **Unified sort/filter control bar** -- consolidates source tabs, content type pills, member chips into single bar
-- [ ] **Sort options** -- Recommended, Newest, Most Popular, Most Discussed (API sort param + client fallback)
-- [ ] **3-item virtualized window** -- mount content for [current-1, current, current+1] only, placeholders for rest
-- [ ] **Engagement stats overlay** -- vertical action bar with icons and abbreviated counts
-- [ ] **Loading and empty states** -- full-viewport skeleton, filtered-empty feedback
+### Defer
 
-### Add After Core Works (v3.x)
-
-Features to add once the snap feed is stable and usable.
-
-- [ ] **Framer Motion animations** -- card entrance/exit, filter transitions, layout animations
-- [ ] **Auto-hide control bar** -- hide on scroll-down, show on scroll-up or tap
-- [ ] **Config feature flag** -- `features.feedMode: 'snap' | 'list'` in GroupConfig
-- [ ] **Haptic feedback** -- vibrate on snap for Android devices
-- [ ] **Global state persistence** -- save sort/filter prefs to localStorage
-- [ ] **Web Share API** -- share button on each card with clipboard fallback
-- [ ] **Auto-refresh on return** -- refresh feed when tab becomes visible after 5+ minutes
-
-### Future Consideration (v4+)
-
-- [ ] **Extended theming tokens** -- full semantic + component token system in config
-- [ ] **Gesture-based quick filters** -- long-press card to filter by that source/member
-- [ ] **Content preview expansion** -- tap card to expand into detail view with full text + comments count
-- [ ] **Preload optimization** -- preload thumbnail images for next 3 items, preconnect to video embed domains
+- **Reusable BottomSheet component extraction**: Nice refactor but not user-facing. Extract after the milestone if the pattern stabilizes.
+- **Source-colored header accent**: Delightful but purely cosmetic. Add as polish if time permits.
+- **Smart tap-through to iframe**: Basic tap detection (did the touch move?) is sufficient for MVP. Full gesture classification (distinguishing light taps from holds) can be refined later.
+- **Header scroll-aware transparency**: Cosmetic polish, not core functionality.
 
 ## Feature Prioritization Matrix
 
-| Feature | User Value | Implementation Cost | Priority |
-|---------|------------|---------------------|----------|
-| Snap feed container (CSS scroll-snap) | HIGH | MEDIUM | P1 |
-| Current item detection | HIGH | LOW | P1 |
-| Adaptive card layouts (3 variants) | HIGH | MEDIUM | P1 |
-| Unified sort/filter control bar | HIGH | MEDIUM | P1 |
-| Sort options (4 modes) | MEDIUM | LOW | P1 |
-| 3-item virtualized window | HIGH | MEDIUM | P1 |
-| Collapsed text with "See More" | MEDIUM | LOW | P1 |
-| Engagement stats overlay | MEDIUM | LOW | P1 |
-| Loading/empty states | MEDIUM | LOW | P1 |
-| Source link button | MEDIUM | LOW | P1 |
-| Framer Motion entrance/exit | MEDIUM | MEDIUM | P2 |
-| Auto-hide control bar | LOW | MEDIUM | P2 |
-| Config feature flag (snap/list) | MEDIUM | LOW | P2 |
-| Haptic feedback on snap | LOW | LOW | P2 |
-| Global state persistence | MEDIUM | LOW | P2 |
-| Web Share API integration | LOW | LOW | P2 |
-| Auto-refresh on visibility | LOW | LOW | P2 |
-| Extended theming tokens | MEDIUM | MEDIUM | P3 |
+| Feature | User Value | Implementation Cost | Risk | Priority |
+|---------|------------|---------------------|------|----------|
+| Fixed header with branding + buttons | HIGH | LOW | LOW | P0 |
+| Sort bottom sheet | HIGH | LOW | LOW | P0 |
+| Media-centric card layout (60/40) | HIGH | MEDIUM | LOW | P0 |
+| Auto-snippet on all cards | MEDIUM | LOW | LOW | P0 |
+| Touch overlay for video swipe | HIGH | MEDIUM | MEDIUM | P0 |
+| "(Show More)" opens source URL | MEDIUM | LOW | LOW | P0 |
+| Bottom sheet visual consistency | MEDIUM | LOW | LOW | P0 |
+| Consistent video card layout (title+meta always) | MEDIUM | LOW | LOW | P0 (part of card layout) |
+| Engagement stats with date | LOW | LOW | LOW | P1 |
+| Smart tap-through (play/pause via overlay) | MEDIUM | MEDIUM | MEDIUM | P1 |
+| Reusable BottomSheet component | LOW (dev-facing) | LOW | LOW | P2 |
+| Source-colored header accent | LOW | LOW | LOW | P2 |
+| Sort persistence indicator | LOW | LOW | LOW | P2 |
 
-**Priority key:**
-- P1: Must have for v3.0 launch -- defines the immersive experience
-- P2: Should have, adds polish and config flexibility after core works
-- P3: Nice to have, enables advanced white-label use cases
-
-## Competitor UX Analysis
-
-| UX Pattern | TikTok | YouTube Shorts | Instagram Reels | BTS Army Feed v3.0 |
-|------------|--------|----------------|-----------------|---------------------|
-| Navigation | Vertical snap scroll | Vertical snap scroll | Vertical snap scroll | Vertical snap scroll |
-| Item height | 100vh, video-only | 100vh, video-only | 100vh, video-only | 100dvh, mixed content (video + image + text) |
-| Sort controls | None (algorithm-only) | None (algorithm-only) | None (algorithm-only) | Explicit sort + filter controls (our differentiator) |
-| Filter controls | None | None (separate tabs) | None | Source, member, content type filters |
-| Virtualization | Aggressive (3-item) | Aggressive (3-item) | Aggressive (3-item) | 3-item window matching platform apps |
-| Video behavior | Autoplay, mute-default | Autoplay, mute-default | Autoplay, mute-default | Autoplay, mute-default (already built) |
-| Text content | Short caption overlay | Title + description overlay | Short caption overlay | Adaptive: full text layout for articles/discussions |
-| Content types | Video only | Video only | Video/image carousel | Video, image, text, news, discussion, fan art |
-| Engagement display | Right-side vertical bar | Right-side vertical bar | Right-side vertical bar | Right-side vertical bar (matching convention) |
-| Source attribution | Creator profile | Creator channel | Creator profile | Source badge (Reddit, YouTube, etc.) + author |
-| Cross-platform content | No | No | No | Yes -- core differentiator |
-| User control over feed | None (black box) | None (black box) | None (black box) | Full sort/filter transparency |
-
-**Key insight:** TikTok/Shorts/Reels are video-only snap feeds with zero user control over the algorithm. The BTS Army Feed differentiates by applying the same immersive snap UX to mixed content types AND giving users explicit sort/filter controls. The combination of immersive format + user agency over content is uncommon.
+**Risk notes:**
+- Touch overlay is MEDIUM risk because iframe touch behavior varies across browsers (iOS Safari vs Chrome). The fundamental approach (transparent div over iframe) is proven but integration with the existing `useVerticalPaging` gesture system needs careful testing on real devices.
+- Media-centric card layout refactor is LOW risk because `SnapCardImage` already demonstrates the 60/40 pattern successfully. Applying it to `SnapCardVideo` and `SnapCardText` is straightforward CSS + layout restructuring.
 
 ## Sources
 
-### CSS Scroll Snap
-- [MDN: CSS Scroll Snap Guide](https://developer.mozilla.org/en-US/docs/Web/CSS/Guides/Scroll_snap)
-- [MDN: scroll-snap-type](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/scroll-snap-type)
-- [web.dev: Well-controlled scrolling with CSS Scroll Snap](https://web.dev/css-scroll-snap/)
-- [CSS-Tricks: Practical CSS Scroll Snapping](https://css-tricks.com/practical-css-scroll-snapping/)
-- [Ahmad Shadeed: CSS Scroll Snap](https://ishadeed.com/article/css-scroll-snap/)
-- [CodePen: CSS Scroll Snap TikTok Example](https://codepen.io/ellie_html/pen/dyYjZyB)
+### Touch Overlay / iframe Gesture Passthrough
+- [MDN: touch-action CSS property](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/touch-action) -- HIGH confidence, authoritative
+- [CSS-Tricks: touch-action](https://css-tricks.com/almanac/properties/t/touch-action/) -- HIGH confidence
+- [W3C Pointer Events: touch-action behavior on iframe (Issue #325)](https://github.com/w3c/pointerevents/issues/325) -- HIGH confidence, spec-level discussion
+- [Steven Waller: Prevent iframes from eating touch events in iOS](https://stevenwaller.io/articles/prevent-iframes-from-eating-touch-events-in-ios/) -- MEDIUM confidence, webkit-specific
+- [Slick carousel: Swiping iframes doesn't work (Issue #564)](https://github.com/kenwheeler/slick/issues/564) -- MEDIUM confidence, documents the problem and common solutions
+- [GitHub Gist: iframe overlay for mobile scrolling in webkit](https://gist.github.com/datchley/6793842) -- MEDIUM confidence, demonstrates the overlay pattern
 
-### Scroll Snap Events (Limited Browser Support)
-- [Chrome Developers: Scroll Snap Events](https://developer.chrome.com/blog/scroll-snap-events) -- Chrome 129+ / Edge 129+ only, no Firefox/Safari
-- [MDN: scrollsnapchange event](https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollsnapchange_event)
-- [MDN: scrollsnapchanging event](https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollsnapchanging_event)
+### Fixed Header / Mobile Navigation Patterns
+- [Design Studio: Mobile Navigation UX Best Practices (2026)](https://www.designstudiouiux.com/blog/mobile-navigation-ux/) -- MEDIUM confidence
+- [Eleken: Mobile UX design examples (2025)](https://www.eleken.co/blog-posts/mobile-ux-design-examples) -- MEDIUM confidence
+- [Arounda: Top Mobile Menu Design Inspirations (2025)](https://arounda.agency/blog/top-mobile-menu-design-inspirations) -- MEDIUM confidence
 
-### React Snap Feed Implementation
-- [DEV: Create TikTok/YouTube Shorts-like Snap Infinite Scroll in React](https://dev.to/biomathcode/create-tik-tokyoutube-shorts-like-snap-infinite-scroll-react-1mca)
-- [CoderPad: Implement Infinite Scroll in React (TikTok Clone)](https://coderpad.io/blog/development/how-to-implement-infinite-scroll-in-react-js/)
-- [DEV: IntersectionObserver, Scroll Snap and React](https://dev.to/ruben_suet/my-experience-with-intersectionobserver-scroll-snap-and-react-252a)
+### Bottom Sheet Design
+- [Mobbin: Bottom Sheet UI Design best practices](https://mobbin.com/glossary/bottom-sheet) -- MEDIUM confidence
+- [NN/g: Bottom Sheets Definition and UX Guidelines](https://www.nngroup.com/articles/bottom-sheet/) -- HIGH confidence
+- [Material Design 3: Bottom Sheets](https://m3.material.io/components/bottom-sheets/overview) -- HIGH confidence
 
-### Framer Motion / Motion
-- [Motion: React Scroll Animations](https://www.framer.com/motion/scroll-animations/)
-- [Motion: Gesture Animations](https://www.framer.com/motion/gestures/)
-- [Motion: useScroll hook](https://www.framer.com/motion/use-scroll/)
-- [LogRocket: React Scroll Animations with Framer Motion](https://blog.logrocket.com/react-scroll-animations-framer-motion/)
+### CSS Line-Clamp / Text Truncation
+- [MDN: line-clamp](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/line-clamp) -- HIGH confidence
+- [TheLinuxCode: CSS -webkit-line-clamp in Production (2026)](https://thelinuxcode.com/css-webkit-line-clamp-in-production-practical-patterns-pitfalls-and-2026-guidance/) -- MEDIUM confidence
 
-### Virtualization
-- [TanStack Virtual Documentation](https://tanstack.com/virtual/latest)
-- [LogRocket: Speed Up Long Lists with TanStack Virtual](https://blog.logrocket.com/speed-up-long-lists-tanstack-virtual/)
-- [Medium: Anatomy of a Vertical Videos Module](https://medium.com/@aa.castro.medina/anatomy-of-a-component-the-vertical-videos-module-2ac1999277f2)
-
-### Sort/Filter UX Patterns
-- [Pencil & Paper: Mobile Filter UX Design Patterns](https://www.pencilandpaper.io/articles/ux-pattern-analysis-mobile-filters)
-- [Smashing Magazine: UI Patterns for Mobile Search, Sort, and Filter](https://www.smashingmagazine.com/2012/04/ui-patterns-for-mobile-apps-search-sort-filter/)
-- [Medium: Designing Filter & Sort for Better UX](https://medium.com/design-bootcamp/designing-filter-sort-for-better-ux-9b88f40081db)
-- [Medium: Filtering and Sorting Best Practices on Mobile](https://thierrymeier.medium.com/filtering-and-sorting-best-practices-on-mobile-61626449cec)
-- [UXPin: Filter UI and UX 101](https://www.uxpin.com/studio/blog/filter-ui-and-ux/)
-
-### Text Truncation / "See More" Pattern
-- [Carbon Design System: Overflow Content](https://carbondesignsystem.com/patterns/overflow-content/)
-- [justmarkup: Truncating and Revealing Text](https://justmarkup.com/articles/2017-01-12-truncating-and-revealing-text-the-show-more-and-read-more-patterns/)
-- [Medium: Design for Truncation](https://medium.com/design-bootcamp/design-for-truncation-946951d5b6b8)
-
-### Content Loading Patterns
-- [NN/g: Infinite Scrolling Tips](https://www.nngroup.com/articles/infinite-scrolling-tips/)
-- [UX Collective: Pagination, Infinite Scroll, and Load More](https://uxdesign.cc/ui-cheat-sheet-pagination-infinite-scroll-and-the-load-more-button-e5c452e279a8)
-- [ResultFirst: Pagination vs Infinite Scroll vs Load More](https://www.resultfirst.com/blog/ai-seo/pagination-vs-infinite-scroll-vs-load-more/)
-
-### Config-Driven Theming / Design Tokens
-- [Penpot: Developer's Guide to Design Tokens and CSS Variables](https://penpot.app/blog/the-developers-guide-to-design-tokens-and-css-variables/)
-- [UXPin: Managing Global Styles in React with Design Tokens](https://www.uxpin.com/studio/blog/managing-global-styles-in-react-with-design-tokens/)
-- [Medium: Advanced Theming Techniques with Design Tokens](https://david-supik.medium.com/advanced-theming-techniques-with-design-tokens-bd147fe7236e)
-- [Whoisryosuke: Theming in Modern Design Systems](https://whoisryosuke.com/blog/2020/theming-in-modern-design-systems)
+### Card Layout Patterns
+- [Material Design: Cards](https://m2.material.io/components/cards) -- HIGH confidence
+- [Mobbin: Card UI Design best practices](https://mobbin.com/glossary/card) -- MEDIUM confidence
 
 ---
-*Feature research for: BTS Army Feed v3.0 Immersive Feed Experience*
-*Researched: 2026-03-03*
+*Feature research for: BTS Army Feed v4.0 Enhanced Feed UI*
+*Researched: 2026-03-04*

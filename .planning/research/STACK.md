@@ -1,12 +1,11 @@
-# Stack Research
+# Technology Stack
 
-**Domain:** Immersive snap feed UX, scroll physics, global filter/sort state, virtualized rendering, config-driven theming
-**Researched:** 2026-03-03
-**Confidence:** HIGH (Motion, Zustand, CSS scroll-snap) / MEDIUM (virtualization strategy, theming tokens)
+**Project:** BTS Army Feed v4.0 -- Enhanced Feed UI
+**Researched:** 2026-03-04
 
 ## Existing Stack (DO NOT CHANGE)
 
-Already validated and deployed. Listed for reference only.
+Already validated and deployed in v3.0. Listed for reference only.
 
 | Technology | Version | Purpose |
 |------------|---------|---------|
@@ -16,301 +15,169 @@ Already validated and deployed. Listed for reference only.
 | react-router-dom | ^7.13.1 | Routing |
 | vite-plugin-pwa | ^1.2.0 | PWA support |
 | dompurify | ^3.3.1 | HTML sanitization |
-| Fastify | ^5.7.4 | REST API server |
-| SQLite + Drizzle | ^0.45.1 | Database + ORM |
-| Vercel AI SDK | ^6.0.105 | LLM moderation |
-| node-cron | ^4.2.1 | Scheduled scraping |
 
 ## Recommended Stack Additions
 
-### Animation & Scroll Physics
+### NONE. Zero new dependencies.
 
-| Technology | Version | Purpose | Why Recommended |
-|------------|---------|---------|-----------------|
-| motion | ^12.34.3 | Scroll-linked animations, gesture physics, exit transitions | The successor to framer-motion (same team, same API, new package name). 18M+ monthly npm downloads. Verified compatible with React 19.2 + Vite 7.3 as of January 2026. Provides `AnimatePresence` for mount/unmount transitions, `useScroll` for scroll-linked animations, `useInView` for viewport detection, and `motion.div` drag gestures with inertia physics. The snap feed needs: (1) smooth entry animations for cards scrolling into view, (2) exit animations when navigating away, (3) scroll progress tracking for the "X of N" indicator, (4) gesture-based drag-to-dismiss or drag-to-next. CSS scroll-snap handles the actual snapping; Motion handles the polish layer on top. |
+Every feature in v4.0 is achievable with the existing stack plus browser APIs. The previous v3.0 research recommended Motion and Zustand, but v3.0 shipped successfully without either -- using CSS keyframe animations, `useReducer`-based `useFeedState`, manual 3-slide DOM windowing via `useVerticalPaging`, and `createPortal` for bottom sheets. That architecture remains correct for v4.0.
 
-**Import path:** `import { motion, AnimatePresence, useScroll, useInView } from 'motion/react'`
+## How Each Feature Maps to Existing Technology
 
-**Why `motion` not `framer-motion`:** The package was renamed. `framer-motion` still works but is the legacy import. New projects should use `motion` (same API, active development, ESM-native). The upgrade guide confirms it is a drop-in replacement.
+### Feature 1: Touch Overlay for Iframe Gesture Passthrough
 
-**What Motion handles vs what CSS handles:**
+**Problem:** Cross-origin iframes (YouTube, TikTok) swallow all touch events. When a user touches a video card to swipe vertically to the next card, the iframe captures the touch and the `useVerticalPaging` hook never receives it. The current `SnapCardVideo` has an `onClick={togglePlayPause}` on the wrapper div, but this only works because the click fires on the wrapper outside the iframe. Vertical swipes over the iframe area are completely lost.
 
-| Concern | Solution | Why |
-|---------|----------|-----|
-| Snap to full-viewport positions | CSS `scroll-snap-type: y mandatory` | Native browser behavior, zero JS, 60fps guaranteed. Fighting this with JS is slower. |
-| Card entry animations | Motion `whileInView` + `initial`/`animate` | Fade/slide cards as they snap into view. CSS can't do spring physics. |
-| Exit transitions | Motion `AnimatePresence` + `exit` | Animate cards out when filters change or user navigates. CSS can't animate unmounting elements. |
-| Scroll progress indicator | Motion `useScroll` | Track `scrollYProgress` to show position in feed. Leverages native ScrollTimeline API where supported for GPU-accelerated tracking. |
-| Drag-to-advance gesture | Motion `drag="y"` + `dragConstraints` | Optional enhancement: drag a card up to advance to next. Provides inertia physics on release. |
-| Video embed reveal | Motion `layoutId` + `AnimatePresence` | Smooth transition when expanding a video player from thumbnail. |
+**Solution:** Transparent overlay div with programmatic tap passthrough. No library needed.
 
-### Global State Management
+| Concern | Technology | Why |
+|---------|-----------|-----|
+| Intercept vertical swipes | Transparent `<div>` with `pointer-events: auto` positioned over iframe (z-index above iframe) | The overlay receives all touch events. `useVerticalPaging` already listens on the container -- the overlay just needs to be inside the touch-event-receiving container, which it is. |
+| Pass taps through to iframe controls | Programmatic `pointer-events: none` toggle + re-dispatch or `elementFromPoint` | On `touchend` with no significant movement (<10px) and short duration (<300ms), classify as a tap. Briefly set overlay `pointer-events: none`, use `document.elementFromPoint(x, y).click()` to forward the tap to the iframe's play/pause/mute buttons, then restore `pointer-events: auto`. |
+| Pass horizontal swipes through | `useSwipeGesture` already handles axis locking via `gestureClaimedRef` | The existing gesture arbitration system (`gestureClaimedRef` shared between `useVerticalPaging` and `useSwipeGesture`) determines vertical vs horizontal intent. The overlay just needs to be inside the same container. |
 
-| Technology | Version | Purpose | Why Recommended |
-|------------|---------|---------|-----------------|
-| zustand | ^5.0.11 | Global filter/sort state persisting across scroll | 1.16KB gzipped. No providers, no context wrappers. Works via hooks: `useFeedStore((s) => s.sortMode)`. The current codebase manages filter state with `useState` in `News.tsx` -- this breaks when the snap feed needs to access sort/filter state from multiple components (the control bar, the feed container, individual cards, the URL state). Zustand solves this with a single store that any component can subscribe to, with selector-based subscriptions preventing unnecessary re-renders. |
+**Why this works for cross-origin iframes:** We do NOT need to forward events INTO the iframe document. YouTube/TikTok embedded players respond to `postMessage` commands for play/pause/mute -- the existing `useSnapVideo` hook already uses this pattern (`sendCommand(iframe, videoType, "play")`). The tap-through is needed only so the user can interact with the embedded player's native UI controls (scrubber, fullscreen button) when they intentionally tap rather than swipe.
 
-**Why Zustand over alternatives:**
+**Alternative considered and rejected:**
 
-| Option | Why Not |
-|--------|---------|
-| React Context | The filter/sort state updates on every user interaction (changing sort mode, toggling filters). Context re-renders ALL consumers on any state change. With 3+ cards rendered and a control bar, this causes visible jank during filter changes. Zustand's selector-based subscriptions mean only the components that read the changed slice re-render. |
-| Jotai | Atomic model is better for many independent state atoms. The feed state is a cohesive object (sortMode + sourceFilter + memberFilter + contentTypeFilter) -- a single store is cleaner than 4+ separate atoms that need coordination. |
-| Redux Toolkit | 10x the bundle size, boilerplate (slices, reducers, dispatch), overkill for one store with 4 fields. |
-| URL search params only | Sort/filter should persist in URL (for shareability), but URL is not the source of truth for React renders. Zustand store syncs to/from URL params. Reading `useSearchParams()` on every render is slower than a Zustand selector. |
+| Alternative | Why Not |
+|-------------|---------|
+| `touch-action: pan-y` on iframe | W3C spec explicitly states `touch-action` does NOT cascade through embedded browsing contexts. Setting it on the `<iframe>` element has no effect on touch behavior within the iframe content. Confirmed in [W3C Pointer Events #325](https://github.com/w3c/pointerevents/issues/325). |
+| Remove iframe, use custom video player | YouTube/TikTok Terms of Service require using their official embed players. A custom player using direct video URLs would violate ToS and eventually break. |
+| Capture phase event listeners on parent | Touch events from within a cross-origin iframe never propagate to the parent document at all. The browser blocks this for security reasons. The event never reaches any parent listener regardless of capture vs bubble phase. |
+| Hammer.js / ZingTouch gesture libraries | Add a dependency for something achievable in ~40 lines of vanilla JS. The app already has gesture detection (`useVerticalPaging`, `useSwipeGesture`). Adding a library creates a second gesture system that fights the first. |
 
-**Store shape:**
+**Implementation pattern (React hook):**
 
 ```typescript
-import { create } from 'zustand';
+// useTouchOverlay.ts -- ~50 lines
+// Attaches to a transparent div overlaying the iframe
+// Returns: ref for the overlay div, tap handler props
 
-type SortMode = 'recommended' | 'newest' | 'oldest' | 'popular' | 'discussed';
-type SourceFilter = string | 'all';
-type ContentTypeFilter = ContentType | 'all';
-
-interface FeedStore {
-  sortMode: SortMode;
-  sourceFilter: SourceFilter;
-  memberFilters: string[];  // bias IDs
-  contentTypeFilter: ContentTypeFilter;
-  setSortMode: (mode: SortMode) => void;
-  setSourceFilter: (source: SourceFilter) => void;
-  toggleMemberFilter: (memberId: string) => void;
-  setContentTypeFilter: (type: ContentTypeFilter) => void;
-  clearFilters: () => void;
+interface UseTouchOverlayOptions {
+  onTap?: (x: number, y: number) => void;  // optional: custom tap handler
+  tapThreshold?: number;   // max movement in px to classify as tap (default: 10)
+  tapDuration?: number;    // max duration in ms to classify as tap (default: 300)
 }
 
-export const useFeedStore = create<FeedStore>()((set) => ({
-  sortMode: 'recommended',
-  sourceFilter: 'all',
-  memberFilters: [],
-  contentTypeFilter: 'all',
-  setSortMode: (mode) => set({ sortMode: mode }),
-  setSourceFilter: (source) => set({ sourceFilter: source }),
-  toggleMemberFilter: (memberId) => set((s) => ({
-    memberFilters: s.memberFilters.includes(memberId)
-      ? s.memberFilters.filter((id) => id !== memberId)
-      : [...s.memberFilters, memberId],
-  })),
-  setContentTypeFilter: (type) => set({ contentTypeFilter: type }),
-  clearFilters: () => set({
-    sortMode: 'recommended',
-    sourceFilter: 'all',
-    memberFilters: [],
-    contentTypeFilter: 'all',
-  }),
-}));
+// Core logic:
+// 1. touchstart: record position + timestamp
+// 2. touchmove: do nothing (useVerticalPaging handles via container)
+// 3. touchend: if distance < threshold && duration < tapDuration:
+//    a. Set overlay pointer-events: none
+//    b. document.elementFromPoint(x, y)?.click()
+//    c. requestAnimationFrame(() => restore pointer-events: auto)
 ```
 
-### Virtualized Rendering
+**Critical detail:** The overlay must NOT call `e.preventDefault()` or `e.stopPropagation()` on `touchstart` or `touchmove`. It must be passive. The `useVerticalPaging` hook listens on the `containerRef` (the `.snap-feed` div) which is an ancestor of the overlay. Touch events bubble from the overlay up to the container, where `useVerticalPaging` picks them up. The overlay only acts on `touchend` to determine if it was a tap.
 
-| Technology | Version | Purpose | Why Recommended |
-|------------|---------|---------|-----------------|
-| **No library -- manual 3-slide window** | N/A | Render only current + prev + next slides | TanStack Virtual and react-window are designed for lists with hundreds or thousands of small items where the DOM node count is the bottleneck. The snap feed has full-viewport (100vh) slides -- even with 200 items, the performance problem is not DOM node count but **iframe/media loading**. Rendering 3 slides (the visible one + 1 buffer on each side) with `display: contents` or conditional rendering is trivial to implement manually and avoids fighting TanStack Virtual's scroll container assumptions vs CSS `scroll-snap-type`. |
+**Confidence:** HIGH. This pattern is well-documented for TikTok-style vertical feeds with embedded video iframes. The `elementFromPoint` + `pointer-events` toggle is the standard approach for cross-origin iframe tap passthrough.
 
-**Why NOT TanStack Virtual:**
+### Feature 2: Media-Centric Card Layout (~60% Viewport Media)
 
-1. **Scroll-snap conflict.** TanStack Virtual manages a scroll container with `position: relative` and absolutely-positioned children. CSS `scroll-snap-type: y mandatory` requires children to be in normal document flow within the scroll container. These two models fight each other.
-2. **Overkill for the item count.** The API serves paginated feeds (50 items default). Even 200 items at 100vh each = 200 DOM nodes. The browser handles 200 divs fine. The performance bottleneck is embedded iframes and images, not div count.
-3. **3-slide window is simpler.** Rendering `items[currentIndex - 1]`, `items[currentIndex]`, `items[currentIndex + 1]` with `IntersectionObserver` to detect the current slide is ~30 lines of code. TanStack Virtual would add a dependency for the same result with more configuration.
+**Problem:** Current card layout already uses `flex: 0 0 60%` for `.snap-card-image-hero` but video cards use `width: 100%; height: 100%` (full bleed). The new requirement is a consistent layout across ALL card types: media area ~60% viewport top, then title + metadata + snippet + engagement stats below.
 
-**Implementation approach:**
+**Solution:** CSS restructuring only. No new technology.
 
-```typescript
-// Render ALL slides as scroll-snap containers (CSS handles positioning)
-// But only MOUNT expensive content (iframes, images) for current +/- 1
-function SnapFeed({ items }: { items: FeedItem[] }) {
-  const [activeIndex, setActiveIndex] = useState(0);
-  const containerRef = useRef<HTMLDivElement>(null);
+| Concern | Technology | Why |
+|---------|-----------|-----|
+| 60/40 viewport split | CSS `flex: 0 0 60%` on media region, `flex: 1` on info panel | Already used in `SnapCardImage`. Extend to video and text cards. |
+| Consistent card structure | Shared CSS class `.snap-card-unified` with predictable child regions | All three card variants (video, image, text) render the same DOM skeleton: `.media-region` + `.info-panel`. Content differs; structure is identical. |
+| Auto-snippet (100-150 chars) | `String.prototype.slice(0, 150)` + word boundary cleanup | Pure JS string operation. The server already provides `preview` text. Truncation is a one-liner. |
+| Text card without media | Gradient or themed background in the media region | Current `.snap-card-text` uses full-height text. New layout places a decorative gradient in the 60% media area with the source logo/icon centered, maintaining visual consistency. |
 
-  // IntersectionObserver detects which slide is centered
-  // Only slides within window of activeIndex get media content
-  const shouldRenderMedia = (index: number) =>
-    Math.abs(index - activeIndex) <= 1;
+**Why no CSS framework or layout library:**
 
-  return (
-    <div className="snap-feed" ref={containerRef}>
-      {items.map((item, i) => (
-        <div key={item.id} className="snap-slide">
-          {shouldRenderMedia(i) ? (
-            <FullSlideContent item={item} />
-          ) : (
-            <SlideShell item={item} /> {/* Title + placeholder only */}
-          )}
-        </div>
-      ))}
-    </div>
-  );
-}
-```
+| Alternative | Why Not |
+|-------------|---------|
+| Tailwind CSS | Would require rewriting ~2300 lines of existing CSS. The layout change is ~30 lines of CSS. |
+| CSS Grid with `grid-template-rows: 60fr 40fr` | Flexbox `flex: 0 0 60%` already works and is what the image card uses. Grid adds no benefit for a two-region vertical split. |
+| Container queries | The card is always 100% viewport width. There is no responsive breakpoint within the card. Media queries (already unused for snap mode) or fixed percentages suffice. |
 
-**CSS for snap behavior:**
+**Confidence:** HIGH. This is a CSS restructuring of existing components, not a technology decision.
 
-```css
-.snap-feed {
-  height: 100vh;
-  height: 100dvh; /* dynamic viewport height for mobile */
-  overflow-y: scroll;
-  scroll-snap-type: y mandatory;
-  -webkit-overflow-scrolling: touch;
-}
+### Feature 3: Fixed Always-Visible Header
 
-.snap-slide {
-  height: 100vh;
-  height: 100dvh;
-  scroll-snap-align: start;
-  scroll-snap-stop: always; /* prevent skipping slides on fast scroll */
-}
-```
+**Problem:** Current `SnapControlBar` auto-hides with `transform: translateY(-100%)` based on user interaction. The new requirement is a fixed header that NEVER hides, with "Army Feed" branding on the left and Sort/Filter action buttons on the right.
 
-**Why `100dvh` not `100vh`:** On mobile browsers, `100vh` includes the area behind the address bar. `100dvh` (dynamic viewport height) accounts for the browser chrome shrinking/expanding. Supported in all modern browsers since 2023.
+**Solution:** CSS `position: fixed` with layout adjustment. No new technology.
 
-### Config-Driven Theming
+| Concern | Technology | Why |
+|---------|-----------|-----|
+| Always-visible header | `position: fixed; top: 0;` with fixed height (e.g., 48px) | Standard CSS fixed positioning. The current `SnapControlBar` already uses `position: absolute; top: 0;` -- change to `position: fixed;` and remove the hide/show logic. |
+| Feed content not hidden behind header | `padding-top` on `.snap-page` matching header height, or `calc(100svh - 48px)` for feed height | The snap feed container needs to account for the header. Cards fill the remaining viewport below the header. |
+| Safe area inset (notch) | `padding-top: max(8px, env(safe-area-inset-top))` | Already implemented in `SnapControlBar`. Keep this. |
+| Backdrop blur for glass effect | `backdrop-filter: blur(12px)` | Already implemented in `SnapControlBar`. Keep this. |
 
-| Technology | Version | Purpose | Why Recommended |
-|------------|---------|---------|-----------------|
-| **CSS custom properties (expanded)** | N/A | Design token system for white-label theming | The existing `applyTheme()` sets 3 CSS variables (`--theme-primary`, `--theme-accent`, `--theme-dark`). Expand this to a full token system covering typography, spacing, border radius, shadows, and component-specific tokens. No library needed -- CSS custom properties cascade, inherit, and can be scoped to components. The config-driven architecture already works (change config, change app). Extending `ThemeConfig` with more tokens follows the existing pattern. |
+**Layout impact on card heights:** Cards currently use `height: 100%` (filling the `.snap-card` which fills `.snap-paging-track` which fills `.snap-feed`). With a fixed header, the feed container is `100svh - headerHeight`. Cards still use `height: 100%` but now "100%" refers to the post-header space. No card CSS changes needed -- only the container sizing changes.
 
-**Why NOT a theming library (styled-components, Stitches, vanilla-extract):**
+**What changes:**
 
-1. **Already have CSS custom properties working.** `applyTheme()` in `config/applyTheme.ts` sets properties on `:root`. Extending this is 10 lines, not a migration.
-2. **No CSS-in-JS overhead.** The app uses plain CSS (`.css` files). Adding styled-components means rewriting every component's styles. Not worth it for theming alone.
-3. **CSS custom properties are the standard.** They cascade, they're inspectable in DevTools, they work in media queries, they animate with `@property`. No build step, no runtime.
+| Current | New |
+|---------|-----|
+| `SnapControlBar` with show/hide animation | Fixed `SnapHeader` that never hides |
+| Sort tabs inline in control bar | Sort button in header opens Sort bottom sheet |
+| Filter icon in control bar | Filter button in header opens Filter bottom sheet |
+| `snap-reveal-zone` touch target to show bar | Remove (no longer needed -- header is always visible) |
+| `useControlBarVisibility` hook | Remove (no longer needed) |
 
-**Expanded token schema:**
+**Confidence:** HIGH. Fixed headers are a solved problem. The current implementation is 80% of the way there.
 
-```typescript
-// Extend existing ThemeConfig
-interface ThemeConfig {
-  // Existing (keep)
-  groupName: string;
-  groupNameNative: string;
-  tagline: string;
-  fandomName: string;
-  primaryColor: string;
-  accentColor: string;
-  darkColor: string;
-  logoUrl: string;
-  socialLinks: { platform: string; handle: string; url: string }[];
+### Feature 4: Sort Bottom Sheet
 
-  // NEW: Extended design tokens
-  tokens?: {
-    // Colors
-    surfaceColor?: string;       // Card/overlay background
-    surfaceDimColor?: string;    // Muted surface
-    textColor?: string;          // Primary text
-    textMutedColor?: string;     // Secondary text
-    borderColor?: string;        // Dividers, card borders
+**Problem:** Sort selection is currently inline tabs in `SnapControlBar`. The new requirement is a bottom sheet matching the existing `FilterSheet` design language.
 
-    // Typography
-    fontFamily?: string;         // Body font
-    fontFamilyHeading?: string;  // Heading font (defaults to fontFamily)
-    fontSizeBase?: string;       // Base font size (rem)
+**Solution:** Clone and simplify `FilterSheet`. No new technology.
 
-    // Spacing & Shape
-    radiusSm?: string;           // Small border radius (pills, badges)
-    radiusMd?: string;           // Medium radius (cards)
-    radiusLg?: string;           // Large radius (modals)
-    spacingUnit?: string;        // Base spacing unit (px or rem)
+| Concern | Technology | Why |
+|---------|-----------|-----|
+| Bottom sheet overlay | `createPortal(sheet, document.body)` | Exactly what `FilterSheet` already uses. Same pattern, same escape from scroll-snap stacking context. |
+| Slide-up animation | CSS `transform: translateY(100%)` transitioning to `translateY(0)` | Exactly what `FilterSheet` already uses via `.filter-sheet-backdrop.open .filter-sheet`. |
+| Drag-to-dismiss | Touch handlers tracking `deltaY` with threshold | Exactly what `FilterSheet` already implements in `handleTouchStart/Move/End`. |
+| Body scroll lock | `document.body.style.overflow = 'hidden'` on open | Exactly what `FilterSheet` already implements. |
+| Sort option list | 5 radio-style buttons (Recommended, Newest, Oldest, Popular, Discussed) | Simpler than `FilterSheet` which has tabs + multi-select chips. `SortSheet` is a flat list of options with the active one highlighted. |
+| Dispatch sort change | `dispatch({ type: "SET_SORT", sort: mode })` | Already exists in `useFeedState` reducer. |
 
-    // Feed-specific
-    cardBackdropBlur?: string;   // Glassmorphism blur amount
-    cardOverlayOpacity?: string; // Text overlay opacity on images
-  };
+**Why not a shared "BottomSheet" component:** Extracting a shared base is a reasonable refactor during implementation, but it is NOT a stack decision. Whether the two sheets share a base component or are two independent components with similar CSS is an implementation detail. Both approaches use the same underlying technology: `createPortal` + CSS transforms + touch event handlers.
 
-  // NEW: Feature flags
-  features?: {
-    snapFeed?: boolean;          // true = snap feed, false = list view
-    showEngagementStats?: boolean;
-    showContentTypeBadges?: boolean;
-    enableMemberFilter?: boolean;
-    enableDarkMode?: boolean;
-  };
-}
-```
-
-**Updated applyTheme():**
-
-```typescript
-export function applyTheme(theme: ThemeConfig): void {
-  const s = document.documentElement.style;
-  // Existing
-  s.setProperty('--theme-primary', theme.primaryColor);
-  s.setProperty('--theme-accent', theme.accentColor);
-  s.setProperty('--theme-dark', theme.darkColor);
-
-  // Extended tokens (with defaults)
-  const t = theme.tokens;
-  if (t) {
-    if (t.surfaceColor) s.setProperty('--surface', t.surfaceColor);
-    if (t.textColor) s.setProperty('--text', t.textColor);
-    if (t.textMutedColor) s.setProperty('--text-muted', t.textMutedColor);
-    if (t.borderColor) s.setProperty('--border', t.borderColor);
-    if (t.fontFamily) s.setProperty('--font-body', t.fontFamily);
-    if (t.fontFamilyHeading) s.setProperty('--font-heading', t.fontFamilyHeading);
-    if (t.radiusSm) s.setProperty('--radius-sm', t.radiusSm);
-    if (t.radiusMd) s.setProperty('--radius-md', t.radiusMd);
-    if (t.radiusLg) s.setProperty('--radius-lg', t.radiusLg);
-  }
-}
-```
+**Confidence:** HIGH. This is a direct clone of an existing pattern in the codebase.
 
 ## Supporting Libraries
 
 | Library | Version | Purpose | When to Use |
 |---------|---------|---------|-------------|
-| motion | ^12.34.3 | Animation, gestures, scroll-linked effects | Every snap slide transition, filter change animation, card entry/exit |
-| zustand | ^5.0.11 | Global sort/filter state | Shared state between ControlBar, SnapFeed, and URL sync |
+| **None needed** | -- | -- | -- |
 
-**That's it.** Two new dependencies for v3.0. The rest (virtualization, theming) is built with existing browser APIs and the current CSS approach.
-
-## Installation
-
-```bash
-# From packages/frontend/ (or from root with workspace flag)
-npm install motion zustand --workspace=packages/frontend
-```
-
-No dev dependencies needed. Both packages include TypeScript types.
-
-## Alternatives Considered
-
-| Recommended | Alternative | Why Not Alternative |
-|-------------|-------------|---------------------|
-| motion (formerly framer-motion) | react-spring | react-spring uses a different mental model (spring physics config objects). Motion's declarative props (`animate`, `exit`, `whileInView`) are more readable for a team of 1. Motion has 10x the community examples for scroll-snap + animation combos. |
-| motion | GSAP (GreenSock) | GSAP is imperative (timeline-based). Requires refs and manual cleanup. Great for complex sequenced animations, overkill for "fade card in on scroll." GSAP's license also restricts use in some commercial contexts. |
-| motion | CSS-only animations | CSS `@keyframes` + `animation` can't animate elements unmounting from the DOM (no exit animations). Can't track scroll progress as a JS value. Can't do spring physics. Motion adds what CSS can't. |
-| motion | auto-animate | auto-animate is a lightweight alternative (1.5KB) but only handles enter/exit transitions. No scroll-linked animations, no drag gestures, no layout animations. Too limited for the snap feed. |
-| zustand | Jotai | Jotai's atomic model is better for many independent state pieces. Feed filter state is a cohesive object (sort + source + member + contentType filters all belong together). A single Zustand store is cleaner than coordinating 4 atoms. |
-| zustand | React Context | Context re-renders all consumers on any change. The snap feed renders 3+ cards plus a control bar -- context would cause all of them to re-render when sort mode changes, even if only the control bar reads sort mode. Zustand's selectors prevent this. |
-| zustand | @tanstack/react-query | React Query is for server state (caching API responses). Sort/filter is client-only UI state. The existing `useFeed` hook already handles API fetching with caching. Zustand handles UI state that doesn't come from the server. |
-| Manual 3-slide window | @tanstack/react-virtual | TanStack Virtual's scroll container management conflicts with CSS scroll-snap. The feed has ~50-200 items at 100vh each -- DOM count isn't the bottleneck. Media loading is. A manual window handles this with less complexity. |
-| Manual 3-slide window | react-window | Same CSS scroll-snap conflict. react-window is also unmaintained (last publish 2021). |
-| CSS custom properties | styled-components | The app uses plain CSS files. Migrating to CSS-in-JS to gain theming is backwards -- CSS custom properties already provide theming with zero runtime cost. |
-| CSS custom properties | Tailwind CSS | Would require rewriting all existing styles. Tailwind's utility classes are great for new projects, but migrating an existing CSS codebase is high effort for low gain when the theming need is just "more CSS variables." |
+**That's it.** Zero new dependencies for v4.0. Every feature uses:
+- React 19 (`useRef`, `useCallback`, `createPortal`)
+- TypeScript (type safety)
+- CSS custom properties + flexbox (layout)
+- Vanilla touch event APIs (`touchstart`, `touchmove`, `touchend`)
+- DOM APIs (`document.elementFromPoint`, `pointer-events` CSS property)
 
 ## What NOT to Add
 
 | Avoid | Why | Use Instead |
 |-------|-----|-------------|
-| @tanstack/react-virtual | Scroll-snap conflict, overkill for 50-200 full-viewport items | Manual 3-slide rendering window with IntersectionObserver |
-| react-window | Unmaintained (last publish 2021), same scroll-snap conflict | Manual 3-slide rendering window |
-| react-virtuoso | Another virtualization lib that fights scroll-snap | Manual approach |
-| framer-motion | Legacy package name, still works but no new features | `motion` (the successor package) |
-| styled-components / emotion | CSS-in-JS migration for theming alone is not worth it | CSS custom properties (already in use) |
-| @tanstack/react-query | The API fetching layer (`useFeed` + `feedService`) works. Adding React Query for sort/filter would mean refactoring the data layer during a UI milestone. | Keep existing `useFeed`, add Zustand for UI state only |
-| redux / @reduxjs/toolkit | 10x bundle size, boilerplate for one store with 4 fields | Zustand |
-| react-snap-carousel | Horizontal carousel library, not vertical snap feed | CSS scroll-snap + Motion |
-| swiper | Heavy (50KB+), designed for horizontal sliders. Vertical mode exists but scroll-snap conflict. | CSS scroll-snap + Motion |
-| overlayscrollbars | Custom scrollbar library. Fighting native scroll-snap. | Native scrollbar (hide with CSS if needed) |
+| motion (framer-motion) | v3.0 shipped without it. CSS animations handle entry transitions. No exit animations needed for v4.0 features. The constraint "CSS animations only" is an explicit project decision. | CSS `@keyframes` + `transition` (already used throughout) |
+| Hammer.js | Gesture library that would create a second gesture system conflicting with `useVerticalPaging` + `useSwipeGesture`. The app already has robust gesture arbitration. | Existing hooks + a new `useTouchOverlay` hook (~50 lines) |
+| ZingTouch | Same as Hammer.js. Adds complexity for a problem already solved in the codebase. | Existing gesture hooks |
+| zustand | v3.0 shipped without it. `useFeedState` with `useReducer` + `localStorage` persistence works. Adding Zustand for this milestone would mean rewriting the state layer during a UI-focused milestone. | Existing `useFeedState` hook (already handles sort + filter + persistence) |
+| react-spring | Animation library. Same rationale as Motion -- CSS animations are the project constraint. | CSS transitions + `@keyframes` |
+| @radix-ui/react-dialog | Would provide an accessible bottom sheet primitive, but adds a dependency for something the app already implements (FilterSheet). The existing sheet handles backdrop, focus trap equivalent (body scroll lock), and drag-to-dismiss. | Clone existing `FilterSheet` pattern |
+| react-bottom-sheet | 25KB+ library for a pattern already implemented in ~80 lines of code in `FilterSheet.tsx`. | Clone existing pattern |
+| any CSS framework | Tailwind, Bootstrap, etc. would require rewriting existing CSS. The layout changes are ~50 lines of CSS. | Plain CSS (already used throughout) |
 
-## Version Compatibility
+## Alternatives Considered
 
-| Package | Compatible With | Notes |
-|---------|-----------------|-------|
-| motion@^12.34.3 | React >= 18, React 19.2 confirmed | Import from `motion/react`. Lazy loading available via `motion/react-m` + `LazyMotion`. |
-| zustand@^5.0.11 | React >= 18, React 19 confirmed | Use `create<T>()()` double-parens syntax for TypeScript. No provider wrapper needed. |
-| CSS scroll-snap | All modern browsers | `scroll-snap-type`, `scroll-snap-align`, `scroll-snap-stop` have universal support. `100dvh` supported since Chrome 108, Safari 15.4, Firefox 94. |
+| Category | Recommended | Alternative | Why Not |
+|----------|-------------|-------------|---------|
+| Touch overlay | Vanilla `useTouchOverlay` hook | Hammer.js gesture library | App already has gesture arbitration. Hammer.js would be a second gesture system fighting the first. |
+| Touch overlay | `pointer-events` toggle + `elementFromPoint` | `touch-action: pan-y` on iframe | W3C spec: `touch-action` does not cascade into embedded browsing contexts. Does not work. |
+| Card layout | CSS flexbox 60/40 split | CSS Grid `grid-template-rows` | Flexbox already used for image cards. No benefit from grid for a two-region split. |
+| Bottom sheet | Clone FilterSheet | @radix-ui/react-dialog | Adds dependency for 80 lines of code already written. FilterSheet pattern is proven. |
+| Sort UI | Bottom sheet | Keep inline tabs | Requirements specify bottom sheet to match filter UI design language. Inline tabs also waste fixed header space. |
+| Fixed header | CSS `position: fixed` | `position: sticky` | Sticky requires a scroll container. The snap feed uses `overflow: hidden` with programmatic `translateY` -- there is no scroll container for sticky to attach to. Fixed positioning is correct. |
 
 ## Integration Points with Existing Code
 
@@ -318,44 +185,62 @@ No dev dependencies needed. Both packages include TypeScript types.
 
 | File | Change | Why |
 |------|--------|-----|
-| `pages/News.tsx` | Replace `useState` filter/sort state with `useFeedStore` selectors | State moves from local to global so SnapFeed and ControlBar can share it |
-| `components/SwipeFeed.tsx` | Replace entirely with new `SnapFeed.tsx` | Current swipe feed renders all items, no snap behavior, no Motion animations |
-| `components/FeedFilter.tsx` | Refactor into `ControlBar.tsx` with sort + filters | Current filter is source-only tabs. New control bar adds sort modes, content type, member filters |
-| `components/BiasFilter.tsx` | Merge into ControlBar | Currently a separate component; consolidate into unified control bar |
-| `hooks/useFeed.ts` | Add sort parameter, integrate with Zustand store | Currently only filters by source and bias. Needs to pass `sortMode` to API |
-| `hooks/useBias.ts` | Remove (replaced by Zustand store) | Bias/member filter state moves into `useFeedStore` |
-| `config/types.ts` | Extend `ThemeConfig` with `tokens` and `features` | Add design tokens and feature flags |
-| `config/applyTheme.ts` | Expand to set all new CSS custom properties | Currently sets 3 vars, needs to set 10+ |
-| `services/api.ts` | Add `sort` query parameter to feed endpoint | Server needs to know sort mode for `popular` and `discussed` sort |
+| `components/snap/SnapCardVideo.tsx` | Add transparent touch overlay div above iframe | Intercept vertical swipes that currently get swallowed by cross-origin iframe |
+| `components/snap/SnapCard.tsx` | Unify card DOM structure: media region (60%) + info panel (40%) for all variants | Consistent layout across video/image/text cards |
+| `components/snap/SnapCardImage.tsx` | Already has 60/40 split. Minor adjustments: add auto-snippet, ensure consistent metadata rendering | Align with unified card structure |
+| `components/snap/SnapCardText.tsx` | Restructure: decorative gradient in media region, text content in info panel | Currently full-height text. New layout matches image/video card structure. |
+| `components/snap/SnapControlBar.tsx` | Replace with new `SnapHeader.tsx`: fixed position, branding left, sort+filter buttons right | Header is always visible, sort moves to bottom sheet |
+| `pages/News.tsx` | Remove `useControlBarVisibility`, remove `snap-reveal-zone`, add sort sheet state | Simpler page-level state (no show/hide bar logic) |
+| `hooks/useControlBarVisibility.ts` | Delete (no longer needed) | Header is always visible |
+| `App.css` | Update `.snap-page` layout to account for fixed header height, update card layout classes, add sort sheet styles | Layout adjustments for fixed header + unified cards |
+
+### New files
+
+| File | Purpose |
+|------|---------|
+| `hooks/useTouchOverlay.ts` | Touch overlay logic: classify tap vs swipe, handle tap passthrough to iframe |
+| `components/snap/SortSheet.tsx` | Sort selection bottom sheet (clone of FilterSheet pattern) |
+| `components/snap/SnapHeader.tsx` | Fixed header with branding + action buttons |
 
 ### What stays the same
 
 | File | Why No Change |
 |------|---------------|
-| `components/FeedCard.tsx` | Cards render inside SnapFeed slides. Card component doesn't know about snap behavior. |
-| `components/VideoEmbed.tsx` | Video embeds are unchanged. They render inside cards. |
-| `services/feedService.ts` | Feed fetching logic stays. Zustand handles what to fetch, feedService handles how. |
-| `config/groups/bts/*` | Config files get new optional fields (`tokens`, `features`). Existing fields unchanged. |
-| All server-side code | This milestone is frontend-only. API may add a `sort` parameter but core server is unchanged. |
+| `hooks/useVerticalPaging.ts` | Touch events from the overlay bubble up to the container where this hook listens. No changes needed. |
+| `hooks/useSwipeGesture.ts` | Horizontal swipe gesture detection continues to work via `gestureClaimedRef` arbitration. No changes needed. |
+| `hooks/useSnapVideo.ts` | Video play/pause/mute via `postMessage` is unchanged. The overlay handles touch; the hook handles video state. |
+| `hooks/useSnapFeed.ts` | DOM windowing (3-item visible slice) is unchanged. Card contents change, but the feed mechanics do not. |
+| `hooks/useFeedState.ts` | Already has `SET_SORT` action and full sort/filter state. No additions needed. |
+| `components/snap/FilterSheet.tsx` | Filter bottom sheet is unchanged. Sort sheet is a new component. |
+| `components/snap/SeeMoreSheet.tsx` | Text expansion sheet is unchanged. |
+| `components/snap/SnapStatsBar.tsx` | Engagement stats display is unchanged (moves into unified info panel but component itself is the same). |
+| `components/snap/SnapFeed.tsx` | Feed container and paging track are unchanged. Cards render differently inside, but the feed structure is the same. |
+| All server-side code | This milestone is frontend-only. No API changes needed. |
+| `config/groups/bts/*` | No config changes needed. All features use existing config values. |
+
+## Browser APIs Used (No Polyfills Needed)
+
+| API | Purpose | Support |
+|-----|---------|---------|
+| `document.elementFromPoint(x, y)` | Find element under tap coordinates for iframe passthrough | All browsers, no polyfill |
+| `element.style.pointerEvents` | Programmatic `pointer-events: none/auto` toggle | All browsers, no polyfill |
+| `TouchEvent` (touchstart/move/end) | Touch gesture detection | All mobile browsers, no polyfill |
+| `createPortal` (React) | Bottom sheet rendering outside scroll context | React 19, already used |
+| `CSS position: fixed` | Always-visible header | All browsers |
+| `CSS env(safe-area-inset-top)` | Notch/status bar avoidance | iOS Safari 11.1+, Chrome 69+ |
+| `CSS backdrop-filter: blur()` | Frosted glass header background | All modern browsers (2020+) |
 
 ## Sources
 
-- [Motion (framer-motion successor) npm](https://www.npmjs.com/package/motion) -- v12.34.3, 18M+ monthly downloads (HIGH confidence)
-- [Motion React 19 compatibility](https://github.com/motiondivision/motion/issues/2668) -- v12.27.5+ confirmed with React 19.2.3 (HIGH confidence)
-- [Motion upgrade guide](https://motion.dev/docs/react-upgrade-guide) -- framer-motion to motion migration, import from `motion/react` (HIGH confidence)
-- [Motion scroll animations](https://motion.dev/docs/react-scroll-animations) -- useScroll, whileInView, ScrollTimeline API support (HIGH confidence)
-- [Motion gestures](https://motion.dev/docs/react-gestures) -- drag, press, hover gesture props (HIGH confidence)
-- [Zustand npm](https://www.npmjs.com/package/zustand) -- v5.0.11, 1.16KB gzipped (HIGH confidence)
-- [Zustand vs Jotai vs Context 2026](https://inhaq.com/blog/react-state-management-2026-redux-vs-zustand-vs-jotai.html) -- Zustand for cohesive stores, Jotai for atomic state (MEDIUM confidence)
-- [Zustand TypeScript guide](https://dev.to/avt/understanding-zustand-a-beginners-guide-with-typescript-4jjo) -- `create<T>()()` pattern for TS (MEDIUM confidence)
-- [TanStack Virtual npm](https://www.npmjs.com/package/@tanstack/react-virtual) -- v3.13.19, headless virtualizer (HIGH confidence)
-- [TanStack Virtual vs react-window](https://borstch.com/blog/development/comparing-tanstack-virtual-with-react-window-which-one-should-you-choose) -- TanStack for complex layouts, react-window for simple fixed-size (MEDIUM confidence)
-- [CSS scroll-snap MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/scroll-snap-type) -- Universal browser support, mandatory vs proximity (HIGH confidence)
-- [TikTok-style snap scroll in React](https://dev.to/biomathcode/create-tik-tokyoutube-shorts-like-snap-infinite-scroll-react-1mca) -- CSS scroll-snap + IntersectionObserver pattern (MEDIUM confidence)
-- [CSS custom properties theming guide 2026](https://devtoolbox.dedyn.io/blog/css-custom-properties-complete-guide) -- Token naming conventions, cascade behavior (MEDIUM confidence)
-- [Design tokens with CSS variables](https://penpot.app/blog/the-developers-guide-to-design-tokens-and-css-variables/) -- Primitive/semantic/component token layers (MEDIUM confidence)
-- [100dvh viewport units](https://web.dev/blog/viewport-units) -- Dynamic viewport units for mobile (HIGH confidence)
+- [W3C Pointer Events Issue #325: touch-action on iframe](https://github.com/w3c/pointerevents/issues/325) -- Confirms `touch-action` does NOT cascade into embedded browsing contexts (HIGH confidence)
+- [W3C Pointer Events PR #334](https://github.com/w3c/pointerevents/pull/334) -- Spec clarification for touch-action + iframe behavior (HIGH confidence)
+- [MDN: touch-action](https://developer.mozilla.org/en-US/docs/Web/CSS/touch-action) -- `pan-y`, `none`, `manipulation` values and browser compat (HIGH confidence)
+- [MDN: pointer-events CSS property](https://developer.mozilla.org/en-US/docs/Web/CSS/pointer-events) -- `none`/`auto` for click-through behavior (HIGH confidence)
+- [MDN: Using Touch Events](https://developer.mozilla.org/en-US/docs/Web/API/Touch_events/Using_Touch_Events) -- touchstart/move/end event handling (HIGH confidence)
+- [CSS-Tricks: pointer-events](https://css-tricks.com/almanac/properties/p/pointer-events/) -- Practical overlay patterns with pointer-events (HIGH confidence)
+- [Iframe overlay for touch event capture (Gist)](https://gist.github.com/datchley/6793842) -- Overlay pattern for iframe touch events, noting cross-origin limitations (MEDIUM confidence)
+- [Iframe overlay for click passthrough (Gist)](https://gist.github.com/agaase/6971953) -- jQuery overlay dispatching clicks through to iframe (MEDIUM confidence)
 
 ---
-*Stack research for: BTS Army Feed v3.0 -- Immersive Feed Experience*
-*Researched: 2026-03-03*
+*Stack research for: BTS Army Feed v4.0 -- Enhanced Feed UI*
+*Researched: 2026-03-04*

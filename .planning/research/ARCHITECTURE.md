@@ -1,653 +1,535 @@
-# Architecture: v3.0 Immersive Feed Integration
+# Architecture Research
 
-**Domain:** TikTok-style snap feed, sort/filter global state, virtualized rendering
-**Researched:** 2026-03-03
-**Confidence:** HIGH (existing codebase fully audited, CSS scroll-snap and IntersectionObserver patterns verified against MDN docs and production implementations)
+**Domain:** Integration of enhanced feed UI into existing snap feed system
+**Researched:** 2026-03-04
+**Confidence:** HIGH
 
-## Existing Architecture (Baseline)
-
-The current frontend has this structure:
+## Existing System Overview
 
 ```
-packages/frontend/src/
-  pages/
-    News.tsx              Feed page -- owns ALL state (filter, contentType, viewMode, bias)
-  components/
-    SwipeFeed.tsx         Horizontal swipe cards (IntersectionObserver for current index)
-    FeedCard.tsx          List view card (thumbnail, video embed, stats, meta)
-    FeedFilter.tsx        Source filter tabs (reddit, youtube, news, etc.)
-    BiasFilter.tsx        Member chip toggles
-    VideoEmbed.tsx        Lazy iframe loader (IntersectionObserver for viewport entry)
-  hooks/
-    useFeed.ts            Data fetching + caching (localStorage 5min TTL) + source/bias filtering
-    useBias.ts            Bias selection persistence (localStorage)
-    useVideoAutoplay.ts   IntersectionObserver for video play/pause + one-at-a-time enforcement
-  services/
-    feedService.ts        Dual-mode: API fetch (primary) with client-side fallback
-    api.ts                fetchApiFeed() -- page-based pagination, source/contentType params
-  config/
-    types.ts              GroupConfig, ThemeConfig, SourceEntry, MemberConfig
-    applyTheme.ts         CSS custom properties from config
+snap-page (position: fixed, inset: 0, flex column)
+ |
+ +-- SnapControlBar (absolute, z:20, auto-hide overlay)      <-- REPLACE with SnapHeader
+ |    +-- sort tabs (Rec/New/Old/Pop/Disc)                   <-- MOVE into SortSheet
+ |    +-- filter icon + badge                                <-- MOVE into SnapHeader
+ |    +-- active filter chips                                <-- MOVE into SnapHeader
+ |
+ +-- snap-reveal-zone (absolute, z:15, tap-to-show)          <-- REMOVE
+ |
+ +-- SnapFeed (flex:1, overflow:hidden, touch-action:none)
+ |    +-- snap-paging-track (translateY for spring transitions)
+ |    |    +-- SnapCard[-1] (absolute, top:-100%)
+ |    |    +-- SnapCard[0]  (absolute, top:0) -- active
+ |    |    +-- SnapCard[+1] (absolute, top:100%)
+ |    |
+ |    +-- snap-counter (absolute, bottom:12px)
+ |
+ +-- FilterSheet (createPortal to body)
 ```
 
-### Current Data Flow
+### Hook Architecture
 
 ```
 News.tsx (page)
-  |-- useState: filter, contentTypeFilter, viewMode, biases
-  |-- useFeed(filter, biases) -> allItems + client-side filtering
-  |-- useBias() -> bias selection (localStorage-persisted)
+  +-- useFeedState()             -- sort/filter state with localStorage persistence
+  +-- useFeed()                  -- API fetch with sort/source/member params
+  +-- useControlBarVisibility()  -- hide bar on index change, show on tap  <-- REMOVE
   |
-  |-- FeedFilter        props: active, onChange (sets filter state)
-  |-- ContentType pills  inline in News.tsx (sets contentTypeFilter state)
-  |-- BiasFilter         props: biases, onToggle, onClear
-  |
-  |-- viewMode === "swipe" ? SwipeFeed : FeedCard list
+  +-- SnapFeed (component)
+       +-- useSnapFeed()         -- 3-item DOM window, currentIndex, goNext/goPrev
+       +-- useVerticalPaging()   -- touch-driven translateY with spring animation
+       |    returns: trackRef, containerRef, gestureClaimedRef, onTransitionEnd
+       |
+       +-- SnapCard (per visible item)
+            +-- useSwipeGesture() -- horizontal right-swipe via gestureClaimedRef axis locking
 ```
 
-### Key Observations About Current State
+### Gesture Axis Locking (Critical Integration Point)
 
-1. **All state lives in News.tsx** -- filter, contentType, viewMode, biases are local useState
-2. **useFeed hook** fetches ALL items then filters client-side by source and bias
-3. **SwipeFeed renders ALL items** as DOM nodes (no virtualization)
-4. **Three separate filter UIs** (source tabs, content type pills, member chips) are stacked vertically, consuming significant screen space
-5. **Server already supports** page-based pagination, source filtering, and contentType filtering via query params
-6. **Existing IntersectionObserver patterns** in useVideoAutoplay and SwipeFeed prove the team can use IO-based virtualization without a library
+`useVerticalPaging` and `useSwipeGesture` share a `gestureClaimedRef` for mutual exclusion:
 
-## Target Architecture (v3.0)
+1. On touchstart, both reset: `gestureClaimedRef.current = null`
+2. On touchmove, first to exceed dead zone (10px) claims the axis:
+   - Vertical wins (dy > dx * 1.5): `gestureClaimedRef.current = "vertical"` -- blocks horizontal
+   - Horizontal wins (dx > dy * 1.5): `gestureClaimedRef.current = "horizontal"` -- blocks vertical
+3. On touchend/transitionEnd, ref resets to null
 
-### What Changes
+Touch events are registered on `containerRef` (the `.snap-feed` div) via `addEventListener` with `{ passive: true }`. The swipe gesture uses React synthetic events on the `.snap-card-layout` div.
 
-| Area | Current | Target |
-|------|---------|--------|
-| Feed view | List + swipe toggle | Full-screen vertical snap feed (default), list as fallback |
-| Scroll behavior | Normal scroll (list) / CSS snap (swipe) | CSS `scroll-snap-type: y mandatory` with 100dvh slides |
-| Rendering | All items in DOM | 3-item virtualization window (prev + current + next) |
-| Filter/sort state | useState in News.tsx | Lifted to `useFeedState` hook with URL search params sync |
-| Sort options | None (server-ranked only) | Recommended, Newest, Oldest, Most Popular, Most Discussed |
-| Filter UI | 3 stacked horizontal rows | Single collapsible control bar |
-| Video playback | Autoplay visible video | Autoplay current snap item only, pause all others |
-| Text content | Full preview shown | Collapsed with "See More" gradient overlay |
-| Source link | "View original" text link | Separate icon button on card overlay |
-| Config | ThemeConfig with 3 colors | Extended with feature flags and styling tokens |
+**Key constraint:** Iframes swallow ALL touch events. When the iframe is active and loaded (visible YouTube/TikTok video), touch events on the iframe area never reach `containerRef`. The iframe creates a separate browsing context. This is the bug that the touch overlay must fix.
 
-### Component Architecture
+## Integration Architecture for New Features
+
+### Feature 1: Transparent Touch Overlay for Video Iframes
+
+**Problem:** When a YouTube/TikTok iframe is active and loaded, the iframe captures all touch events. `useVerticalPaging` touch listeners on `.snap-feed` (`containerRef`) never fire. User cannot swipe up/down to navigate away from a playing video card.
+
+**Solution:** Render a transparent `<div>` above the iframe (higher z-index) that intercepts touch events. Since this overlay div exists in the same DOM tree as `containerRef`, touch events naturally bubble up from the overlay through the DOM to `containerRef`, where `useVerticalPaging` picks them up.
+
+**Why this works (DOM event bubbling):**
+
+1. User touches the overlay (a regular div inside the snap-feed tree)
+2. Touch event fires on overlay, bubbles up through DOM: overlay -> snap-card-video -> snap-card-content -> snap-card-layout -> snap-card -> snap-paging-track -> snap-feed (containerRef)
+3. `useVerticalPaging` touchstart/touchmove/touchend listeners on containerRef fire normally
+4. Axis locking works as before via gestureClaimedRef
+5. The overlay ALSO tracks touches locally to detect taps vs. drags for play/pause
+
+No event forwarding or synthetic event dispatching needed. Standard DOM bubbling handles everything.
+
+**Integration point:** Inside `SnapCardVideo`, above the iframe.
 
 ```
-App.tsx
-  |-- BrowserRouter > Routes
-        |-- /news -> FeedPage (renamed from News.tsx)
-
-FeedPage.tsx (page)
-  |-- useFeedState() ................. global filter/sort state hook
-  |-- useFeed(feedState) ............. data fetching, uses feedState params
-  |
-  |-- FeedControlBar ................. NEW: collapsed sort/filter overlay
-  |     |-- SortSelector ............. NEW: sort mode dropdown
-  |     |-- FilterChips .............. NEW: unified source + member + type chips
-  |
-  |-- SnapFeed ....................... NEW: replaces SwipeFeed + list view
-  |     |-- SnapSlide (x3 max) ...... NEW: 100dvh container for single item
-  |     |     |-- SnapCard ........... NEW: full-screen card layout
-  |     |     |     |-- CardMedia .... NEW: video/image/placeholder (top portion)
-  |     |     |     |-- CardOverlay .. NEW: gradient + meta + text + actions
-  |     |     |     |-- CardActions .. NEW: source link icon, share, etc.
-  |     |-- InfiniteScrollSentinel ... NEW: triggers next page fetch
-  |
-  |-- (config.features.listFallback ? FeedList : null) .. existing list view behind feature flag
+SnapCardVideo (position: relative)
+  +-- video-facade (loading state, z-index: 2)
+  +-- <iframe> (z-index: 1)
+  +-- touch-overlay (z-index: 3, position: absolute, inset: 0)
+  |    - pointer-events: auto (captures all touch on video area)
+  |    - On tap (movement < 10px): calls togglePlayPause
+  |    - On swipe: does nothing -- events bubble to containerRef naturally
+  +-- mute-btn (z-index: 10, pointer-events: auto)
+  +-- progress bar (z-index: 10)
+  +-- metadata overlay (z-index: 5, pointer-events: none)
 ```
 
-### New Components (8)
+**What changes:**
 
-| Component | Responsibility | Key Props |
-|-----------|---------------|-----------|
-| `SnapFeed` | Scroll-snap container, 3-item virtualization window, IO-based current index tracking | `items: FeedItem[]`, `onLoadMore: () => void`, `hasMore: boolean` |
-| `SnapSlide` | 100dvh wrapper with snap alignment, renders content or placeholder | `item: FeedItem \| null`, `isActive: boolean`, `index: number` |
-| `SnapCard` | Full-screen card layout: media top, overlay bottom | `item: FeedItem`, `isActive: boolean` |
-| `CardMedia` | Handles video embed, image, or placeholder for snap context | `item: FeedItem`, `isActive: boolean` |
-| `CardOverlay` | Gradient overlay with source badge, title, collapsed text, stats | `item: FeedItem`, `expanded: boolean`, `onToggleExpand` |
-| `CardActions` | Action buttons on right edge (source link, share) | `item: FeedItem` |
-| `FeedControlBar` | Collapsible sort/filter bar, sticky at top | `feedState: FeedState`, `dispatch: Dispatch` |
-| `SortSelector` | Sort mode picker (dropdown or horizontal pills) | `value: SortMode`, `onChange` |
+| File | Change Type | Description |
+|------|-------------|-------------|
+| `SnapCardVideo.tsx` | MODIFY | Add transparent overlay div above iframe. Replace `onClick={togglePlayPause}` on outer div with tap detection on overlay. |
+| `useVerticalPaging.ts` | NO CHANGE | Touch listeners already on containerRef. Bubbling from overlay reaches them. |
+| `useSwipeGesture.ts` | NO CHANGE | Axis locking via gestureClaimedRef works as before. |
+| `App.css` | MODIFY | Add `.snap-card-video-touch-overlay` styles. |
 
-### Modified Components (4)
-
-| Component | Change | Reason |
-|-----------|--------|--------|
-| `News.tsx` -> `FeedPage.tsx` | Rename + gut rewrite. Replace all local state with `useFeedState()`. Replace SwipeFeed/FeedCard list with SnapFeed. | Central orchestrator for new feed experience |
-| `FeedFilter.tsx` | Absorb into `FeedControlBar` as `FilterChips` section. Current standalone component becomes unused. | Unified control bar replaces 3 separate filter rows |
-| `BiasFilter.tsx` | Absorb into `FeedControlBar` as member chips within `FilterChips`. Current standalone component becomes unused. | Same reason |
-| `VideoEmbed.tsx` | Add `isActive` prop to control autoplay based on snap position instead of IO-based viewport detection. Keep IO fallback for list mode. | Snap feed knows exactly which item is "current" -- no need for per-video IO |
-
-### Components to Deprecate (2)
-
-| Component | Replacement |
-|-----------|-------------|
-| `SwipeFeed.tsx` | `SnapFeed` (full rewrite, not refactor -- different paradigm) |
-| Content type pill inline JSX in News.tsx | `FilterChips` inside `FeedControlBar` |
-
-### Components Unchanged
-
-`FeedCard.tsx`, `Navbar.tsx`, `SkeletonCard.tsx`, `NewsCard.tsx`, `MemberCard.tsx`, all pages except News.
-
-## Data Flow Architecture
-
-### State Management: useFeedState Hook
-
-Use a custom hook with `useReducer` + `useSearchParams` for URL sync. No external state library needed -- the state is localized to the feed page and does not need cross-route sharing.
-
-**Why not Zustand:** The filter/sort state only matters on the feed page. It does not need to survive route changes (URL params handle that). Adding a dependency for one page of state is over-engineering. React 19's useReducer handles this cleanly.
-
-**Why URL search params:** Enables shareable filtered URLs (`/news?sort=newest&source=youtube`), browser back/forward respects filter changes, and persists across page refreshes.
+**Tap detection implementation:**
 
 ```typescript
-// hooks/useFeedState.ts
-
-type SortMode = 'recommended' | 'newest' | 'oldest' | 'popular' | 'discussed';
-
-interface FeedState {
-  sort: SortMode;
-  source: string | 'all';       // source filter
-  contentType: ContentType | 'all';
-  members: BiasId[];            // member/bias filter
-}
-
-type FeedAction =
-  | { type: 'SET_SORT'; sort: SortMode }
-  | { type: 'SET_SOURCE'; source: string | 'all' }
-  | { type: 'SET_CONTENT_TYPE'; contentType: ContentType | 'all' }
-  | { type: 'TOGGLE_MEMBER'; id: BiasId }
-  | { type: 'CLEAR_MEMBERS' }
-  | { type: 'RESET' };
-
-function feedReducer(state: FeedState, action: FeedAction): FeedState { ... }
-
-export function useFeedState(): [FeedState, Dispatch<FeedAction>] {
-  // Initialize from URL search params, fall back to defaults
-  // Sync state changes back to URL search params
-  // Persist member selection to localStorage (existing useBias pattern)
-}
-```
-
-### Updated useFeed Hook
-
-The existing `useFeed` hook needs modification to:
-1. Accept the full `FeedState` instead of separate `filter` and `biases` params
-2. Pass `sort` to the API (requires minor server-side addition)
-3. Support incremental page loading for infinite scroll
-
-```typescript
-// hooks/useFeed.ts (modified)
-
-export function useFeed(state: FeedState) {
-  // Existing: fetch, cache, retry logic
-  // New: pass sort param to API
-  // New: loadMore() function for infinite scroll (increment page)
-  // New: reset page to 1 when filters change
-
-  return {
-    items,
-    isLoading,
-    isRetrying,
-    error,
-    refresh,
-    hasItems,
-    hasMore,         // NEW: from API response
-    loadMore,        // NEW: fetch next page and append
-  };
-}
-```
-
-### Server-Side Sort Support
-
-The server `/feed` endpoint already accepts `page`, `limit`, `source`, and `contentType` params. Add a `sort` param:
-
-| Sort Mode | Server Implementation |
-|-----------|----------------------|
-| `recommended` | Existing `rankFeed()` blend scoring (default, no change) |
-| `newest` | ORDER BY publishedAt DESC (skip rankFeed) |
-| `oldest` | ORDER BY publishedAt ASC (skip rankFeed) |
-| `popular` | ORDER BY extracted engagement score DESC |
-| `discussed` | ORDER BY commentCount DESC |
-
-This is a minor change to `packages/server/src/routes/feed.ts` -- add a `sort` query param that selects the ordering strategy before pagination.
-
-### Updated Data Flow Diagram
-
-```
-FeedPage
-  |
-  |-- useFeedState() -> [state, dispatch]
-  |     |-- reads URL search params on mount
-  |     |-- syncs state changes to URL params
-  |     |-- persists member selection to localStorage
-  |
-  |-- useFeed(state) -> { items, loadMore, hasMore, isLoading }
-  |     |-- fetchApiFeed({ page, sort, source, contentType })
-  |     |-- appends pages (items accumulate for infinite scroll)
-  |     |-- resets to page 1 when state.sort/source/contentType changes
-  |     |-- client-side member filtering (bias matching unchanged)
-  |
-  |-- FeedControlBar
-  |     |-- dispatch(SET_SORT), dispatch(SET_SOURCE), etc.
-  |     |-- reads state for active indicators
-  |
-  |-- SnapFeed
-        |-- receives items array
-        |-- manages virtualization window internally (prev/current/next)
-        |-- IntersectionObserver tracks current index
-        |-- calls onLoadMore when near end of list
-        |
-        |-- SnapSlide[current-1]  (or empty placeholder)
-        |-- SnapSlide[current]    (active: video autoplay, full rendering)
-        |-- SnapSlide[current+1]  (preload media, no autoplay)
-```
-
-## Virtualization Strategy
-
-### Why Not TanStack Virtual or react-window
-
-CSS `scroll-snap-type: y mandatory` is **incompatible** with TanStack Virtual. The virtualization library's scroll position management conflicts with the browser's snap behavior, causing scroll bounce-back and jitter on Chrome/Edge. This is a [known unresolved issue](https://github.com/TanStack/virtual/issues/478).
-
-For a feed with ~50-200 items per page load, the performance concern is not DOM node count but **iframe/media weight**. Each video embed is an iframe with its own browsing context. Rendering 50+ iframes simultaneously will crash mobile browsers.
-
-### 3-Item Windowed Rendering (Custom)
-
-Render exactly 3 items in the DOM at any time: previous, current, and next. Use CSS scroll snap for physics and IntersectionObserver for index tracking. This approach:
-
-1. Works with CSS scroll snap (no library conflict)
-2. Limits iframes to 1-2 simultaneously (current + preloading next)
-3. Uses patterns already proven in this codebase (useVideoAutoplay uses IO)
-4. Zero dependency cost
-
-```
-Implementation approach:
-
-Container: scroll-snap-type: y mandatory; height: 100dvh; overflow-y: auto;
-           (minus navbar height via calc)
-
-Items:     Each has scroll-snap-align: start; min-height: 100dvh;
-
-Virtualization:
-  - Maintain a `currentIndex` via IntersectionObserver (threshold: 0.5)
-  - Render 3 SnapSlide components: [currentIndex-1, currentIndex, currentIndex+1]
-  - Above/below the 3-item window: render empty divs with fixed height (100dvh)
-    to maintain scroll position
-  - When currentIndex changes: swap which items are "real" vs placeholder
-  - When currentIndex approaches items.length - 2: trigger loadMore()
-```
-
-### Scroll Position Maintenance
-
-The critical challenge with windowed rendering + scroll snap is maintaining scroll position when replacing real content with placeholders. The approach:
-
-```
-Total scroll height = items.length * slideHeight
-                    = items.length * (100dvh - navHeight)
-
-For currentIndex = 5 with items.length = 50:
-  Slots 0-3:  empty divs, height: slideHeight each
-  Slot 4:     SnapSlide (previous)
-  Slot 5:     SnapSlide (current, active)
-  Slot 6:     SnapSlide (next)
-  Slots 7-49: empty divs, height: slideHeight each
-```
-
-This maintains the total scroll height so the scrollbar position stays accurate and snap points remain correct.
-
-### Fallback for Long Lists
-
-If total items exceed 200, the empty placeholder divs (even with minimal DOM) become a concern. For v3.0 this is unlikely since the API returns max 500 items and pagination is 50/page. But if needed later: replace the placeholder approach with `paddingTop`/`paddingBottom` on the container to simulate scroll height.
-
-## Component Design Details
-
-### SnapFeed
-
-```typescript
-interface SnapFeedProps {
-  items: FeedItem[];
-  hasMore: boolean;
-  isLoading: boolean;
-  onLoadMore: () => void;
-}
-
-// Internal state:
-// - currentIndex: number (tracked by IntersectionObserver)
-// - slideHeight: number (measured from container, typically 100dvh - navHeight)
-//
-// Renders:
-// 1. Spacer div (height = currentIndex > 1 ? (currentIndex - 1) * slideHeight : 0)
-// 2. SnapSlide for items[currentIndex - 1] (if exists)
-// 3. SnapSlide for items[currentIndex] (isActive = true)
-// 4. SnapSlide for items[currentIndex + 1] (if exists)
-// 5. Spacer div (height = remaining items * slideHeight)
-//
-// IO targets: each SnapSlide's root div
-// Threshold: 0.5 (same as existing SwipeFeed pattern)
-//
-// Load more trigger: when currentIndex >= items.length - 3
-```
-
-**CSS:**
-```css
-.snap-feed {
-  height: calc(100dvh - var(--nav-height));
-  overflow-y: auto;
-  scroll-snap-type: y mandatory;
-  overscroll-behavior: contain;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
-}
-
-.snap-slide {
-  height: calc(100dvh - var(--nav-height));
-  scroll-snap-align: start;
-  scroll-snap-stop: always;
-  position: relative;
-  overflow: hidden;
-}
-```
-
-### SnapCard Layout
-
-Each snap card fills the full viewport height. Layout strategy:
-
-```
-+----------------------------------+
-|                                  |
-|          CardMedia               |  ~60% of height
-|    (video/image/placeholder)     |
-|                                  |
-+----------------------------------+
-|  [Source Badge] [Time]     [Stats]|
-|                                  |
-|  Title (2 lines max)             |  CardOverlay
-|                                  |  ~40% of height
-|  Preview text...                 |  gradient from transparent to bg
-|  [See More]                      |
-|                                  |
-|  Author                         |
-|         [Source Link] [Share]    |  CardActions
-+----------------------------------+
-```
-
-For items with video content, the media section expands and the overlay becomes a gradient overlay on top of the video (similar to TikTok/YouTube Shorts).
-
-For text-heavy content (Reddit discussions, news articles), the media section shrinks to thumbnail-only and the text area gets more space.
-
-### CardOverlay: "See More" Pattern
-
-Long text content needs truncation with a reveal mechanism:
-
-```typescript
-// Inside CardOverlay
-const [expanded, setExpanded] = useState(false);
-const textRef = useRef<HTMLDivElement>(null);
-const [isTruncated, setIsTruncated] = useState(false);
-
-useEffect(() => {
-  if (textRef.current) {
-    setIsTruncated(textRef.current.scrollHeight > textRef.current.clientHeight);
-  }
-}, [item.preview]);
-
-// Render:
-// - Truncated: max-height with gradient overlay, "See More" button
-// - Expanded: full text, "See Less" button
-// - Not truncated: no button, no gradient
-```
-
-### FeedControlBar
-
-A sticky bar at the top of the feed that collapses into a single row. Tapping expands it to show all filter options.
-
-```
-Collapsed state (default):
-+------------------------------------------+
-| [Recommended v]  [Filters (2)]      [X]  |
-+------------------------------------------+
-
-Expanded state (on tap):
-+------------------------------------------+
-| Sort: [Recommended] [Newest] [Popular]...|
-|                                          |
-| Source: [All] [Reddit] [YouTube] [News]..|
-|                                          |
-| Type: [All] [News] [Fan Art] [Meme].... |
-|                                          |
-| Member: [All] [RM] [Jin] [Suga]....     |
-+------------------------------------------+
-```
-
-The bar should be positioned above the SnapFeed, taking space from the viewport height. When collapsed: ~44px. When expanded: auto-height with slide animation. The SnapFeed adjusts its height via CSS calc.
-
-**Important:** The control bar must NOT be inside the scroll-snap container. It sits as a sibling above the SnapFeed so it remains visible during scrolling.
-
-## Config Extensions
-
-### Feature Flags
-
-Add to `GroupConfig` (or a new `features` field):
-
-```typescript
-interface FeatureFlags {
-  snapFeed: boolean;          // true = snap feed default, false = list view
-  listFallback: boolean;      // true = show list mode toggle
-  controlBarCollapsed: boolean; // true = control bar starts collapsed
-}
-```
-
-### Styling Tokens
-
-Extend `ThemeConfig` for the immersive feed:
-
-```typescript
-interface ThemeConfig {
-  // Existing...
-  primaryColor: string;
-  accentColor: string;
-  darkColor: string;
-
-  // New styling tokens
-  cardOverlayGradient?: string;   // CSS gradient for card overlay
-  cardBorderRadius?: number;       // px, default 0 for full-bleed
-  snapTransition?: string;         // CSS transition for snap animations
-  controlBarBg?: string;           // Control bar background
-}
-```
-
-These are optional fields with sensible defaults, maintaining backward compatibility with existing configs.
-
-## Patterns to Follow
-
-### Pattern 1: IntersectionObserver for Index Tracking
-
-Already used in `SwipeFeed.tsx` and `useVideoAutoplay.ts`. The SnapFeed uses the same pattern but with a stricter threshold for full-screen items.
-
-```typescript
-// Create observer once, observe all rendered slides
-const observer = new IntersectionObserver(
-  (entries) => {
-    for (const entry of entries) {
-      if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
-        const index = Number(entry.target.dataset.index);
-        setCurrentIndex(index);
-      }
-    }
-  },
-  { root: containerRef.current, threshold: 0.5 }
-);
-```
-
-### Pattern 2: URL-Synced State
-
-```typescript
-// Read from URL on mount
-const [searchParams, setSearchParams] = useSearchParams();
-const initialState: FeedState = {
-  sort: (searchParams.get('sort') as SortMode) || 'recommended',
-  source: searchParams.get('source') || 'all',
-  contentType: (searchParams.get('type') as ContentType) || 'all',
-  members: loadBiasesFromLocalStorage(), // existing pattern from useBias
+// Inside SnapCardVideo
+const touchStartPos = useRef({ x: 0, y: 0 });
+
+const onOverlayTouchStart = (e: React.TouchEvent) => {
+  touchStartPos.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
 };
 
-// Sync on state change
-useEffect(() => {
-  const params = new URLSearchParams();
-  if (state.sort !== 'recommended') params.set('sort', state.sort);
-  if (state.source !== 'all') params.set('source', state.source);
-  if (state.contentType !== 'all') params.set('type', state.contentType);
-  setSearchParams(params, { replace: true });
-}, [state.sort, state.source, state.contentType]);
+const onOverlayTouchEnd = (e: React.TouchEvent) => {
+  const touch = e.changedTouches[0];
+  const dx = Math.abs(touch.clientX - touchStartPos.current.x);
+  const dy = Math.abs(touch.clientY - touchStartPos.current.y);
+  if (dx < 10 && dy < 10) {
+    togglePlayPause(); // Tap, not swipe
+  }
+  // Swipes: useVerticalPaging already handled via bubbling
+};
 ```
 
-### Pattern 3: Accumulated Infinite Scroll
+**Mute button interaction:** Currently at z-index 10, above the overlay's z-index 3. Button events fire on the button directly. Its existing `e.stopPropagation()` prevents tap-to-play/pause from also firing. No changes needed.
+
+### Feature 2: Media-Centric Card Layout Rearrangement
+
+**Current card layouts diverge significantly:**
+
+- **VideoCard:** Full-bleed iframe (100% height), metadata in gradient overlay at bottom, stats bar absolute-positioned
+- **ImageCard:** Image hero (flex: 0 0 60%), panel below with SnapCardMeta + preview text
+- **TextCard:** Title + preview centered, SnapCardMeta in footer
+
+**Target: Unified two-zone layout for all variants:**
+
+```
++--------------------------------------------------+
+|                                                  |
+|              Media Zone (~60%)                   |
+|   (image / video iframe+overlay / gradient bg)   |
+|                                                  |
++--------------------------------------------------+
+| Title                                            |
+| source-dot  author  time-ago                     |
+| First 100-150 chars of description...            |
+| (Show More)                        upvotes cmt v |
++--------------------------------------------------+
+```
+
+**Architecture decision: Lift shared layout into SnapCard.**
+
+Currently each variant independently renders its own SnapCardMeta, handles its own layout split, and positions SnapStatsBar. The unified layout means title, metadata, snippet, stats, and "(Show More)" all live in a shared info zone rendered by `SnapCard`. The variant components only render their media zone content.
+
+**Restructured SnapCard:**
+
+```tsx
+<div className="snap-card-layout" {...handlers} style={swipeStyle}>
+  <div className="snap-card-content" style={style}>
+    {/* Source link button -- top right */}
+    <button className="snap-card-source-link" onClick={openSourceUrl}>...</button>
+
+    {/* Media zone: ~60% height */}
+    <div className="snap-card-media-zone">
+      {variant === "video" && <SnapCardVideoMedia item={item} isActive={isActive} />}
+      {variant === "image" && <SnapCardImageMedia item={item} />}
+      {variant === "text" && <SnapCardTextMedia />}
+    </div>
+
+    {/* Info zone: remaining height */}
+    <div className="snap-card-info-zone">
+      <SnapCardMeta item={item} />
+      <SnapCardSnippet item={item} onShowMore={openSourceUrl} />
+      <SnapStatsBar stats={item.stats} />
+    </div>
+  </div>
+</div>
+```
+
+**What changes:**
+
+| File | Change Type | Description |
+|------|-------------|-------------|
+| `SnapCard.tsx` | MODIFY | Add two-zone layout structure. Move SnapCardMeta, snippet, SnapStatsBar into shared info zone. Variant components only render media zone. |
+| `SnapCardVideo.tsx` | MODIFY | Remove SnapCardMeta import, remove metadata overlay div, remove bottom gradient. Export only media zone content (iframe + facade + touch overlay). |
+| `SnapCardImage.tsx` | MODIFY | Remove SnapCardMeta, remove preview text rendering. Export only image hero. |
+| `SnapCardText.tsx` | MODIFY | Remove title, preview text, footer. Export only gradient/placeholder hero for media zone. |
+| `SnapStatsBar.tsx` | MODIFY | Change from absolute-positioned gradient overlay to inline flex row. Remove gradient background. |
+| `App.css` | MODIFY | Add `.snap-card-media-zone` (flex: 0 0 60%), `.snap-card-info-zone` (flex: 1). Update stats bar to remove absolute positioning. |
+| `SeeMoreSheet.tsx` | NO CHANGE | Keep component, but remove triggers from card variants. "(Show More)" now opens source URL directly. SeeMoreSheet may be removed in a future cleanup. |
+
+**Snippet logic (new SnapCardSnippet component):**
 
 ```typescript
-// In useFeed, items accumulate across pages
-const [allItems, setAllItems] = useState<FeedItem[]>([]);
-const [page, setPage] = useState(1);
+function getSnippet(preview: string | undefined): string | null {
+  if (!preview) return null;
+  const max = 150;
+  if (preview.length <= max) return preview;
+  const truncated = preview.slice(0, max);
+  const lastSpace = truncated.lastIndexOf(' ');
+  return (lastSpace > 80 ? truncated.slice(0, lastSpace) : truncated) + '...';
+}
 
-const loadMore = useCallback(async () => {
-  const result = await fetchApiFeed({ page: page + 1, ...filterParams });
-  setAllItems(prev => [...prev, ...result.items]);
-  setPage(p => p + 1);
-  setHasMore(result.hasMore);
-}, [page, filterParams]);
-
-// Reset on filter/sort change
-useEffect(() => {
-  setAllItems([]);
-  setPage(1);
-  // Trigger fresh fetch...
-}, [state.sort, state.source, state.contentType]);
+function SnapCardSnippet({ item, onShowMore }: { item: FeedItem; onShowMore: () => void }) {
+  const snippet = getSnippet(item.preview);
+  if (!snippet) return null;
+  return (
+    <div className="snap-card-snippet">
+      <p className="snap-card-snippet-text">{snippet}</p>
+      <button className="snap-card-show-more" onClick={onShowMore}>
+        (Show More)
+      </button>
+    </div>
+  );
+}
 ```
+
+"(Show More)" opens original source URL via `window.open(item.url, '_blank', 'noopener')` per requirements. This replaces the current "...See More" button that opened SeeMoreSheet.
+
+### Feature 3: Fixed Header Replacing Auto-Hide Control Bar
+
+**Current behavior:** `SnapControlBar` is absolutely positioned at top of `.snap-page`, slides up via CSS transform on index change (useControlBarVisibility), revealed by tapping a transparent `.snap-reveal-zone`. Contains sort tabs inline + filter icon + active filter chips.
+
+**Target behavior:** Fixed header always visible. Contains "Army Feed" branding on left, Sort button and Filter button on right. No auto-hide. No reveal zone.
+
+**Layout change:**
+
+```
+BEFORE:                              AFTER:
++---------------------------+        +---------------------------+
+| SnapControlBar (absolute) |        | SnapHeader (in-flow)      |
+| auto-hides on swipe       |        | always visible, ~48px     |
++===========================+        +===========================+
+|                           |        |                           |
+| SnapFeed (flex:1)         |        | SnapFeed (flex:1)         |
+| height: 100% of snap-page|        | height: remaining space   |
+|                           |        |                           |
++---------------------------+        +---------------------------+
+```
+
+**Critical implication:** Moving from absolute overlay to in-flow flex child shrinks the feed viewport by header height (~48px). Cards fill the SnapFeed container, which is `flex: 1` and fills remaining space. `useVerticalPaging` already measures `container.clientHeight` dynamically for paging distances, so transitions auto-adjust. No hook changes needed.
+
+**What changes:**
+
+| File | Change Type | Description |
+|------|-------------|-------------|
+| `SnapControlBar.tsx` | REPLACE | Delete and create `SnapHeader.tsx` -- fixed header with brand left, sort/filter buttons right. |
+| `useControlBarVisibility.ts` | DELETE | No longer needed. Header always visible. |
+| `News.tsx` | MODIFY | Remove useControlBarVisibility, remove snapIndex/setSnapIndex (only used for bar visibility), remove snap-reveal-zone div, replace SnapControlBar with SnapHeader, add isSortOpen state. |
+| `SnapFeed.tsx` | MODIFY | Remove `onIndexChange` prop (no longer needed). |
+| `App.css` | MODIFY | Replace `.snap-control-bar` with `.snap-header`. Remove `.snap-reveal-zone`. Remove auto-hide transition styles. |
+
+**SnapHeader component:**
+
+```tsx
+interface SnapHeaderProps {
+  onSortClick: () => void;
+  onFilterClick: () => void;
+  filterCount: number;
+}
+
+function SnapHeader({ onSortClick, onFilterClick, filterCount }: SnapHeaderProps) {
+  return (
+    <header className="snap-header">
+      <span className="snap-header-brand">Army Feed</span>
+      <div className="snap-header-actions">
+        <button className="snap-header-btn" onClick={onSortClick}>
+          {/* Sort icon SVG */} Sort
+        </button>
+        <button className="snap-header-btn" onClick={onFilterClick}>
+          {/* Filter icon SVG */}
+          {filterCount > 0 && <span className="filter-badge">{filterCount}</span>}
+        </button>
+      </div>
+    </header>
+  );
+}
+```
+
+**CSS for SnapHeader:**
+
+```css
+.snap-header {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  padding-top: max(10px, env(safe-area-inset-top));
+  background: var(--bg-primary);
+  z-index: 20;
+}
+```
+
+### Feature 4: Sort Bottom Sheet
+
+**Current sort UI:** Inline horizontal pill tabs in SnapControlBar (Rec/New/Old/Pop/Disc). User taps a pill to change sort.
+
+**Target sort UI:** Bottom sheet triggered by Sort button in header. Matches FilterSheet's visual design: slide-up from bottom, drag handle, backdrop, drag-to-dismiss.
+
+**Architecture decision: Extract shared BottomSheet wrapper.**
+
+FilterSheet and SortSheet share identical mechanics: createPortal to body, backdrop click-to-close, drag handle, drag-to-dismiss (80px threshold), body scroll lock. Extract a reusable `BottomSheet` component.
+
+**What changes:**
+
+| File | Change Type | Description |
+|------|-------------|-------------|
+| `BottomSheet.tsx` | NEW | Shared wrapper: portal, backdrop, drag handle, drag-to-dismiss, body scroll lock. Extracted from FilterSheet logic. |
+| `SortSheet.tsx` | NEW | Sort option list (5 modes) inside BottomSheet. Single-select (radio style). Closes on selection. |
+| `FilterSheet.tsx` | MODIFY | Refactor to use BottomSheet wrapper instead of duplicating portal/backdrop/drag logic. |
+| `SeeMoreSheet.tsx` | MODIFY | Optionally refactor to use BottomSheet wrapper for consistency. |
+| `News.tsx` | MODIFY | Add `isSortOpen` state. Pass to SortSheet. Wire to SnapHeader's `onSortClick`. Extend `pagingDisabled` to `isFilterOpen \|\| isSortOpen`. |
+| `App.css` | MODIFY | Add `.bottom-sheet-*` shared classes. Add `.sort-sheet-*` specific styles. Refactor `.filter-sheet-*` to use shared classes. |
+
+**BottomSheet component:**
+
+```tsx
+interface BottomSheetProps {
+  isOpen: boolean;
+  onClose: () => void;
+  children: React.ReactNode;
+}
+
+function BottomSheet({ isOpen, onClose, children }: BottomSheetProps) {
+  // Body scroll lock on open
+  // Drag-to-dismiss with 80px threshold
+  // createPortal to document.body
+  return createPortal(
+    <div className={`bottom-sheet-backdrop${isOpen ? ' open' : ''}`} onClick={onClose}>
+      <div className="bottom-sheet" onClick={e => e.stopPropagation()} onTouch...>
+        <div className="bottom-sheet-handle" />
+        {children}
+      </div>
+    </div>,
+    document.body
+  );
+}
+```
+
+**SortSheet component:**
+
+```tsx
+const SORT_OPTIONS = [
+  { mode: "recommended", label: "Recommended", desc: "Best mix of new and popular" },
+  { mode: "newest", label: "Newest First", desc: "Most recent content" },
+  { mode: "oldest", label: "Oldest First", desc: "Earliest content" },
+  { mode: "popular", label: "Most Popular", desc: "Highest engagement" },
+  { mode: "discussed", label: "Most Discussed", desc: "Most comments" },
+];
+
+function SortSheet({ isOpen, onClose, currentSort, onSortChange }: SortSheetProps) {
+  return (
+    <BottomSheet isOpen={isOpen} onClose={onClose}>
+      <div className="sort-sheet-content">
+        <h3 className="sort-sheet-title">Sort by</h3>
+        {SORT_OPTIONS.map(opt => (
+          <button
+            key={opt.mode}
+            className={`sort-option${currentSort === opt.mode ? ' active' : ''}`}
+            onClick={() => { onSortChange(opt.mode); onClose(); }}
+          >
+            <span className="sort-option-label">{opt.label}</span>
+            <span className="sort-option-desc">{opt.desc}</span>
+          </button>
+        ))}
+      </div>
+    </BottomSheet>
+  );
+}
+```
+
+**Paging disabled when any sheet open:** Extend `pagingDisabled={isFilterOpen || isSortOpen}` in News.tsx.
+
+## Data Flow Changes
+
+### Before (Current v3.0)
+
+```
+News.tsx
+  |-- useFeedState() ----------> feedState {sort, sources, members, contentTypes}
+  |-- useFeed(feedState) ------> items[]
+  |-- useControlBarVisibility(snapIndex) --> barVisible
+  |
+  |-- SnapControlBar (sort tabs inline, filter icon, filter chips)
+  |     |-- dispatch(SET_SORT) on tab click
+  |     |-- onFilterIconClick --> setIsFilterOpen(true)
+  |
+  |-- snap-reveal-zone (tap --> showBar)
+  |
+  |-- SnapFeed (items, onIndexChange=setSnapIndex, pagingDisabled=isFilterOpen)
+  |
+  |-- FilterSheet (feedState, dispatch)
+```
+
+### After (v4.0)
+
+```
+News.tsx
+  |-- useFeedState() ----------> feedState {sort, sources, members, contentTypes}
+  |-- useFeed(feedState) ------> items[]
+  |
+  |-- SnapHeader (onSortClick, onFilterClick, filterCount)
+  |
+  |-- SnapFeed (items, pagingDisabled=isFilterOpen||isSortOpen)
+  |     (no onIndexChange -- no longer needed)
+  |
+  |-- SortSheet (feedState.sort, dispatch)   -- via BottomSheet wrapper
+  |-- FilterSheet (feedState, dispatch)      -- via BottomSheet wrapper
+```
+
+**Removed:**
+- `useControlBarVisibility` hook (deleted entirely)
+- `snapIndex` / `setSnapIndex` state in News.tsx
+- `snap-reveal-zone` div
+- `onIndexChange` prop on SnapFeed
+- Sort tabs from control bar inline UI
+- `SnapControlBar` component (replaced by `SnapHeader`)
+
+**Added:**
+- `SnapHeader` component (always visible)
+- `BottomSheet` shared wrapper component
+- `SortSheet` component
+- `isSortOpen` state in News.tsx
+- `SnapCardSnippet` component
+- Touch overlay div in SnapCardVideo
+
+**Modified:**
+- `FilterSheet` (refactored to use BottomSheet wrapper)
+- `SnapCard` (unified two-zone layout)
+- `SnapCardVideo` (media zone only + touch overlay)
+- `SnapCardImage` (media zone only)
+- `SnapCardText` (media zone only)
+- `SnapStatsBar` (inline instead of absolute-positioned)
+
+## Component Boundaries
+
+| Component | Responsibility | Communicates With |
+|-----------|---------------|-------------------|
+| `SnapHeader` | Brand text + sort/filter trigger buttons, always visible | News.tsx (callbacks for opening sheets) |
+| `BottomSheet` | Shared portal + backdrop + drag-dismiss + body scroll lock | FilterSheet, SortSheet (as wrapper) |
+| `SortSheet` | Sort option list (radio-style single select) | News.tsx via dispatch(SET_SORT) |
+| `FilterSheet` | Multi-select filter tabs (source/member/type) | News.tsx via dispatch (unchanged API) |
+| `SnapCard` | Unified two-zone layout: media zone + info zone (meta, snippet, stats) | Variant media components |
+| `SnapCardVideoMedia` | Video iframe + facade + touch overlay (media zone only) | SnapCard parent (isActive prop) |
+| `SnapCardImageMedia` | Image hero display (media zone only) | SnapCard parent |
+| `SnapCardTextMedia` | Gradient placeholder (media zone only) | SnapCard parent |
+| `SnapCardSnippet` | Auto-truncated preview text + "(Show More)" link | SnapCard parent |
 
 ## Anti-Patterns to Avoid
 
-### Anti-Pattern 1: Framer Motion for Scroll Physics
+### Anti-Pattern 1: Synthetic Touch Event Forwarding
 
-**What:** Using Framer Motion's `animate` or `drag` to implement the snap scrolling.
-**Why bad:** CSS scroll-snap runs on the compositor thread (off main thread), achieving consistent 60fps on mobile. Framer Motion's JavaScript-driven animations run on the main thread and will cause jank on lower-end phones. Framer Motion also adds ~30KB to the bundle.
-**Instead:** Use native CSS `scroll-snap-type: y mandatory`. The browser handles the physics. Use Framer Motion only if adding entry/exit animations to the card content (not the scroll).
+**What people do:** Capture touch events on the overlay and manually dispatch synthetic `TouchEvent` on containerRef using `dispatchEvent`.
+**Why it's wrong:** Synthetic TouchEvents lack `isTrusted: true`. Browser security may reject them. Complex state tracking to reconstruct touch sequences. Fragile across browsers and versions.
+**Do this instead:** Let DOM event bubbling work naturally. The overlay div is a descendant of containerRef. Events bubble automatically without intervention. useVerticalPaging's listeners on containerRef fire natively.
 
-### Anti-Pattern 2: TanStack Virtual with Scroll Snap
+### Anti-Pattern 2: pointer-events Toggle During Active Touch
 
-**What:** Using `@tanstack/react-virtual` for the virtualized snap feed.
-**Why bad:** [Known incompatibility](https://github.com/TanStack/virtual/issues/478) -- TanStack Virtual's scroll management fights with CSS scroll-snap in Chrome/Edge, causing scroll bounce-back. The library was designed for continuous scrolling, not discrete snapping.
-**Instead:** Custom 3-item windowed rendering with IntersectionObserver. The codebase already uses this IO pattern.
+**What people do:** Set `pointer-events: none` on the overlay mid-touch to let events pass through to the iframe underneath.
+**Why it's wrong:** Changing pointer-events during an active touch sequence does NOT re-target the touch. The original target continues receiving events until touchend. The intent (let iframe receive touches for its native controls) fails silently.
+**Do this instead:** Keep the overlay permanently above the iframe with `pointer-events: auto`. Handle play/pause via tap detection on the overlay. The iframe's native tap-to-play is replaced by the overlay's tap handler calling `togglePlayPause` via `postMessage`.
 
-### Anti-Pattern 3: Rendering All Iframes
+### Anti-Pattern 3: Separate Gesture System for Overlay
 
-**What:** Keeping all items in the DOM with just CSS `display: none` or visibility tricks.
-**Why bad:** Each video iframe is a separate browsing context. Even hidden iframes consume memory and CPU. 50+ hidden iframes will crash mobile Safari.
-**Instead:** The 3-item window ensures at most 2 iframes exist simultaneously (current + next preload).
+**What people do:** Create a second `useVerticalPaging` instance specifically for the touch overlay, thinking it needs its own gesture handling since it's above the iframe.
+**Why it's wrong:** Two competing gesture systems processing the same touch sequence causes double-fires, conflicting animations, and race conditions on the shared `gestureClaimedRef`.
+**Do this instead:** One useVerticalPaging instance on containerRef. The overlay's touch events bubble to containerRef naturally. Zero duplication.
 
-### Anti-Pattern 4: Global State Library for Page-Local State
+### Anti-Pattern 4: Absolute Header with Padding Compensation
 
-**What:** Adding Zustand/Redux/Jotai for the feed filter/sort state.
-**Why bad:** The state only matters on the `/news` route. It does not need cross-route persistence (URL params handle that). Adding a library for a single page creates unnecessary dependency and indirection.
-**Instead:** `useReducer` + `useSearchParams` in a custom hook. Clean, zero-dependency, and URL-synced.
+**What people do:** Keep the header absolutely positioned (like current SnapControlBar) and add `padding-top` to the feed container to avoid overlap.
+**Why it's wrong:** Header height varies with safe-area-inset-top and potentially active filter chips. Hard-coded padding leads to content overlap or gaps. Dynamic calculation adds fragile resize observers.
+**Do this instead:** Make the header an in-flow flex child (not absolute). The feed container (`flex: 1`) naturally fills remaining space. `useVerticalPaging` already measures `containerRef.clientHeight` dynamically.
 
-### Anti-Pattern 5: Client-Side Sorting
+### Anti-Pattern 5: Duplicating Bottom Sheet Mechanics
 
-**What:** Fetching all items then sorting client-side.
-**Why bad:** The server has access to the full candidate set (500 items) and the ranking pipeline. Client-side sort on a subset would give inconsistent results, especially for "most popular" which needs engagement normalization across the full dataset.
-**Instead:** Pass sort mode to the API. The server applies the appropriate ordering before pagination.
+**What people do:** Copy-paste FilterSheet's portal/backdrop/drag code into SortSheet, creating two independent implementations of the same pattern.
+**Why it's wrong:** Bug fixes must be applied twice. Behavior drifts between sheets. Animation timing, drag threshold, body scroll lock logic diverges silently.
+**Do this instead:** Extract `BottomSheet` wrapper. FilterSheet and SortSheet become thin content wrappers around shared mechanics.
 
-## Integration Points Summary
+## Build Order (Dependency-Driven)
 
-### Files to Create (New)
+### Phase 1: BottomSheet + SortSheet + FixedHeader
 
-| File | Purpose |
-|------|---------|
-| `components/SnapFeed.tsx` | Scroll-snap container with 3-item virtualization |
-| `components/SnapSlide.tsx` | Individual 100dvh slide wrapper |
-| `components/SnapCard.tsx` | Full-screen card layout for snap context |
-| `components/CardMedia.tsx` | Media rendering (video/image) for snap cards |
-| `components/CardOverlay.tsx` | Gradient overlay with text, stats, actions |
-| `components/CardActions.tsx` | Source link and share action buttons |
-| `components/FeedControlBar.tsx` | Collapsible sort/filter control bar |
-| `components/SortSelector.tsx` | Sort mode picker |
-| `hooks/useFeedState.ts` | Global feed state (sort, filters) with URL sync |
+**Rationale:** Pure UI-layer changes. No touch on gesture system. Low risk. Independently testable.
 
-### Files to Modify
+1. Create `BottomSheet.tsx` -- extract portal/backdrop/drag-dismiss from FilterSheet
+2. Refactor `FilterSheet.tsx` to use BottomSheet wrapper (functional parity, visual parity)
+3. Create `SortSheet.tsx` using BottomSheet wrapper
+4. Create `SnapHeader.tsx` replacing SnapControlBar
+5. Update `News.tsx`: remove useControlBarVisibility, remove snapIndex state, remove snap-reveal-zone, add isSortOpen state, swap SnapControlBar for SnapHeader + SortSheet, extend pagingDisabled
+6. Delete `useControlBarVisibility.ts`
+7. Remove `onIndexChange` prop from `SnapFeed.tsx`
+8. Update `App.css`: add snap-header/bottom-sheet/sort-sheet styles, remove snap-control-bar auto-hide + snap-reveal-zone styles
 
-| File | Change |
-|------|--------|
-| `pages/News.tsx` | Rename to FeedPage.tsx (or keep name, gut rewrite internals) |
-| `hooks/useFeed.ts` | Accept FeedState, add loadMore/hasMore, pass sort to API |
-| `components/VideoEmbed.tsx` | Add `isActive` prop for snap-aware autoplay |
-| `services/api.ts` | Add `sort` param to fetchApiFeed |
-| `config/types.ts` | Add FeatureFlags and extend ThemeConfig |
-| `config/groups/bts/index.ts` | Add feature flags to btsConfig |
-| `App.css` | Add snap feed CSS, control bar CSS, card overlay CSS |
+**Test checkpoint:** Header always visible. Sort sheet opens/closes. Filter sheet still works. Paging disabled when either sheet open. Vertical swipe navigation unaffected.
 
-### Server-Side Changes
+### Phase 2: Touch Overlay for Video Cards
 
-| File | Change |
-|------|--------|
-| `packages/server/src/routes/feed.ts` | Add `sort` query param with 5 sort strategies |
-| `packages/shared/src/types/feed.ts` | Add `SortMode` type, add `sort` to `FeedQuery` |
+**Rationale:** Touches SnapCardVideo internals and gesture system integration. Must be tested on real mobile device with loaded YouTube iframe. Independent of Phase 1 UI changes.
 
-### Files Unchanged
+1. Add transparent touch overlay div in `SnapCardVideo.tsx` above the iframe (z-index 3)
+2. Add tap detection (touchstart/touchend position delta < 10px threshold)
+3. On tap: call `togglePlayPause`
+4. Remove `onClick={togglePlayPause}` from the outer `.snap-card-video` div
+5. Ensure overlay does NOT call `e.stopPropagation()` (events must bubble to containerRef)
+6. Ensure mute button z-index (10) remains above overlay z-index (3)
+7. Update CSS for `.snap-card-video-touch-overlay`
 
-Everything outside the feed feature: Members, Tours, Home, MemberDetail, all scrapers, ranking engine, pipeline, database schema.
+**Test checkpoint:** Can swipe up/down past a playing YouTube video on mobile. Tapping pauses/resumes video. Mute button still accessible. Horizontal swipe-to-open-source still works (gestureClaimedRef axis locking).
 
-## Build Order (Dependency-Aware)
+### Phase 3: Media-Centric Card Rearrangement
 
-The following build order respects component dependencies:
+**Rationale:** Largest visual change, touches all three card variants and the shared SnapCard wrapper. Phases 1-2 must be stable first since this changes the card DOM structure that gesture handlers attach to.
 
-### Phase 1: Foundation (no visible changes)
+1. Create `SnapCardSnippet` component (auto-truncate 150 chars, "(Show More)" opens source URL)
+2. Restructure `SnapCard.tsx`: add two-zone layout (media-zone + info-zone), render shared SnapCardMeta + SnapCardSnippet + SnapStatsBar in info zone
+3. Refactor `SnapCardVideo.tsx`: remove SnapCardMeta, remove bottom gradient overlay, export only media zone content (iframe + facade + touch overlay from Phase 2)
+4. Refactor `SnapCardImage.tsx`: remove SnapCardMeta, remove preview text. Export only image hero div.
+5. Refactor `SnapCardText.tsx`: replace title/text layout with gradient placeholder hero for media zone. Remove internal title/footer rendering.
+6. Modify `SnapStatsBar.tsx`: change from absolute-positioned gradient overlay to inline flex row within info zone. Remove `position: absolute`, `background: linear-gradient(...)`.
+7. Update `App.css`: add `.snap-card-media-zone` (flex: 0 0 60%), `.snap-card-info-zone` (flex: 1), update stats bar styles, remove variant-specific meta styles that moved to shared zone.
+8. Remove `SeeMoreSheet` triggers from card variants (replaced by "(Show More)" source link)
 
-1. **Shared types** -- Add `SortMode` to shared types
-2. **Server sort endpoint** -- Add `sort` param to `/feed` route
-3. **Config types** -- Add `FeatureFlags` and styling tokens to `GroupConfig`
-4. **useFeedState hook** -- State management with URL sync
-5. **Modify useFeed** -- Accept FeedState, add loadMore/hasMore
-
-Build these first because everything else depends on the state shape and API contract.
-
-### Phase 2: Snap Feed Core (replaces existing view)
-
-6. **SnapSlide** -- 100dvh slide wrapper (no dependencies on other new components)
-7. **CardMedia** -- Media rendering (depends on existing VideoEmbed)
-8. **CardOverlay** -- Text + stats overlay (standalone)
-9. **CardActions** -- Action buttons (standalone)
-10. **SnapCard** -- Assembles CardMedia + CardOverlay + CardActions
-11. **SnapFeed** -- Scroll-snap container + virtualization + IO tracking
-
-### Phase 3: Controls (adds sort/filter)
-
-12. **SortSelector** -- Sort picker (depends on SortMode type)
-13. **FeedControlBar** -- Assembles SortSelector + absorbs FeedFilter + BiasFilter
-14. **FeedPage rewrite** -- Wire everything together
-
-### Phase 4: Polish
-
-15. **CSS** -- Snap feed styles, overlay gradients, control bar animations
-16. **VideoEmbed isActive** -- Snap-aware autoplay
-17. **Feature flags** -- Config-driven snap vs list toggle
-18. **Theme tokens** -- Apply new styling tokens via applyTheme
-
-## Scalability Considerations
-
-| Concern | Current (50 items) | At 200 items | At 1000 items |
-|---------|--------------------|--------------|---------------|
-| DOM nodes | 3 slides rendered | 3 slides rendered | 3 slides rendered |
-| Placeholder divs | ~47 empty divs | ~197 empty divs | Replace with padding approach |
-| Memory | 1-2 iframes | 1-2 iframes | 1-2 iframes |
-| Scroll position | Accurate | Accurate | Use container padding instead of divs |
-| API calls | 1 page of 50 | 4 pages of 50 | 20 pages of 50 (lazy loaded) |
+**Test checkpoint:** All three card types show media top / info bottom. Snippets truncate at ~150 chars. "(Show More)" opens source URL in new tab. Stats display inline in info zone. Video touch overlay still works within new media zone structure. Layout consistent across video/image/text cards.
 
 ## Sources
 
-- [MDN: scroll-snap-type](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/scroll-snap-type) -- CSS scroll snap reference
-- [MDN: Basic concepts of scroll snap](https://developer.mozilla.org/en-US/docs/Web/CSS/Guides/Scroll_snap/Basic_concepts) -- snap behavior details
-- [TanStack Virtual scroll-snap issue #478](https://github.com/TanStack/virtual/issues/478) -- incompatibility documented
-- [TanStack Virtual scroll-snap issue #267](https://github.com/TanStack/virtual/issues/267) -- Chrome bounce-back bug
-- [DEV.to: TikTok/YouTube Shorts snap infinite scroll](https://dev.to/biomathcode/create-tik-tokyoutube-shorts-like-snap-infinite-scroll-react-1mca) -- React implementation pattern
-- [DEV.to: IntersectionObserver + scroll snap + React](https://dev.to/ruben_suet/my-experience-with-intersectionobserver-scroll-snap-and-react-252a) -- IO pitfalls and solutions
-- [Motion.dev: Web Animation Performance Tier List](https://motion.dev/magazine/web-animation-performance-tier-list) -- CSS vs JS animation performance
-- [DEV.to: React State Management 2025 - Context vs Zustand](https://dev.to/cristiansifuentes/react-state-management-in-2025-context-api-vs-zustand-385m) -- state management comparison
-- [CSS-Tricks: Practical CSS Scroll Snapping](https://css-tricks.com/practical-css-scroll-snapping/) -- scroll snap patterns
+- Direct codebase analysis: `useVerticalPaging.ts`, `useSwipeGesture.ts`, `useSnapFeed.ts`, `SnapFeed.tsx`, `SnapCard.tsx`, `SnapCardVideo.tsx`, `SnapCardImage.tsx`, `SnapCardText.tsx`, `SnapControlBar.tsx`, `FilterSheet.tsx`, `SeeMoreSheet.tsx`, `SnapStatsBar.tsx`, `useControlBarVisibility.ts`, `useFeedState.ts`, `useSnapVideo.ts`, `News.tsx`, `App.css` (HIGH confidence -- full source read)
+- DOM event bubbling: W3C UI Events spec -- events on child elements bubble to ancestor event listeners unless `stopPropagation()` is called (browser standard, HIGH confidence)
+- iframe touch event isolation: cross-origin iframes are separate browsing contexts that do not propagate touch events to parent document DOM (web platform standard, HIGH confidence)
+
+---
+*Architecture research for: BTS Army Feed v4.0 -- enhanced feed UI integration*
+*Researched: 2026-03-04*
