@@ -9,10 +9,10 @@ Requirements for Enhanced Feed UI & Navigation milestone.
 
 ### Header & Navigation
 
-- [ ] **NAV-01**: Fixed header with "Army Feed" branding always visible at top-left
-- [ ] **NAV-02**: Sort and Filter action buttons at top-right of fixed header
-- [ ] **NAV-03**: Sort button opens bottom sheet with sort options (Recommended/Newest/Oldest/Popular/Discussed)
-- [ ] **NAV-04**: Sort and Filter bottom sheets share consistent slide-up design language
+- [x] **NAV-01**: Fixed header with "Army Feed" branding always visible at top-left
+- [x] **NAV-02**: Sort and Filter action buttons at top-right of fixed header
+- [x] **NAV-03**: Sort button opens bottom sheet with sort options (Recommended/Newest/Oldest/Popular/Discussed)
+- [x] **NAV-04**: Sort and Filter bottom sheets share consistent slide-up design language
 - [ ] **NAV-05**: Remove auto-hide control bar and related dead code (useControlBarVisibility, snap-reveal-zone)
 
 ### Card Layout
@@ -49,10 +49,10 @@ None deferred -- full spec included in v4.0.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| NAV-01 | Phase 13 | Pending |
-| NAV-02 | Phase 13 | Pending |
-| NAV-03 | Phase 13 | Pending |
-| NAV-04 | Phase 13 | Pending |
+| NAV-01 | Phase 13 | Complete |
+| NAV-02 | Phase 13 | Complete |
+| NAV-03 | Phase 13 | Complete |
+| NAV-04 | Phase 13 | Complete |
 | NAV-05 | Phase 13 | Pending |
 | CARD-01 | Phase 15 | Pending |
 | CARD-02 | Phase 15 | Pending |
