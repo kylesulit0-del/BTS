@@ -101,6 +101,6 @@ Plans:
 | 10. Snap Feed Core | v3.0 | 4/4 | Complete | 2026-03-03 |
 | 11. Sort and Filter Controls | v3.0 | 2/2 | Complete | 2026-03-03 |
 | 12. Polish and Animations | v3.0 | 2/2 | Complete | 2026-03-03 |
-| 13. Fixed Header & Sort Bottom Sheet | 2/2 | Complete   | 2026-03-04 | - |
+| 13. Fixed Header & Sort Bottom Sheet | 2/2 | Complete    | 2026-03-04 | - |
 | 14. Video Touch Overlay | v4.0 | 0/? | Not started | - |
 | 15. Media-Centric Card Layout | v4.0 | 0/? | Not started | - |
