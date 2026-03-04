@@ -1,7 +1,10 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useCallback } from "react";
 import type { FeedItem, VideoType } from "../../types/feed";
 import { useSnapVideo } from "../../hooks/useSnapVideo";
 import { SnapCardMeta } from "./SnapCard";
+
+const TAP_MAX_DISTANCE = 10; // px — beyond this, it's a swipe not a tap
+const TAP_MAX_DURATION = 300; // ms — beyond this, it's a long press not a tap
 
 interface SnapCardVideoProps {
   item: FeedItem;
@@ -28,7 +31,7 @@ function getVideoId(item: FeedItem): string | null {
 
 function buildIframeSrc(videoType: VideoType, videoId: string): string {
   if (videoType === "youtube-short") {
-    return `https://www.youtube.com/embed/${videoId}?enablejsapi=1&autoplay=1&mute=1&loop=1&playlist=${videoId}&playsinline=1&rel=0&controls=1&origin=${encodeURIComponent(window.location.origin)}`;
+    return `https://www.youtube.com/embed/${videoId}?enablejsapi=1&autoplay=1&mute=1&loop=1&playlist=${videoId}&playsinline=1&rel=0&controls=0&origin=${encodeURIComponent(window.location.origin)}`;
   }
   return `https://www.tiktok.com/player/v1/${videoId}?autoplay=1&loop=1&controls=1&progress_bar=1&play_button=1&volume_control=1&music_info=0&description=0&rel=0`;
 }
@@ -36,11 +39,41 @@ function buildIframeSrc(videoType: VideoType, videoId: string): string {
 export default function SnapCardVideo({ item, isActive }: SnapCardVideoProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [iframeLoaded, setIframeLoaded] = useState(false);
+  const [tapIcon, setTapIcon] = useState<'play' | 'pause' | null>(null);
+  const tapIconTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const touchStartRef = useRef<{ x: number; y: number; t: number } | null>(null);
   const videoType = getVideoType(item);
   const videoId = getVideoId(item);
 
-  const { muted, toggleMute, togglePlayPause, progress, onIframeLoad } =
+  const { muted, toggleMute, togglePlayPause, isPlaying, progress, onIframeLoad } =
     useSnapVideo(isActive, iframeRef, videoType);
+
+  const handleTap = useCallback(() => {
+    togglePlayPause();
+    // After toggling, show the NEW state icon:
+    // If was playing, we just paused -> show 'pause' icon
+    // If was paused, we just played -> show 'play' icon
+    setTapIcon(isPlaying ? 'pause' : 'play');
+    if (tapIconTimeoutRef.current) clearTimeout(tapIconTimeoutRef.current);
+    tapIconTimeoutRef.current = setTimeout(() => setTapIcon(null), 800);
+  }, [togglePlayPause, isPlaying]);
+
+  const handleOverlayTouchStart = useCallback((e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY, t: Date.now() };
+  }, []);
+
+  const handleOverlayTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (!touchStartRef.current) return;
+    const touch = e.changedTouches[0];
+    const dx = Math.abs(touch.clientX - touchStartRef.current.x);
+    const dy = Math.abs(touch.clientY - touchStartRef.current.y);
+    const dt = Date.now() - touchStartRef.current.t;
+    touchStartRef.current = null;
+    if (dx < TAP_MAX_DISTANCE && dy < TAP_MAX_DISTANCE && dt < TAP_MAX_DURATION) {
+      handleTap();
+    }
+  }, [handleTap]);
 
   const handleIframeLoad = () => {
     setIframeLoaded(true);
@@ -78,7 +111,7 @@ export default function SnapCardVideo({ item, isActive }: SnapCardVideoProps) {
   const src = buildIframeSrc(videoType, videoId);
 
   return (
-    <div className="snap-card-video" onClick={togglePlayPause}>
+    <div className="snap-card-video">
       {/* Loading state: thumbnail + spinner while iframe loads */}
       {!iframeLoaded && (
         <div className="snap-card-video-facade snap-card-video-loading">
@@ -127,6 +160,30 @@ export default function SnapCardVideo({ item, isActive }: SnapCardVideoProps) {
           zIndex: 1,
         }}
       />
+
+      {/* Touch overlay - intercepts touch events from cross-origin iframe */}
+      <div
+        className="snap-video-touch-overlay"
+        onTouchStart={handleOverlayTouchStart}
+        onTouchEnd={handleOverlayTouchEnd}
+      />
+
+      {/* Play/pause tap feedback icon */}
+      {tapIcon && (
+        <div className="snap-video-tap-icon" key={tapIcon}>
+          <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+            <circle cx="32" cy="32" r="32" fill="rgba(0,0,0,0.5)" />
+            {tapIcon === 'play' ? (
+              <polygon points="26,20 26,44 46,32" fill="white" />
+            ) : (
+              <g fill="white">
+                <rect x="22" y="20" width="8" height="24" rx="2" />
+                <rect x="34" y="20" width="8" height="24" rx="2" />
+              </g>
+            )}
+          </svg>
+        </div>
+      )}
 
       {/* Mute/unmute button - bottom right */}
       <button
