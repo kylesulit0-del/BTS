@@ -1,10 +1,16 @@
-import { useState, useRef, useEffect, useLayoutEffect, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import type { FeedItem } from "../types/feed";
 import { DOM_WINDOW_SIZE } from "../config/snap";
 
 export interface WindowedItem {
   item: FeedItem;
   realIndex: number;
+}
+
+export interface VisibleItem {
+  item: FeedItem;
+  realIndex: number;
+  position: -1 | 0 | 1;
 }
 
 /**
@@ -15,7 +21,6 @@ function getWindowedItems(items: FeedItem[], currentIndex: number): WindowedItem
   const len = items.length;
   if (len === 0) return [];
 
-  // When fewer items than window size, return all without wrapping to avoid duplicate keys
   if (len <= DOM_WINDOW_SIZE) {
     return items.map((item, i) => ({ item, realIndex: i }));
   }
@@ -33,16 +38,9 @@ function getWindowedItems(items: FeedItem[], currentIndex: number): WindowedItem
 
 /**
  * Core snap feed hook providing DOM virtualization, index tracking, and seamless looping.
- *
- * Returns:
- * - windowedItems: array of { item, realIndex } to render (max DOM_WINDOW_SIZE)
- * - currentIndex: the real index of the currently-snapped item
- * - containerRef: ref to attach to the scroll container
  */
 export function useSnapFeed(items: FeedItem[]) {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const prevCenterRef = useRef<number | null>(null);
 
   // Reset index if items change drastically
   useEffect(() => {
@@ -58,63 +56,33 @@ export function useSnapFeed(items: FeedItem[]) {
     [items, currentIndex]
   );
 
-  // Compute the position of the center item within the windowed array
-  const centerPositionInWindow = useMemo(() => {
-    if (items.length === 0) return 0;
-    if (items.length <= DOM_WINDOW_SIZE) return currentIndex;
-    return Math.floor(DOM_WINDOW_SIZE / 2);
-  }, [items.length, currentIndex]);
-
-  // Scroll position management: when window shifts, adjust scrollTop to prevent jumps
-  useLayoutEffect(() => {
-    const container = containerRef.current;
-    if (!container || items.length === 0) return;
-
-    const prevCenter = prevCenterRef.current;
-    if (prevCenter === null) {
-      // Initial render: scroll to the center item
-      container.scrollTop = centerPositionInWindow * container.clientHeight;
-      prevCenterRef.current = centerPositionInWindow;
-      return;
+  // 3-item visible slice: prev, current, next
+  const visibleItems = useMemo<VisibleItem[]>(() => {
+    const len = items.length;
+    if (len === 0) return [];
+    if (len === 1) {
+      return [{ item: items[0], realIndex: 0, position: 0 }];
     }
 
-    // Only adjust if the center position in the window changed
-    if (prevCenter !== centerPositionInWindow) {
-      container.scrollTop = centerPositionInWindow * container.clientHeight;
-      prevCenterRef.current = centerPositionInWindow;
-    }
-  }, [windowedItems, centerPositionInWindow, items.length]);
+    const prevIdx = ((currentIndex - 1) % len + len) % len;
+    const nextIdx = (currentIndex + 1) % len;
 
-  // IntersectionObserver for snap detection
-  const handleIntersection = useCallback(
-    (entries: IntersectionObserverEntry[]) => {
-      for (const entry of entries) {
-        if (entry.isIntersecting && entry.intersectionRatio > 0.6) {
-          const el = entry.target as HTMLElement;
-          const realIndex = Number(el.dataset.realindex);
-          if (!isNaN(realIndex) && realIndex >= 0 && realIndex < items.length) {
-            setCurrentIndex(realIndex);
-          }
-        }
-      }
-    },
-    [items.length]
-  );
+    return [
+      { item: items[prevIdx], realIndex: prevIdx, position: -1 },
+      { item: items[currentIndex], realIndex: currentIndex, position: 0 },
+      { item: items[nextIdx], realIndex: nextIdx, position: 1 },
+    ];
+  }, [items, currentIndex]);
 
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container || items.length === 0) return;
+  const goNext = useCallback(() => {
+    if (items.length === 0) return;
+    setCurrentIndex((prev) => (prev + 1) % items.length);
+  }, [items.length]);
 
-    const observer = new IntersectionObserver(handleIntersection, {
-      root: container,
-      threshold: 0.6,
-    });
+  const goPrev = useCallback(() => {
+    if (items.length === 0) return;
+    setCurrentIndex((prev) => (prev - 1 + items.length) % items.length);
+  }, [items.length]);
 
-    const cards = container.querySelectorAll<HTMLElement>("[data-realindex]");
-    cards.forEach((card) => observer.observe(card));
-
-    return () => observer.disconnect();
-  }, [windowedItems, handleIntersection, items.length]);
-
-  return { windowedItems, currentIndex, containerRef };
+  return { windowedItems, visibleItems, currentIndex, goNext, goPrev };
 }

@@ -33,5 +33,5 @@ export const btsConfig = {
   labels,
   events,
   news,
-  feedMode: "list",
+  feedMode: "snap",
 } satisfies GroupConfig;

@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback, type CSSProperties, type TouchEvent } from "react";
+import { useRef, useState, useCallback, type CSSProperties, type TouchEvent, type MutableRefObject } from "react";
 
 const DEAD_ZONE = 10;
 const SWIPE_THRESHOLD = 120;
@@ -19,6 +19,7 @@ interface UseSwipeGestureReturn {
 export function useSwipeGesture(
   onSwipeRight: () => void,
   _sourceColor?: string,
+  gestureClaimedRef?: MutableRefObject<"vertical" | "horizontal" | null>,
 ): UseSwipeGestureReturn {
   const startX = useRef(0);
   const startY = useRef(0);
@@ -60,10 +61,18 @@ export function useSwipeGesture(
 
     // Axis locking: determine if this is horizontal or vertical
     if (!axisLockedRef.current && Math.abs(dx) > DEAD_ZONE) {
+      // If vertical paging already claimed the gesture, bail
+      if (gestureClaimedRef?.current === "vertical") {
+        axisLockedRef.current = true;
+        isSwipingRef.current = false;
+        return;
+      }
+
       if (Math.abs(dx) > Math.abs(dy) * AXIS_LOCK_RATIO) {
         // Horizontal swipe claimed
         isSwipingRef.current = true;
         axisLockedRef.current = true;
+        if (gestureClaimedRef) gestureClaimedRef.current = "horizontal";
         setSwiping(true);
       } else {
         // Vertical scroll dominates - do NOT claim
@@ -78,7 +87,7 @@ export function useSwipeGesture(
       deltaXRef.current = clampedDx;
       setDeltaX(clampedDx);
     }
-  }, []);
+  }, [gestureClaimedRef]);
 
   const onTouchEnd = useCallback(() => {
     if (!isSwipingRef.current) {
