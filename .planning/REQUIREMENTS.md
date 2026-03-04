@@ -13,7 +13,7 @@ Requirements for Enhanced Feed UI & Navigation milestone.
 - [x] **NAV-02**: Sort and Filter action buttons at top-right of fixed header
 - [x] **NAV-03**: Sort button opens bottom sheet with sort options (Recommended/Newest/Oldest/Popular/Discussed)
 - [x] **NAV-04**: Sort and Filter bottom sheets share consistent slide-up design language
-- [ ] **NAV-05**: Remove auto-hide control bar and related dead code (useControlBarVisibility, snap-reveal-zone)
+- [x] **NAV-05**: Remove auto-hide control bar and related dead code (useControlBarVisibility, snap-reveal-zone)
 
 ### Card Layout
 
@@ -53,7 +53,7 @@ None deferred -- full spec included in v4.0.
 | NAV-02 | Phase 13 | Complete |
 | NAV-03 | Phase 13 | Complete |
 | NAV-04 | Phase 13 | Complete |
-| NAV-05 | Phase 13 | Pending |
+| NAV-05 | Phase 13 | Complete |
 | CARD-01 | Phase 15 | Pending |
 | CARD-02 | Phase 15 | Pending |
 | CARD-03 | Phase 15 | Pending |

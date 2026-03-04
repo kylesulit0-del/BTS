@@ -41,7 +41,7 @@
 
 ### 🚧 v4.0 Enhanced Feed UI & Navigation (In Progress)
 
-- [ ] **Phase 13: Fixed Header & Sort Bottom Sheet** - Always-visible header with branding and sort/filter actions; sort bottom sheet matching filter design
+- [x] **Phase 13: Fixed Header & Sort Bottom Sheet** - Always-visible header with branding and sort/filter actions; sort bottom sheet matching filter design (completed 2026-03-04)
 - [ ] **Phase 14: Video Touch Overlay** - Transparent gesture layer over video iframes enabling swipe navigation and tap play/pause
 - [ ] **Phase 15: Media-Centric Card Layout** - Unified two-zone card layout with media top, info bottom, auto-snippets, and source links
 
@@ -57,7 +57,7 @@
   3. Selecting a sort option in the Sort sheet reorders the feed (Recommended/Newest/Oldest/Popular/Discussed all work)
   4. The old auto-hide control bar, snap-reveal-zone, and useControlBarVisibility code are gone -- no invisible tap targets remain
   5. Vertical swipe navigation between cards still works correctly with the header in place (feed height adjusts to remaining viewport)
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 Plans:
 - [ ] 13-01-PLAN.md -- Create FixedHeader and SortSheet components with CSS styles
 - [ ] 13-02-PLAN.md -- Wire into News.tsx, delete old control bar code, verify integration
@@ -101,6 +101,6 @@ Plans:
 | 10. Snap Feed Core | v3.0 | 4/4 | Complete | 2026-03-03 |
 | 11. Sort and Filter Controls | v3.0 | 2/2 | Complete | 2026-03-03 |
 | 12. Polish and Animations | v3.0 | 2/2 | Complete | 2026-03-03 |
-| 13. Fixed Header & Sort Bottom Sheet | 1/2 | In Progress|  | - |
+| 13. Fixed Header & Sort Bottom Sheet | 2/2 | Complete   | 2026-03-04 | - |
 | 14. Video Touch Overlay | v4.0 | 0/? | Not started | - |
 | 15. Media-Centric Card Layout | v4.0 | 0/? | Not started | - |
