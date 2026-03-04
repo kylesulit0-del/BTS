@@ -57,7 +57,10 @@
   3. Selecting a sort option in the Sort sheet reorders the feed (Recommended/Newest/Oldest/Popular/Discussed all work)
   4. The old auto-hide control bar, snap-reveal-zone, and useControlBarVisibility code are gone -- no invisible tap targets remain
   5. Vertical swipe navigation between cards still works correctly with the header in place (feed height adjusts to remaining viewport)
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 13-01-PLAN.md -- Create FixedHeader and SortSheet components with CSS styles
+- [ ] 13-02-PLAN.md -- Wire into News.tsx, delete old control bar code, verify integration
 
 ### Phase 14: Video Touch Overlay
 **Goal**: Users can swipe vertically through video cards just as smoothly as image and text cards, and tap to play/pause
@@ -98,6 +101,6 @@
 | 10. Snap Feed Core | v3.0 | 4/4 | Complete | 2026-03-03 |
 | 11. Sort and Filter Controls | v3.0 | 2/2 | Complete | 2026-03-03 |
 | 12. Polish and Animations | v3.0 | 2/2 | Complete | 2026-03-03 |
-| 13. Fixed Header & Sort Bottom Sheet | v4.0 | 0/? | Not started | - |
+| 13. Fixed Header & Sort Bottom Sheet | v4.0 | 0/2 | In progress | - |
 | 14. Video Touch Overlay | v4.0 | 0/? | Not started | - |
 | 15. Media-Centric Card Layout | v4.0 | 0/? | Not started | - |
