@@ -2,6 +2,7 @@ import { useCallback, type MutableRefObject, type ReactNode } from "react";
 import type { FeedItem, FeedStats } from "../../types/feed";
 import { useSwipeGesture } from "../../hooks/useSwipeGesture";
 import { abbreviateNumber } from "../../utils/formatNumber";
+import { contentTypeBadgeColors, contentTypeLabels } from "../../utils/contentTypes";
 import SnapCardImage from "./SnapCardImage";
 import SnapCardVideo from "./SnapCardVideo";
 import SnapCardText from "./SnapCardText";
@@ -158,10 +159,21 @@ export function InfoPanel({ item }: { item: FeedItem }) {
     <div className="snap-card-info-panel">
       <h3 className="snap-card-info-title">{item.title}</h3>
       <div className="snap-card-info-meta">
-        <span
-          className="snap-card-source-dot"
-          style={{ background: sourceBadgeColors[item.source] ?? "#555" }}
-        />
+        {(() => {
+          const ct = item.contentType;
+          const ctLabel = ct && ct !== "general" ? contentTypeLabels[ct] : null;
+          const pillColor = ct ? (contentTypeBadgeColors[ct] ?? "#6b7280") : (sourceBadgeColors[item.source] ?? "#555");
+          const sourceName = item.sourceName || item.source;
+
+          return (
+            <span
+              className="snap-card-pill-badge"
+              style={{ background: ctLabel ? pillColor : (sourceBadgeColors[item.source] ?? "#555") }}
+            >
+              {sourceName}{ctLabel ? ` \u00B7 ${ctLabel}` : ""}
+            </span>
+          );
+        })()}
         <span className="snap-card-info-date">{timeAgo(item.timestamp)}</span>
         {renderStats(item.stats)}
       </div>

@@ -56,30 +56,24 @@ export default function FeedCard({ item }: { item: FeedItem }) {
       ) : null}
       <div className="feed-card-content">
         <div className="feed-card-meta">
-          <span
-            className="feed-source-badge"
-            style={{ background: sourceBadgeColors[item.source] }}
-          >
-            {item.sourceName}
-          </span>
+          {(() => {
+            const ct = item.contentType;
+            const ctLabel = ct && ct !== "general" ? contentTypeLabels[ct] : null;
+            const pillColor = ct ? (contentTypeBadgeColors[ct] ?? "#6b7280") : (sourceBadgeColors[item.source] ?? "#555");
+            const sourceName = item.sourceName || item.source;
+
+            return (
+              <span
+                className="feed-source-badge"
+                style={{ background: ctLabel ? pillColor : (sourceBadgeColors[item.source] ?? "#555") }}
+              >
+                {sourceName}{ctLabel ? ` \u00B7 ${ctLabel}` : ""}
+              </span>
+            );
+          })()}
           {item.videoType && (
             <span className="feed-card-video-badge">
               {item.videoType === "youtube-short" ? "Shorts" : "TikTok"}
-            </span>
-          )}
-          {item.contentType && (
-            <span
-              className="feed-card-content-type-badge"
-              style={{
-                fontSize: 11,
-                padding: "2px 8px",
-                borderRadius: 10,
-                background: `${contentTypeBadgeColors[item.contentType] ?? "#6b7280"}33`,
-                color: contentTypeBadgeColors[item.contentType] ?? "#6b7280",
-                fontWeight: 500,
-              }}
-            >
-              {contentTypeLabels[item.contentType] ?? item.contentType}
             </span>
           )}
           <span className="feed-card-time">{timeAgo(item.timestamp)}</span>

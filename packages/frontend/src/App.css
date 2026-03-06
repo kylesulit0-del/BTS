@@ -1734,6 +1734,20 @@ a {
   flex-shrink: 0;
 }
 
+/* Combined pill badge (Source . Content Type) */
+.snap-card-pill-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+}
+
 /* === Shared Info Panel === */
 .snap-card-info-panel {
   flex: 1;
