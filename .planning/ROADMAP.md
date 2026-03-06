@@ -80,7 +80,10 @@ Plans:
   2. AO3 items are automatically classified as `fan_fiction` at ingest time (source-level default, no LLM needed)
   3. FilterSheet displays updated content type categories (Fan Fiction, Music, and others) with correct badge colors
   4. Selecting a content type filter in the UI returns only items of that type from the server
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 17-01-PLAN.md — Shared types, LLM schemas/prompt, source-level defaults in pipeline
+- [ ] 17-02-PLAN.md — Frontend badge colors, FilterSheet expansion, combined pill badges
 
 ## Progress
 
@@ -104,4 +107,4 @@ Plans:
 | 14. Video Touch Overlay | v4.0 | 1/1 | Complete | 2026-03-04 |
 | 15. Media-Centric Card Layout | v4.0 | 2/2 | Complete | 2026-03-06 |
 | 16. Source Expansion | 2/2 | Complete    | 2026-03-06 | - |
-| 17. Content Type Filter Expansion | v5.1 | 0/? | Not started | - |
+| 17. Content Type Filter Expansion | v5.1 | 0/2 | Not started | - |
