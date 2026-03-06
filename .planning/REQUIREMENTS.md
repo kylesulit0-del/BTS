@@ -16,7 +16,7 @@ Requirements for v5.1 Quick Wins. Each maps to roadmap phases.
 - [x] **SRCX-05**: K-pop News RSS expanded with verified Billboard K-Town and Rolling Stone K-pop feeds, or documented as unavailable if RSS endpoints don't exist
 - [x] **SRCX-06**: AO3 BTS fan fiction Atom feed added using existing RSS scraper (needsFilter: false, tag-scoped feed)
 - [x] **SRCX-07**: Tumblr blog list expanded with additional active BTS fan blogs (verify activity within last 30 days before adding)
-- [ ] **SRCX-08**: Frontend sourceLabels config updated for any new source type display names and badge colors
+- [x] **SRCX-08**: Frontend sourceLabels config updated for any new source type display names and badge colors
 
 ### Content Type Filter
 
@@ -81,7 +81,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SRCX-05 | Phase 16 | Complete |
 | SRCX-06 | Phase 16 | Complete |
 | SRCX-07 | Phase 16 | Complete |
-| SRCX-08 | Phase 16 | Pending |
+| SRCX-08 | Phase 16 | Complete |
 | CTYP-01 | Phase 17 | Pending |
 | CTYP-02 | Phase 17 | Pending |
 | CTYP-03 | Phase 17 | Pending |
