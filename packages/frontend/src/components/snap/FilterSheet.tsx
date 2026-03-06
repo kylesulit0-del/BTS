@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { createPortal } from "react-dom";
 import type { FeedState, FeedAction } from "../../hooks/useFeedState";
 import { getConfig } from "../../config";
@@ -28,8 +28,23 @@ export default function FilterSheet({ isOpen, onClose, feedState, dispatch }: Fi
 
   const config = getConfig();
 
-  // Get unique source types from config
-  const sourceTypes = Array.from(new Set(config.sources.map((s) => s.type)));
+  // Build grouped source data from config
+  const sourceGroups = useMemo(() => {
+    const groups: Record<string, { label: string; sources: { id: string; label: string }[] }> = {};
+    for (const s of config.sources) {
+      const type = s.type;
+      if (!groups[type]) {
+        groups[type] = {
+          label: config.labels.sourceLabels[type] ?? type,
+          sources: [],
+        };
+      }
+      groups[type].sources.push({ id: s.id, label: s.label });
+    }
+    return groups;
+  }, [config]);
+
+  const sourceTypes = Object.keys(sourceGroups);
 
   const hasActiveFilters =
     feedState.sources.length > 0 ||
@@ -114,15 +129,29 @@ export default function FilterSheet({ isOpen, onClose, feedState, dispatch }: Fi
         {/* Tab content */}
         <div className="filter-chip-grid">
           {activeTab === "source" &&
-            sourceTypes.map((sourceType) => (
-              <button
-                key={sourceType}
-                className={`filter-chip-toggle${feedState.sources.includes(sourceType) ? " active" : ""}`}
-                onClick={() => dispatch({ type: "TOGGLE_SOURCE", source: sourceType })}
-              >
-                {config.labels.sourceLabels[sourceType] ?? sourceType}
-              </button>
-            ))}
+            sourceTypes.map((sourceType) => {
+              const group = sourceGroups[sourceType];
+              const isActive = feedState.sources.includes(sourceType);
+              return (
+                <div key={sourceType} className="filter-source-group">
+                  <button
+                    className={`filter-chip-toggle${isActive ? " active" : ""}`}
+                    onClick={() => dispatch({ type: "TOGGLE_SOURCE", source: sourceType })}
+                  >
+                    {group.label}
+                  </button>
+                  {isActive && group.sources.length > 1 && (
+                    <div className="filter-source-detail-row">
+                      {group.sources.map((s) => (
+                        <span key={s.id} className="filter-chip-detail">
+                          {s.label}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
 
           {activeTab === "member" &&
             config.members.map((member) => (
