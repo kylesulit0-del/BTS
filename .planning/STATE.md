@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-03-04)
 
 **Core value:** Fans see a rich, diverse stream of content from everywhere with engagement stats that help surface the best content, all without leaving the app.
-**Current focus:** v4.0 Enhanced Feed UI & Navigation -- Phase 15: Media-Centric Card Layout
+**Current focus:** v4.0 Enhanced Feed UI & Navigation -- COMPLETE
 
 ## Current Position
 
 Phase: 15 of 15 (Media-Centric Card Layout)
-Plan: 1 of 2 in current phase (COMPLETE)
-Status: Executing Phase 15
-Last activity: 2026-03-04 -- Completed 15-01 (InfoPanel + two-zone layout for image/text cards)
+Plan: 2 of 2 in current phase (COMPLETE)
+Status: v4.0 milestone complete
+Last activity: 2026-03-06 -- Completed 15-02 (Video card 60/40 layout + visual verification)
 
-Progress: [████████████████████████████████████████░] 36/36 plans complete (v1-v3), v4.0 plans 13-01 + 13-02 + 14-01 + 15-01 done
+Progress: [█████████████████████████████████████████] 36/36 plans complete (v1-v3), v4.0 plans 13-01 + 13-02 + 14-01 + 15-01 + 15-02 done
 
 ## Performance Metrics
 
@@ -28,6 +28,7 @@ Progress: [███████████████████████
 | 13 | 02 | 2min | 2 | 5 |
 | 14 | 01 | 2min | 2 | 2 |
 | 15 | 01 | 3min | 2 | 5 |
+| 15 | 02 | 2min | 2 | 2 |
 
 ## Accumulated Context
 
@@ -46,6 +47,8 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - [15-01] Stats rendered inline in metadata row instead of floating SnapStatsBar overlay
 - [15-01] Snippet truncation at 150 chars with (Show More) link to source URL
 - [15-01] Purple gradient (#6B21A8 to #A855F7) for text cards and failed image fallback
+- [15-02] Mute button repositioned from bottom:80px to bottom:12px within media zone
+- [15-02] Removed snap-card-video-overlay CSS entirely (metadata now in InfoPanel below)
 
 ### Pending Todos
 
@@ -57,6 +60,6 @@ None.
 - v2.0 UAT tests all skipped (need live deployment verification)
 ## Session Continuity
 
-Last session: 2026-03-04
-Stopped at: Completed 15-01-PLAN.md
-Resume with: /gsd:execute-phase 15 (continue with plan 02)
+Last session: 2026-03-06
+Stopped at: Completed 15-02-PLAN.md (Phase 15 complete, v4.0 milestone complete)
+Resume with: All v4.0 plans executed

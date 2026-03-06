@@ -5,7 +5,7 @@
 - ✅ **v1.0 Army Feed Expansion** -- Phases 1-4 (shipped 2026-03-01)
 - ✅ **v2.0 Content Scraping Engine** -- Phases 5-8 (shipped 2026-03-02)
 - ✅ **v3.0 Immersive Feed Experience** -- Phases 9-12 (shipped 2026-03-03)
-- 🚧 **v4.0 Enhanced Feed UI & Navigation** -- Phases 13-15 (in progress)
+- ✅ **v4.0 Enhanced Feed UI & Navigation** -- Phases 13-15 (shipped 2026-03-06)
 
 ## Phases
 
@@ -39,11 +39,11 @@
 
 </details>
 
-### 🚧 v4.0 Enhanced Feed UI & Navigation (In Progress)
+### v4.0 Enhanced Feed UI & Navigation (Shipped 2026-03-06)
 
 - [x] **Phase 13: Fixed Header & Sort Bottom Sheet** - Always-visible header with branding and sort/filter actions; sort bottom sheet matching filter design (completed 2026-03-04)
 - [x] **Phase 14: Video Touch Overlay** - Transparent gesture layer over video iframes enabling swipe navigation and tap play/pause (completed 2026-03-04)
-- [ ] **Phase 15: Media-Centric Card Layout** - Unified two-zone card layout with media top, info bottom, auto-snippets, and source links
+- [x] **Phase 15: Media-Centric Card Layout** - Unified two-zone card layout with media top, info bottom, auto-snippets, and source links (completed 2026-03-06)
 
 ## Phase Details
 
@@ -84,10 +84,10 @@ Plans:
   3. "(Show More)" at the end of the snippet opens the original source URL in a new tab
   4. Text-only posts without media display a branded gradient placeholder in the media zone instead of a blank area
   5. The SeeMoreSheet component is removed (replaced by the "(Show More)" source URL link)
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 Plans:
-- [ ] 15-01-PLAN.md -- Unified InfoPanel, image/text card restructuring, SeeMoreSheet and SnapStatsBar removal
-- [ ] 15-02-PLAN.md -- Video card 60/40 restructuring and visual verification
+- [x] 15-01-PLAN.md -- Unified InfoPanel, image/text card restructuring, SeeMoreSheet and SnapStatsBar removal
+- [x] 15-02-PLAN.md -- Video card 60/40 restructuring and visual verification
 
 ## Progress
 
@@ -109,4 +109,4 @@ Plans:
 | 12. Polish and Animations | v3.0 | 2/2 | Complete | 2026-03-03 |
 | 13. Fixed Header & Sort Bottom Sheet | 2/2 | Complete    | 2026-03-04 | - |
 | 14. Video Touch Overlay | v4.0 | 1/1 | Complete | 2026-03-04 |
-| 15. Media-Centric Card Layout | 1/2 | In Progress|  | - |
+| 15. Media-Centric Card Layout | v4.0 | 2/2 | Complete | 2026-03-06 |
