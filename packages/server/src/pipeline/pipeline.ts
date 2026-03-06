@@ -21,6 +21,14 @@ import type { Db } from '../db/index.js';
 const BATCH_SIZE = 15;
 const MAX_ITEMS_PER_RUN = BATCH_SIZE * 5; // 75 items per pipeline run
 
+/** Source types with hardcoded contentType that skip LLM classification. */
+const SOURCE_DEFAULT_CONTENT_TYPES = new Map<string, string>([
+  ['ao3', 'fan_fiction'],
+  ['googlenews', 'news'],
+  ['youtube', 'media'],
+  ['bluesky', 'social_posts'],
+]);
+
 /**
  * Run the LLM moderation pipeline on raw content items.
  *
@@ -106,8 +114,54 @@ export async function runPipeline(db: Db): Promise<void> {
 
   if (rawItems.length === 0) return;
 
-  // Atomically claim items by marking as 'pending' (prevents double-processing)
-  const itemIds = rawItems.map((item) => item.id);
+  // Partition: items with source-level defaults vs items needing LLM
+  const defaultItems: typeof rawItems = [];
+  const llmItems: typeof rawItems = [];
+
+  for (const item of rawItems) {
+    const defaultType = SOURCE_DEFAULT_CONTENT_TYPES.get(item.source);
+    if (defaultType) {
+      defaultItems.push(item);
+    } else {
+      llmItems.push(item);
+    }
+  }
+
+  // Apply source-level defaults immediately (skip LLM)
+  for (const item of defaultItems) {
+    const defaultType = SOURCE_DEFAULT_CONTENT_TYPES.get(item.source)!;
+    db.update(contentItems)
+      .set({
+        moderationStatus: 'approved',
+        contentType: defaultType,
+        moderatedAt: new Date(),
+      })
+      .where(eq(contentItems.id, item.id))
+      .run();
+  }
+
+  if (defaultItems.length > 0) {
+    console.log(`[pipeline] Source defaults applied: ${defaultItems.length} items (${[...new Set(defaultItems.map(i => i.source))].join(', ')})`);
+  }
+
+  // If no items need LLM, record the run and return
+  if (llmItems.length === 0) {
+    db.insert(pipelineRuns).values({
+      startedAt: new Date(),
+      completedAt: new Date(),
+      itemsProcessed: rawItems.length,
+      itemsApproved: defaultItems.length,
+      itemsRejected: 0,
+      status: 'success',
+      provider: 'source-defaults',
+    }).run();
+
+    console.log(`[pipeline] Complete: all ${rawItems.length} items handled by source defaults`);
+    return;
+  }
+
+  // Atomically claim LLM items by marking as 'pending' (prevents double-processing)
+  const itemIds = llmItems.map((item) => item.id);
   db.update(contentItems)
     .set({ moderationStatus: 'pending' })
     .where(inArray(contentItems.id, itemIds))
@@ -123,18 +177,19 @@ export async function runPipeline(db: Db): Promise<void> {
     provider: providerConfig.name,
   }).returning().get();
 
-  let totalApproved = 0;
+  let totalApproved = defaultItems.length;
   let totalRejected = 0;
   let totalInputTokens = 0;
   let totalOutputTokens = 0;
 
-  // Process in batches
-  for (let i = 0; i < rawItems.length; i += BATCH_SIZE) {
-    const batch = rawItems.slice(i, i + BATCH_SIZE);
+  // Process LLM items in batches
+  for (let i = 0; i < llmItems.length; i += BATCH_SIZE) {
+    const batch = llmItems.slice(i, i + BATCH_SIZE);
     const batchItems = batch.map((item, idx) => ({
       index: idx,
       title: item.title,
       source: item.sourceDetail,
+      description: item.description ?? undefined,
     }));
 
     try {
@@ -227,7 +282,8 @@ export async function runPipeline(db: Db): Promise<void> {
     .run();
 
   console.log(
-    `[pipeline] Complete: processed=${rawItems.length} approved=${totalApproved} ` +
+    `[pipeline] Complete: total=${rawItems.length} source-defaults=${defaultItems.length} ` +
+    `llm-processed=${llmItems.length} approved=${totalApproved} ` +
     `rejected=${totalRejected} tokens=${totalInputTokens + totalOutputTokens} ` +
     `cost=$${totalCost.toFixed(6)}`
   );
