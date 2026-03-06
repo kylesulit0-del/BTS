@@ -5,15 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-03-06)
 
 **Core value:** Fans see a rich, diverse stream of content from everywhere with engagement stats that help surface the best content, all without leaving the app.
-**Current focus:** Planning next milestone
+**Current focus:** v5.1 Quick Wins — source expansions + content type filter
 
 ## Current Position
 
-Phase: 15 of 15 (all milestones complete)
-Status: v4.0 milestone shipped 2026-03-06
-Last activity: 2026-03-06 -- Archived v4.0 milestone
-
-Progress: [█████████████████████████████████████████] 41/41 plans complete (v1.0-v4.0)
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-03-06 — Milestone v5.1 started
 
 ## Performance Metrics
 
@@ -41,5 +40,5 @@ Cleared at milestone boundary — see v4.0 archive for phase-level decisions.
 ## Session Continuity
 
 Last session: 2026-03-06
-Stopped at: Completed v4.0 milestone archival
-Resume with: /gsd:new-milestone
+Stopped at: Milestone v5.1 started, defining requirements
+Resume with: /gsd:resume-work

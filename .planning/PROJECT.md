@@ -77,7 +77,13 @@ Fans see a rich, diverse stream of content from everywhere — official and fan-
 
 ### Active
 
-(None — planning next milestone)
+<!-- v5.1 Quick Wins — config expansions + content type filter -->
+- [ ] Reddit subreddit expansion (+9 subs: r/BTSARMY, r/Korean_Hip_Hop, 7 solo member subs)
+- [ ] Tumblr blog expansion (additional BTS fan blogs)
+- [ ] Google News RSS (4 BTS-scoped query feeds)
+- [ ] K-pop News RSS expansion (Billboard K-Town, Rolling Stone — pending URL verification)
+- [ ] AO3 fan fiction RSS feed (Atom tag feed)
+- [ ] Content Type filter expansion (fan fiction, social, music categories in LLM + UI)
 
 ### Out of Scope
 
@@ -92,6 +98,18 @@ Fans see a rich, diverse stream of content from everywhere — official and fan-
 - Infinite scroll auto-fetch — wrong model for snap feed; API returns full ranked feed
 - Pull-to-refresh — conflicts with scroll-snap overscroll behavior on mobile
 - Dark/light mode toggle — app is dark-first; light mode doubles CSS surface area
+
+## Current Milestone: v5.1 Quick Wins
+
+**Goal:** Expand content coverage through config-only source additions and enhance the content type filter system.
+
+**Target features:**
+- Reddit subreddit expansion (+9 subs including solo member subs)
+- Tumblr blog expansion (additional fan blogs)
+- Google News RSS (4 BTS-scoped feeds)
+- K-pop News RSS expansion (Billboard, Rolling Stone)
+- AO3 fan fiction RSS feed
+- Content Type filter expansion (new LLM categories + UI)
 
 ## Context
 
@@ -159,4 +177,4 @@ Fans see a rich, diverse stream of content from everywhere — official and fan-
 | Dead Nitter/Twitter source removed | nitter.net shut down early 2024 | ✓ Good — eliminated dead code |
 
 ---
-*Last updated: 2026-03-06 after v4.0 milestone*
+*Last updated: 2026-03-06 after v5.1 milestone start*
