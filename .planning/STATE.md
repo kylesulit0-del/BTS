@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-03-06)
 ## Current Position
 
 Phase: 17 of 17 (Content Type Filter Expansion)
-Plan: 1 of 2 in current phase
-Status: In Progress
-Last activity: 2026-03-06 -- Completed 17-01 (backend content type expansion)
+Plan: 2 of 2 in current phase
+Status: Complete
+Last activity: 2026-03-06 -- Completed 17-02 (frontend content type filter UI)
 
-Progress: [█████████████████░] 94% (16.5/17 phases)
+Progress: [██████████████████] 100% (17/17 phases)
 
 ## Performance Metrics
 
@@ -41,6 +41,9 @@ Cleared at milestone boundary -- see v4.0 archive for phase-level decisions.
 **Phase 17 decisions:**
 - SOURCE_DEFAULT_CONTENT_TYPES stored as Map in pipeline.ts rather than modifying source config
 - Source defaults applied after API key check but before LLM claiming
+- FilterSheet dynamic chip ordering uses rawItems (unfiltered) to avoid circular dependency
+- Combined pill badge: source-only for general/null items, no "General" suffix
+- Simplified snap mode content type filtering from category groupings to direct type matching
 
 ### Pending Todos
 
@@ -54,5 +57,5 @@ Cleared at milestone boundary -- see v4.0 archive for phase-level decisions.
 ## Session Continuity
 
 Last session: 2026-03-06
-Stopped at: Completed 17-01-PLAN.md
-Resume with: Continue 17-02 (frontend content type filter updates)
+Stopped at: Completed 17-02-PLAN.md (phase 17 complete)
+Resume with: All phases complete

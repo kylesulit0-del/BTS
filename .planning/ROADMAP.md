@@ -52,7 +52,7 @@
 ### 🚧 v5.1 Quick Wins (In Progress)
 
 - [x] **Phase 16: Source Expansion** - Add Reddit subs, Google News RSS, K-pop news RSS, AO3, and Tumblr blogs to scraper config (completed 2026-03-06)
-- [ ] **Phase 17: Content Type Filter Expansion** - Add fan_fiction and music types across shared types, LLM pipeline, server filter, and frontend UI
+- [x] **Phase 17: Content Type Filter Expansion** - Add fan_fiction and music types across shared types, LLM pipeline, server filter, and frontend UI (completed 2026-03-06)
 
 ## Phase Details
 
@@ -80,7 +80,7 @@ Plans:
   2. AO3 items are automatically classified as `fan_fiction` at ingest time (source-level default, no LLM needed)
   3. FilterSheet displays updated content type categories (Fan Fiction, Music, and others) with correct badge colors
   4. Selecting a content type filter in the UI returns only items of that type from the server
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 Plans:
 - [ ] 17-01-PLAN.md — Shared types, LLM schemas/prompt, source-level defaults in pipeline
 - [ ] 17-02-PLAN.md — Frontend badge colors, FilterSheet expansion, combined pill badges
@@ -107,4 +107,4 @@ Plans:
 | 14. Video Touch Overlay | v4.0 | 1/1 | Complete | 2026-03-04 |
 | 15. Media-Centric Card Layout | v4.0 | 2/2 | Complete | 2026-03-06 |
 | 16. Source Expansion | 2/2 | Complete    | 2026-03-06 | - |
-| 17. Content Type Filter Expansion | 1/2 | In Progress|  | - |
+| 17. Content Type Filter Expansion | 2/2 | Complete   | 2026-03-06 | - |
