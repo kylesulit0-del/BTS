@@ -20,12 +20,12 @@ Requirements for v5.1 Quick Wins. Each maps to roadmap phases.
 
 ### Content Type Filter
 
-- [ ] **CTYP-01**: LLM classification prompt and Zod schema expanded with `fan_fiction` and `music` content types
-- [ ] **CTYP-02**: Shared ContentType union type updated in `@bts/shared/types/feed.ts` to include `fan_fiction` and `music`
-- [ ] **CTYP-03**: Source-level default contentType applied at ingest time (AO3 items -> `fan_fiction`, future music sources -> `music`)
+- [x] **CTYP-01**: LLM classification prompt and Zod schema expanded with `fan_fiction` and `music` content types
+- [x] **CTYP-02**: Shared ContentType union type updated in `@bts/shared/types/feed.ts` to include `fan_fiction` and `music`
+- [x] **CTYP-03**: Source-level default contentType applied at ingest time (AO3 items -> `fan_fiction`, future music sources -> `music`)
 - [ ] **CTYP-04**: FilterSheet CONTENT_TYPE_CATEGORIES updated with new categories: Fan Art, Fan Fiction, Social Posts, Music (replacing current 4-category set)
 - [ ] **CTYP-05**: Content type badge colors and labels assigned in `contentTypes.ts` for `fan_fiction` and `music`
-- [ ] **CTYP-06**: Server-side `?contentType=` query param filter works for all new content type values
+- [x] **CTYP-06**: Server-side `?contentType=` query param filter works for all new content type values
 
 ## Future Requirements
 
@@ -82,12 +82,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SRCX-06 | Phase 16 | Complete |
 | SRCX-07 | Phase 16 | Complete |
 | SRCX-08 | Phase 16 | Complete |
-| CTYP-01 | Phase 17 | Pending |
-| CTYP-02 | Phase 17 | Pending |
-| CTYP-03 | Phase 17 | Pending |
+| CTYP-01 | Phase 17 | Complete |
+| CTYP-02 | Phase 17 | Complete |
+| CTYP-03 | Phase 17 | Complete |
 | CTYP-04 | Phase 17 | Pending |
 | CTYP-05 | Phase 17 | Pending |
-| CTYP-06 | Phase 17 | Pending |
+| CTYP-06 | Phase 17 | Complete |
 
 **Coverage:**
 - v5.1 requirements: 14 total
