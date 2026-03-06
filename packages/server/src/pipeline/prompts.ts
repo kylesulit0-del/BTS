@@ -17,6 +17,7 @@ export interface BatchItem {
   index: number;
   title: string;
   source: string;
+  description?: string;
 }
 
 /**
@@ -51,7 +52,14 @@ export function buildBatchPrompt(items: BatchItem[]): string {
     const title = item.title.length > MAX_TITLE_LENGTH
       ? item.title.slice(0, MAX_TITLE_LENGTH) + '...'
       : item.title;
-    prompt += `[${item.index}] "${title}" (source: ${item.source})\n`;
+    let line = `[${item.index}] "${title}" (source: ${item.source})`;
+    if (item.description) {
+      const desc = item.description.length > 200
+        ? item.description.slice(0, 200) + '...'
+        : item.description;
+      line += `\n    Description: ${desc}`;
+    }
+    prompt += line + '\n';
   }
 
   return prompt;

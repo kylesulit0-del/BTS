@@ -5,15 +5,16 @@
 /** Sort modes supported by the /api/feed endpoint. */
 export type SortMode = 'recommended' | 'newest' | 'oldest' | 'popular' | 'discussed';
 
-/** Content classification type -- nullable, populated by Phase 7 LLM. */
+/** Content classification type -- nullable, populated by LLM pipeline or source-level defaults. */
 export type ContentType =
   | 'news'
   | 'fan_art'
-  | 'meme'
-  | 'video'
+  | 'fan_fiction'
+  | 'music'
   | 'discussion'
-  | 'translation'
-  | 'official'
+  | 'social_posts'
+  | 'media'
+  | 'general'
   | null;
 
 /** A single feed item as returned by the API. */

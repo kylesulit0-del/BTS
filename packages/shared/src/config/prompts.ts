@@ -41,13 +41,17 @@ Content is UNSAFE if it contains:
 
 ## Content Types
 Classify each item into exactly ONE type:
-- news: Official announcements, industry news, interviews
-- fan_art: Fan-created artwork, edits, graphics
-- meme: Humor, jokes, meme formats
-- video: Video content, MVs, performances, vlogs
-- discussion: Opinions, analyses, forum discussions, questions
-- translation: Translated content from Korean/Japanese/etc.
-- official: Direct posts from {{groupName}} members or official accounts
+- news: Official announcements, industry news, interviews, translated interviews
+- fan_art: Original fan-created artwork, edits, graphics (NOT reblogs of others' art)
+- fan_fiction: Fan fiction, fan-written stories, AO3 content
+- music: Audio/MV releases, Spotify links, translated lyrics (NOT dance practices or concert clips)
+- discussion: Opinions, analyses, forum discussions, questions, text posts
+- social_posts: Reblogs, retweets, social media crossposts, casual updates
+- media: Photos, videos, dance practices, concert clips, vlogs, performances
+- general: Content that doesn't clearly fit other categories, memes, miscellaneous
+
+When uncertain, classify as "general" (better uncategorized than miscategorized).
+Translations should be classified by what they're translating (translated interview = news, translated lyrics = music).
 
 ## Task
 For each content item below, determine:

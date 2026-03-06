@@ -11,11 +11,12 @@ import { z } from 'zod';
 export const ContentTypeEnum = z.enum([
   'news',
   'fan_art',
-  'meme',
-  'video',
+  'fan_fiction',
+  'music',
   'discussion',
-  'translation',
-  'official',
+  'social_posts',
+  'media',
+  'general',
 ]);
 
 export const BatchItemDecisionSchema = z.object({
