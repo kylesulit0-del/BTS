@@ -66,7 +66,7 @@
   3. Feed contains AO3 fan fiction entries (title, author, summary, link -- no story text)
   4. K-pop news RSS sources (Billboard, Rolling Stone) are either added as working feeds or documented as unavailable
   5. FilterSheet source filter shows correct labels and badge colors for all new source types
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 Plans:
 - [ ] 16-01-PLAN.md — Server-side source config expansion + RSS scraper update
 - [ ] 16-02-PLAN.md — Frontend badge colors, source labels, and FilterSheet update
@@ -103,5 +103,5 @@ Plans:
 | 13. Fixed Header & Sort Bottom Sheet | v4.0 | 2/2 | Complete | 2026-03-04 |
 | 14. Video Touch Overlay | v4.0 | 1/1 | Complete | 2026-03-04 |
 | 15. Media-Centric Card Layout | v4.0 | 2/2 | Complete | 2026-03-06 |
-| 16. Source Expansion | v5.1 | 0/2 | Not started | - |
+| 16. Source Expansion | 1/2 | In Progress|  | - |
 | 17. Content Type Filter Expansion | v5.1 | 0/? | Not started | - |

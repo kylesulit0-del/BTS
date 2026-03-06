@@ -9,13 +9,13 @@ Requirements for v5.1 Quick Wins. Each maps to roadmap phases.
 
 ### Source Expansion
 
-- [ ] **SRCX-01**: Reddit scraper config expanded with r/BTSARMY (BTS-dedicated, no keyword filter, fetchCount 50)
-- [ ] **SRCX-02**: Reddit scraper config expanded with r/Korean_Hip_Hop (broad, keyword-filtered, fetchCount 50)
-- [ ] **SRCX-03**: Reddit scraper config expanded with 7 solo member subreddits (r/Namjoon, r/jinbts, r/Suga, r/jhope, r/jimin, r/taehyung, r/jungkook -- all BTS-dedicated, no keyword filter, fetchCount 25)
-- [ ] **SRCX-04**: Google News RSS feeds added (8 query URLs: BTS main + 7 individual member-name queries — Namjoon, Jin, Suga, Jhope, Jimin, Taehyung, Jungkook) using existing RSS scraper pattern
-- [ ] **SRCX-05**: K-pop News RSS expanded with verified Billboard K-Town and Rolling Stone K-pop feeds, or documented as unavailable if RSS endpoints don't exist
-- [ ] **SRCX-06**: AO3 BTS fan fiction Atom feed added using existing RSS scraper (needsFilter: false, tag-scoped feed)
-- [ ] **SRCX-07**: Tumblr blog list expanded with additional active BTS fan blogs (verify activity within last 30 days before adding)
+- [x] **SRCX-01**: Reddit scraper config expanded with r/BTSARMY (BTS-dedicated, no keyword filter, fetchCount 50)
+- [x] **SRCX-02**: Reddit scraper config expanded with r/Korean_Hip_Hop (broad, keyword-filtered, fetchCount 50)
+- [x] **SRCX-03**: Reddit scraper config expanded with 7 solo member subreddits (r/Namjoon, r/jinbts, r/Suga, r/jhope, r/jimin, r/taehyung, r/jungkook -- all BTS-dedicated, no keyword filter, fetchCount 25)
+- [x] **SRCX-04**: Google News RSS feeds added (8 query URLs: BTS main + 7 individual member-name queries — Namjoon, Jin, Suga, Jhope, Jimin, Taehyung, Jungkook) using existing RSS scraper pattern
+- [x] **SRCX-05**: K-pop News RSS expanded with verified Billboard K-Town and Rolling Stone K-pop feeds, or documented as unavailable if RSS endpoints don't exist
+- [x] **SRCX-06**: AO3 BTS fan fiction Atom feed added using existing RSS scraper (needsFilter: false, tag-scoped feed)
+- [x] **SRCX-07**: Tumblr blog list expanded with additional active BTS fan blogs (verify activity within last 30 days before adding)
 - [ ] **SRCX-08**: Frontend sourceLabels config updated for any new source type display names and badge colors
 
 ### Content Type Filter
@@ -74,13 +74,13 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SRCX-01 | Phase 16 | Pending |
-| SRCX-02 | Phase 16 | Pending |
-| SRCX-03 | Phase 16 | Pending |
-| SRCX-04 | Phase 16 | Pending |
-| SRCX-05 | Phase 16 | Pending |
-| SRCX-06 | Phase 16 | Pending |
-| SRCX-07 | Phase 16 | Pending |
+| SRCX-01 | Phase 16 | Complete |
+| SRCX-02 | Phase 16 | Complete |
+| SRCX-03 | Phase 16 | Complete |
+| SRCX-04 | Phase 16 | Complete |
+| SRCX-05 | Phase 16 | Complete |
+| SRCX-06 | Phase 16 | Complete |
+| SRCX-07 | Phase 16 | Complete |
 | SRCX-08 | Phase 16 | Pending |
 | CTYP-01 | Phase 17 | Pending |
 | CTYP-02 | Phase 17 | Pending |

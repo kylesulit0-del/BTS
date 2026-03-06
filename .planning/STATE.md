@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-03-06)
 ## Current Position
 
 Phase: 16 of 17 (Source Expansion)
-Plan: 0 of ? in current phase
-Status: Ready to plan
-Last activity: 2026-03-06 -- Roadmap created for v5.1
+Plan: 1 of 2 in current phase
+Status: Executing
+Last activity: 2026-03-06 -- Completed 16-01 (source entries + RSS scraper extension)
 
 Progress: [████████████████░░] 88% (15/17 phases)
 
@@ -30,6 +30,11 @@ Progress: [████████████████░░] 88% (15/17 ph
 Decisions are logged in PROJECT.md Key Decisions table.
 Cleared at milestone boundary -- see v4.0 archive for phase-level decisions.
 
+**Phase 16 decisions:**
+- Billboard/Rolling Stone added as general RSS feeds with needsFilter: true (no K-pop-specific RSS available)
+- No new Tumblr blogs added (all 5 candidates inactive or 404)
+- AO3 feeds kept enabled despite rate limiting -- scraper handles failures gracefully
+
 ### Pending Todos
 
 - Fix Tumblr GIF and video content not showing in feed
@@ -42,5 +47,5 @@ Cleared at milestone boundary -- see v4.0 archive for phase-level decisions.
 ## Session Continuity
 
 Last session: 2026-03-06
-Stopped at: v5.1 roadmap created, ready to plan Phase 16
-Resume with: /gsd:plan-phase 16
+Stopped at: Completed 16-01-PLAN.md
+Resume with: /gsd:execute-phase 16 (plan 02 next)
