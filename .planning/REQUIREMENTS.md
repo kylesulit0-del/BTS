@@ -12,7 +12,7 @@ Requirements for v5.1 Quick Wins. Each maps to roadmap phases.
 - [ ] **SRCX-01**: Reddit scraper config expanded with r/BTSARMY (BTS-dedicated, no keyword filter, fetchCount 50)
 - [ ] **SRCX-02**: Reddit scraper config expanded with r/Korean_Hip_Hop (broad, keyword-filtered, fetchCount 50)
 - [ ] **SRCX-03**: Reddit scraper config expanded with 7 solo member subreddits (r/Namjoon, r/jinbts, r/Suga, r/jhope, r/jimin, r/taehyung, r/jungkook -- all BTS-dedicated, no keyword filter, fetchCount 25)
-- [ ] **SRCX-04**: Google News RSS feeds added (4 BTS-scoped query URLs: BTS+kpop, BTS+HYBE, BTS+comeback, BTS+concert) using existing RSS scraper pattern
+- [ ] **SRCX-04**: Google News RSS feeds added (8 query URLs: BTS main + 7 individual member-name queries — Namjoon, Jin, Suga, Jhope, Jimin, Taehyung, Jungkook) using existing RSS scraper pattern
 - [ ] **SRCX-05**: K-pop News RSS expanded with verified Billboard K-Town and Rolling Stone K-pop feeds, or documented as unavailable if RSS endpoints don't exist
 - [ ] **SRCX-06**: AO3 BTS fan fiction Atom feed added using existing RSS scraper (needsFilter: false, tag-scoped feed)
 - [ ] **SRCX-07**: Tumblr blog list expanded with additional active BTS fan blogs (verify activity within last 30 days before adding)
