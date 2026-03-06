@@ -31,7 +31,7 @@ export function mapApiFeedItem(item: ApiFeedItem): FeedItem {
     thumbnail: item.thumbnailUrl ?? undefined,
     stats,
     contentType: item.contentType ?? undefined,
-    preview: undefined,
+    preview: item.description ?? undefined,
   };
 }
 

@@ -6,7 +6,12 @@ const sourceBadgeColors: Record<string, string> = {
   reddit: "#FF4500",
   youtube: "#FF0000",
   news: "#7c4dbd",
+  rss: "#4CAF50",
   twitter: "#1DA1F2",
+  tumblr: "#001935",
+  bluesky: "#0085FF",
+  googlenews: "#4285F4",
+  ao3: "#990000",
 };
 
 function timeAgo(timestamp: number): string {
@@ -30,7 +35,12 @@ const sourceEmojis: Record<string, string> = {
   reddit: "💬",
   youtube: "🎬",
   news: "📰",
+  rss: "📰",
   twitter: "🐦",
+  tumblr: "📝",
+  bluesky: "🦋",
+  googlenews: "📰",
+  ao3: "📖",
 };
 
 interface SwipeFeedProps {
