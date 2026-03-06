@@ -107,4 +107,4 @@ Plans:
 | 14. Video Touch Overlay | v4.0 | 1/1 | Complete | 2026-03-04 |
 | 15. Media-Centric Card Layout | v4.0 | 2/2 | Complete | 2026-03-06 |
 | 16. Source Expansion | 2/2 | Complete    | 2026-03-06 | - |
-| 17. Content Type Filter Expansion | 2/2 | Complete   | 2026-03-06 | - |
+| 17. Content Type Filter Expansion | 2/2 | Complete    | 2026-03-06 | - |
