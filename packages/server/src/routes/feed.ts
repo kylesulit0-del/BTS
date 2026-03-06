@@ -30,6 +30,7 @@ for (const source of config.sources) {
 function mapRowToFeedItem(row: {
   id: number;
   title: string;
+  description: string | null;
   url: string;
   source: string;
   sourceDetail: string;
@@ -45,6 +46,7 @@ function mapRowToFeedItem(row: {
   return {
     id: row.id,
     title: row.title,
+    description: row.description ?? null,
     url: row.url,
     source: row.source,
     sourceDetail: row.sourceDetail,
@@ -243,6 +245,7 @@ export function registerFeedRoutes(server: FastifyInstance, db: Db) {
     const feedItems: FeedItem[] = pageItems.map(row => ({
       id: row.id,
       title: row.title,
+      description: row.description ?? null,
       url: row.url,
       source: row.source,
       sourceDetail: row.sourceDetail,

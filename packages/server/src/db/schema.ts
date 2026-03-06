@@ -5,6 +5,7 @@ export const contentItems = sqliteTable('content_items', {
   url: text('url').notNull(),
   normalizedUrl: text('normalized_url').notNull().unique(),
   title: text('title').notNull(),
+  description: text('description'),                          // Content snippet/summary
   source: text('source').notNull(),                          // e.g., 'reddit'
   sourceDetail: text('source_detail').notNull(),             // e.g., 'r/bangtan'
   score: integer('score').notNull().default(0),

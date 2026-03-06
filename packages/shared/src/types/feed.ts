@@ -20,6 +20,7 @@ export type ContentType =
 export interface FeedItem {
   id: number;
   title: string;
+  description: string | null;
   url: string;
   source: string;           // e.g., 'reddit'
   sourceDetail: string;     // e.g., 'r/bangtan'

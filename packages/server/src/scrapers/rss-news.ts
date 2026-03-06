@@ -1,10 +1,12 @@
 /**
- * RSS/news site scraper for K-pop news sources.
+ * RSS/news site scraper for K-pop news, Google News, and AO3 sources.
  *
- * A single scraper class handles all RSS-type sources from config (Soompi,
- * AllKPop, Koreaboo, HELLOKPOP, KpopStarz, Seoulbeats, Asian Junkie, etc.).
+ * A single scraper class handles all RSS-type sources from config: traditional
+ * RSS (Soompi, AllKPop, etc.), Google News RSS feeds, and AO3 Atom feeds.
  * Uses progressive thumbnail extraction: RSS enclosure -> og:image -> first
  * article image, with logo detection and HEAD validation.
+ *
+ * Source types handled: 'rss', 'googlenews', 'ao3'
  */
 
 import type { Scraper, ScrapedItem, ScraperResult } from './base.js';
@@ -14,6 +16,13 @@ import { delay } from './utils.js';
 import { extractOgImage, extractRssThumbnail, validateThumbnail } from './thumbnail.js';
 
 const INTER_SITE_DELAY_MS = 1000;
+
+// Parser with custom fields for AO3 dc:language extraction
+const ao3Parser = new Parser({
+  customFields: {
+    item: ['dc:language'],
+  },
+});
 
 export class RssNewsScraper implements Scraper {
   name = 'rss';
@@ -27,7 +36,7 @@ export class RssNewsScraper implements Scraper {
 
   async scrape(): Promise<ScraperResult[]> {
     const rssSources = this.config.sources
-      .filter((s) => s.type === 'rss' && s.enabled !== false)
+      .filter((s) => ['rss', 'googlenews', 'ao3'].includes(s.type) && s.enabled !== false)
       .sort((a, b) => a.priority - b.priority);
 
     const results: ScraperResult[] = [];
@@ -45,8 +54,18 @@ export class RssNewsScraper implements Scraper {
       try {
         console.log(`[rss] Fetching ${source.label}...`);
 
-        const feed = await this.parser.parseURL(source.url);
+        // Use AO3-specific parser for dc:language extraction
+        const parser = source.type === 'ao3' ? ao3Parser : this.parser;
+        const feed = await parser.parseURL(source.url);
         let feedItems = feed.items.slice(0, source.fetchCount);
+
+        // AO3 English-language filter: only keep English or untagged fics
+        if (source.type === 'ao3') {
+          feedItems = feedItems.filter(item => {
+            const lang = (item as any)['dc:language'] || (item as any).language || '';
+            return lang === '' || lang.startsWith('en');
+          });
+        }
 
         // Apply keyword filtering if needed
         if (source.needsFilter) {
@@ -101,7 +120,8 @@ export class RssNewsScraper implements Scraper {
             externalId,
             url: item.link || '',
             title: item.title || '',
-            source: 'rss',
+            description: item.contentSnippet?.slice(0, 300) || item.content?.slice(0, 300) || null,
+            source: source.type,
             sourceDetail: source.label,
             score: 0,
             commentCount: 0,
@@ -116,7 +136,7 @@ export class RssNewsScraper implements Scraper {
 
         results.push({
           items,
-          source: 'rss',
+          source: source.type,
           sourceDetail: source.label,
           duration: Date.now() - start,
           errors,
@@ -130,7 +150,7 @@ export class RssNewsScraper implements Scraper {
 
         results.push({
           items: [],
-          source: 'rss',
+          source: source.type,
           sourceDetail: source.label,
           duration: Date.now() - start,
           errors,

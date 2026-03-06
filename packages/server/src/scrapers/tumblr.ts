@@ -76,6 +76,7 @@ export class TumblrScraper implements Scraper {
             externalId,
             url: item.link || '',
             title: item.title || '(untitled)',
+            description: null,
             source: 'tumblr',
             sourceDetail: source.label,
             score: 0,

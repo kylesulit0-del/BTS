@@ -76,6 +76,7 @@ export class YouTubeScraper implements Scraper {
             externalId: `yt-${videoId || item.id || ''}`,
             url,
             title: item.title || '',
+            description: null,
             source: 'youtube',
             sourceDetail: source.label,
             score: 0,

@@ -91,6 +91,7 @@ export class RedditScraper implements Scraper {
           externalId: post.name,
           url: post.url_overridden_by_dest || `https://www.reddit.com${post.permalink}`,
           title: post.title,
+          description: null,
           source: 'reddit',
           sourceDetail: post.subreddit_name_prefixed,
           score: post.score,

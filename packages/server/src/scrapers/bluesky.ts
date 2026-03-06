@@ -104,6 +104,7 @@ export class BlueskyScraper implements Scraper {
               externalId: `bsky-${rkey}`,
               url: webUrl,
               title: text.slice(0, 200),
+              description: null,
               source: 'bluesky',
               sourceDetail: 'Bluesky',
               score: 0,

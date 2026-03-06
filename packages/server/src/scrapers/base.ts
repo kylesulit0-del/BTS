@@ -18,6 +18,7 @@ export interface ScrapedItem {
   externalId: string;       // Reddit post ID (e.g., "t3_abc123")
   url: string;              // Original post URL
   title: string;
+  description: string | null; // Content snippet/summary (Google News snippet, AO3 summary, etc.)
   source: string;           // 'reddit'
   sourceDetail: string;     // 'r/bangtan'
   score: number;
@@ -115,6 +116,7 @@ export async function runAllScrapers(db: Db, scrapers: Scraper[]): Promise<RunSt
             url: item.url,
             normalizedUrl,
             title: item.title,
+            description: item.description,
             source: item.source,
             sourceDetail: item.sourceDetail,
             score: item.score,
@@ -130,6 +132,7 @@ export async function runAllScrapers(db: Db, scrapers: Scraper[]): Promise<RunSt
           }).onConflictDoUpdate({
             target: contentItems.normalizedUrl,
             set: {
+              description: sql`excluded.description`,
               score: sql`excluded.score`,
               commentCount: sql`excluded.comment_count`,
               flair: sql`excluded.flair`,
