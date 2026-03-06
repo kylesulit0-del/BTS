@@ -7,11 +7,12 @@ export type BiasId = string;
 export type ContentType =
   | "news"
   | "fan_art"
-  | "meme"
-  | "video"
+  | "fan_fiction"
+  | "music"
   | "discussion"
-  | "translation"
-  | "official"
+  | "social_posts"
+  | "media"
+  | "general"
   | null;
 
 export interface FeedStats {

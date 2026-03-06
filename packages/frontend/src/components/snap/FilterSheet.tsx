@@ -1,25 +1,21 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { createPortal } from "react-dom";
 import type { FeedState, FeedAction } from "../../hooks/useFeedState";
+import type { FeedItem } from "../../types/feed";
 import { getConfig } from "../../config";
+import { contentTypeLabels, contentTypeKeys } from "../../utils/contentTypes";
 
 interface FilterSheetProps {
   isOpen: boolean;
   onClose: () => void;
   feedState: FeedState;
   dispatch: React.Dispatch<FeedAction>;
+  items: FeedItem[];
 }
 
 type TabId = "source" | "member" | "type";
 
-const CONTENT_TYPE_CATEGORIES = [
-  { id: "video", label: "Video" },
-  { id: "image", label: "Image" },
-  { id: "news", label: "News" },
-  { id: "discussion", label: "Discussion" },
-];
-
-export default function FilterSheet({ isOpen, onClose, feedState, dispatch }: FilterSheetProps) {
+export default function FilterSheet({ isOpen, onClose, feedState, dispatch, items }: FilterSheetProps) {
   const [activeTab, setActiveTab] = useState<TabId>("source");
   const sheetRef = useRef<HTMLDivElement>(null);
   const touchStartY = useRef(0);
@@ -45,6 +41,19 @@ export default function FilterSheet({ isOpen, onClose, feedState, dispatch }: Fi
   }, [config]);
 
   const sourceTypes = Object.keys(sourceGroups);
+
+  // Dynamic content type chip ordering by volume (most common first)
+  const sortedContentTypes = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const item of items) {
+      if (item.contentType) {
+        counts.set(item.contentType, (counts.get(item.contentType) ?? 0) + 1);
+      }
+    }
+    return contentTypeKeys
+      .filter((ct): ct is NonNullable<typeof ct> => ct !== null)
+      .sort((a, b) => (counts.get(b) ?? 0) - (counts.get(a) ?? 0));
+  }, [items]);
 
   const hasActiveFilters =
     feedState.sources.length > 0 ||
@@ -165,13 +174,13 @@ export default function FilterSheet({ isOpen, onClose, feedState, dispatch }: Fi
             ))}
 
           {activeTab === "type" &&
-            CONTENT_TYPE_CATEGORIES.map((ct) => (
+            sortedContentTypes.map((ct) => (
               <button
-                key={ct.id}
-                className={`filter-chip-toggle${feedState.contentTypes.includes(ct.id) ? " active" : ""}`}
-                onClick={() => dispatch({ type: "TOGGLE_CONTENT_TYPE", contentType: ct.id })}
+                key={ct}
+                className={`filter-chip-toggle${feedState.contentTypes.includes(ct) ? " active" : ""}`}
+                onClick={() => dispatch({ type: "TOGGLE_CONTENT_TYPE", contentType: ct })}
               >
-                {ct.label}
+                {contentTypeLabels[ct] ?? ct}
               </button>
             ))}
         </div>

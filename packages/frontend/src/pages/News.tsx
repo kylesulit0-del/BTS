@@ -16,21 +16,10 @@ import NewsCard from "../components/NewsCard";
 import { getConfig } from "../config";
 import { contentTypeKeys, contentTypeLabels, contentTypeBadgeColors } from "../utils/contentTypes";
 
-// Category mapping for snap mode content type filtering
-const CONTENT_TYPE_CATEGORIES: Record<string, string[]> = {
-  video: ["video"],
-  image: ["fan_art", "meme"],
-  news: ["news", "official", "translation"],
-  discussion: ["discussion"],
-};
-
-function matchesContentTypeFilter(itemContentType: string | null | undefined, selectedCategories: string[]): boolean {
-  if (selectedCategories.length === 0) return true;
+function matchesContentTypeFilter(itemContentType: string | null | undefined, selectedTypes: string[]): boolean {
+  if (selectedTypes.length === 0) return true;
   if (!itemContentType) return false;
-  return selectedCategories.some((category) => {
-    const types = CONTENT_TYPE_CATEGORIES[category];
-    return types ? types.includes(itemContentType) : itemContentType === category;
-  });
+  return selectedTypes.includes(itemContentType);
 }
 
 export default function News() {
@@ -122,6 +111,7 @@ export default function News() {
           onClose={() => setIsFilterOpen(false)}
           feedState={feedState}
           dispatch={dispatch}
+          items={rawItems}
         />
       </div>
     );
