@@ -5,14 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-03-06)
 
 **Core value:** Fans see a rich, diverse stream of content from everywhere with engagement stats that help surface the best content, all without leaving the app.
-**Current focus:** v5.1 Quick Wins — source expansions + content type filter
+**Current focus:** Phase 16 -- Source Expansion (v5.1 Quick Wins)
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements
-Last activity: 2026-03-06 — Milestone v5.1 started
+Phase: 16 of 17 (Source Expansion)
+Plan: 0 of ? in current phase
+Status: Ready to plan
+Last activity: 2026-03-06 -- Roadmap created for v5.1
+
+Progress: [████████████████░░] 88% (15/17 phases)
 
 ## Performance Metrics
 
@@ -26,7 +28,7 @@ Last activity: 2026-03-06 — Milestone v5.1 started
 ### Decisions
 
 Decisions are logged in PROJECT.md Key Decisions table.
-Cleared at milestone boundary — see v4.0 archive for phase-level decisions.
+Cleared at milestone boundary -- see v4.0 archive for phase-level decisions.
 
 ### Pending Todos
 
@@ -40,5 +42,5 @@ Cleared at milestone boundary — see v4.0 archive for phase-level decisions.
 ## Session Continuity
 
 Last session: 2026-03-06
-Stopped at: Milestone v5.1 started, defining requirements
-Resume with: /gsd:resume-work
+Stopped at: v5.1 roadmap created, ready to plan Phase 16
+Resume with: /gsd:plan-phase 16

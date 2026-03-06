@@ -6,6 +6,7 @@
 - ✅ **v2.0 Content Scraping Engine** -- Phases 5-8 (shipped 2026-03-02)
 - ✅ **v3.0 Immersive Feed Experience** -- Phases 9-12 (shipped 2026-03-03)
 - ✅ **v4.0 Enhanced Feed UI & Navigation** -- Phases 13-15 (shipped 2026-03-06)
+- 🚧 **v5.1 Quick Wins** -- Phases 16-17 (in progress)
 
 ## Phases
 
@@ -48,7 +49,39 @@
 
 </details>
 
+### 🚧 v5.1 Quick Wins (In Progress)
+
+- [ ] **Phase 16: Source Expansion** - Add Reddit subs, Google News RSS, K-pop news RSS, AO3, and Tumblr blogs to scraper config
+- [ ] **Phase 17: Content Type Filter Expansion** - Add fan_fiction and music types across shared types, LLM pipeline, server filter, and frontend UI
+
+## Phase Details
+
+### Phase 16: Source Expansion
+**Goal**: Users see content from a wider range of sources -- solo member subreddits, Google News, AO3 fan fiction, and additional Tumblr/news blogs
+**Depends on**: Phase 15 (v4.0 complete)
+**Requirements**: SRCX-01, SRCX-02, SRCX-03, SRCX-04, SRCX-05, SRCX-06, SRCX-07, SRCX-08
+**Success Criteria** (what must be TRUE):
+  1. Feed contains posts from r/BTSARMY, r/Korean_Hip_Hop, and 7 solo member subreddits (r/Namjoon, r/jinbts, r/Suga, r/jhope, r/jimin, r/taehyung, r/jungkook)
+  2. Feed contains Google News articles from BTS-scoped query feeds
+  3. Feed contains AO3 fan fiction entries (title, author, summary, link -- no story text)
+  4. K-pop news RSS sources (Billboard, Rolling Stone) are either added as working feeds or documented as unavailable
+  5. FilterSheet source filter shows correct labels and badge colors for all new source types
+**Plans**: TBD
+
+### Phase 17: Content Type Filter Expansion
+**Goal**: Users can filter the feed by expanded content type categories including fan fiction and music
+**Depends on**: Phase 16 (new sources must exist for source-level defaults)
+**Requirements**: CTYP-01, CTYP-02, CTYP-03, CTYP-04, CTYP-05, CTYP-06
+**Success Criteria** (what must be TRUE):
+  1. LLM pipeline classifies content into expanded type set including `fan_fiction` and `music`
+  2. AO3 items are automatically classified as `fan_fiction` at ingest time (source-level default, no LLM needed)
+  3. FilterSheet displays updated content type categories (Fan Fiction, Music, and others) with correct badge colors
+  4. Selecting a content type filter in the UI returns only items of that type from the server
+**Plans**: TBD
+
 ## Progress
+
+**Execution Order:** 16 → 17
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -67,3 +100,5 @@
 | 13. Fixed Header & Sort Bottom Sheet | v4.0 | 2/2 | Complete | 2026-03-04 |
 | 14. Video Touch Overlay | v4.0 | 1/1 | Complete | 2026-03-04 |
 | 15. Media-Centric Card Layout | v4.0 | 2/2 | Complete | 2026-03-06 |
+| 16. Source Expansion | v5.1 | 0/? | Not started | - |
+| 17. Content Type Filter Expansion | v5.1 | 0/? | Not started | - |
