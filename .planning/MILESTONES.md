@@ -65,3 +65,22 @@
 
 ---
 
+
+## v4.0 Enhanced Feed UI & Navigation (Shipped: 2026-03-06)
+
+**Phases completed:** 3 phases, 5 plans, 10 tasks
+**Timeline:** 3 days (2026-03-04 → 2026-03-06)
+**Codebase:** 11,697 LOC TypeScript/CSS (13 files modified, +860/-849 lines)
+
+**Key accomplishments:**
+- Fixed header with "Army Feed" branding and sort/filter icons always visible — replaced auto-hide control bar
+- Sort bottom sheet matching filter design with 5 sort options, swipe-to-dismiss, and checkmark indicator
+- Transparent touch overlay on video iframes enabling swipe navigation and tap play/pause (verified on physical iOS)
+- Unified two-zone card layout (60% media / 40% info) across video, image, and text cards
+- Shared InfoPanel component with title, metadata row, engagement stats, and "(Show More)" source links
+- Deleted 3 dead components (SnapControlBar, useControlBarVisibility, SeeMoreSheet) and 117 lines of dead CSS
+
+**Known tech debt:** None new — all prior items from v1.0-v3.0 still apply.
+
+---
+

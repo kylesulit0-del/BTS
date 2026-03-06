@@ -133,17 +133,6 @@ export const sources: SourceEntry[] = [
     enabled: false,
   },
 
-  // Twitter sources
-  {
-    type: "twitter",
-    id: "twitter-search",
-    label: "X/Twitter",
-    url: "https://nitter.net/search?q=BTS&f=tweets",
-    needsFilter: false,
-    fetchCount: 10,
-    priority: 9,
-  },
-
   // Tumblr sources
   {
     type: "tumblr",

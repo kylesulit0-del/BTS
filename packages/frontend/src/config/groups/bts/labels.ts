@@ -8,7 +8,6 @@ export const labels = {
     reddit: "Reddit",
     youtube: "YouTube",
     rss: "News",
-    twitter: "Twitter",
     tumblr: "Tumblr",
   },
   memberFilterLabel: "Select Your Bias",

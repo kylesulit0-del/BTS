@@ -12,6 +12,9 @@ export const contentItems = sqliteTable('content_items', {
   flair: text('flair'),                                      // Reddit post flair
   contentType: text('content_type'),                         // Phase 7 LLM classification
   externalId: text('external_id').notNull(),                 // Reddit post ID for dedup/update
+  // LEGAL NOTE: Stores external URL references only — never binary media or
+  // base64 content. Do not modify this column to store media files or proxied
+  // content without legal review.
   thumbnailUrl: text('thumbnail_url'),                       // Hotlinked image URL
   engagementStats: text('engagement_stats'),                 // JSON string, e.g., {"upvotes":42,"comments":5}
   moderationStatus: text('moderation_status').notNull().default('raw'),

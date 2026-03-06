@@ -58,25 +58,26 @@ Fans see a rich, diverse stream of content from everywhere — official and fan-
 - ✓ Right-swipe gesture to open source link in new tab — v3.0
 - ✓ Server-side sort API (Recommended/Newest/Oldest/Popular/Discussed) — v3.0
 - ✓ Multi-select filter bottom sheet (source/member/content type) — v3.0
-- ✓ Auto-hide control bar with sort tabs, filter icon, and active filter chips — v3.0
+- ✓ Auto-hide control bar with sort tabs, filter icon, and active filter chips — v3.0 (replaced by fixed header in v4.0)
 - ✓ Feed state persistence in localStorage surviving page refresh — v3.0
 - ✓ Config feedMode flag toggling snap vs list view — v3.0
 - ✓ Semantic theme tokens as CSS custom properties — v3.0
 - ✓ Card entrance animations (slide-up + fade-in, 250ms decelerate) — v3.0
 - ✓ Engagement stats bar with SVG icons and abbreviated counts — v3.0
 - ✓ Shimmer skeleton loading state for initial feed load — v3.0
+- ✓ Fixed header with "Army Feed" branding and Sort/Filter action buttons, always visible — v4.0
+- ✓ Sort bottom sheet matching Filter UI design language — v4.0
+- ✓ Media-centric card layout: media ~60% viewport top, title, metadata, snippet, Show More — v4.0
+- ✓ Auto-snippet: first 100-150 characters of post description — v4.0
+- ✓ Consistent card layout even for video-only posts (title + metadata always present) — v4.0
+- ✓ Engagement stats showing available per-source data (date, likes, comments, views, etc.) — v4.0
+- ✓ "(Show More)" link opens original source URL in new tab — v4.0
+- ✓ Video gesture fix: transparent touch overlay for vertical swipe passthrough over iframes — v4.0
+- ✓ Bottom sheet consistency: Sort and Filter share same slide-up design — v4.0
 
 ### Active
 
-- [ ] Fixed header with "Army Feed" branding (left) and Sort/Filter buttons (right), always visible
-- [ ] Sort bottom sheet matching Filter UI design language
-- [ ] Media-centric card layout: media ~60% viewport top, title, metadata, snippet, Show More
-- [ ] Auto-snippet: first 100-150 characters of post description
-- [ ] Consistent card layout even for video-only posts (title + metadata always present)
-- [ ] Engagement stats showing available per-source data (date, likes, comments, views, etc.)
-- [ ] "(Show More)" link opens original source URL in new tab
-- [ ] Video gesture fix: transparent touch overlay for vertical swipe passthrough over iframes
-- [ ] Bottom sheet consistency: Sort and Filter share same slide-up design
+(None — planning next milestone)
 
 ### Out of Scope
 
@@ -94,11 +95,11 @@ Fans see a rich, diverse stream of content from everywhere — official and fan-
 
 ## Context
 
-**Current state:** 9,384 LOC TypeScript across 3 packages (frontend, server, shared). React 19 + Vite 7 frontend, Fastify API server, SQLite + Drizzle ORM. Monorepo with npm workspaces.
+**Current state:** 11,697 LOC TypeScript/CSS across 3 packages (frontend, server, shared). React 19 + Vite 7 frontend, Fastify API server, SQLite + Drizzle ORM. Monorepo with npm workspaces.
 
 **Architecture:** Server scrapes 6 sources on 20-min cron → stores in SQLite → LLM pipeline filters/classifies → rankFeed() scores and interleaves → API serves ranked feed → frontend renders immersive snap feed with sort/filter controls, adaptive card layouts, and animations.
 
-**Shipped:** v1.0 (feed expansion), v2.0 (scraping engine), v3.0 (immersive snap feed). 3 milestones, 12 phases, 36 plans.
+**Shipped:** v1.0 (feed expansion), v2.0 (scraping engine), v3.0 (immersive snap feed), v4.0 (enhanced feed UI). 4 milestones, 15 phases, 41 plans.
 
 **Known tech debt:**
 - Zero test coverage
@@ -148,6 +149,14 @@ Fans see a rich, diverse stream of content from everywhere — official and fan-
 | createPortal for bottom sheets | Escape scroll-snap stacking context | ✓ Good — z-index isolation |
 | Single iframe for videos | Browser memory + autoplay policy | ✓ Good — facade pattern works |
 | Server-side sort on 500-item candidate set | Client sort on full feed too slow | ✓ Good — fast sort response |
+| Fixed header over auto-hide control bar | Invisible tap targets are bad UX | ✓ Good — always visible, no hidden affordances |
+| Touch overlay over iframe event passthrough | iframes swallow touch events | ✓ Good — swipe/tap/mute all work on video cards |
+| Tap distance+duration thresholds (10px/300ms) | onClick unreliable on mobile touch | ✓ Good — clean tap vs swipe discrimination |
+| YouTube controls=0 with overlay | Native controls unreachable through overlay | ✓ Good — overlay handles play/pause |
+| Two-zone 60/40 card layout | Media-forward, consistent across card types | ✓ Good — unified visual hierarchy |
+| InfoPanel as named export in SnapCard.tsx | Shared across card types, no separate file | ✓ Good — colocation, simple imports |
+| "(Show More)" links to source URL | Replaces SeeMoreSheet bottom sheet | ✓ Good — simpler, drives traffic to source |
+| Dead Nitter/Twitter source removed | nitter.net shut down early 2024 | ✓ Good — eliminated dead code |
 
 ---
-*Last updated: 2026-03-04 after v4.0 milestone start*
+*Last updated: 2026-03-06 after v4.0 milestone*
