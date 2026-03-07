@@ -75,15 +75,18 @@ Fans see a rich, diverse stream of content from everywhere — official and fan-
 - ✓ Video gesture fix: transparent touch overlay for vertical swipe passthrough over iframes — v4.0
 - ✓ Bottom sheet consistency: Sort and Filter share same slide-up design — v4.0
 
+- ✓ Reddit subreddit expansion (+9 subs: BTSARMY, Korean_Hip_Hop, 7 solo member subs) — v5.1
+- ✓ Google News RSS (8 BTS-scoped query feeds) — v5.1
+- ✓ AO3 fan fiction Atom feeds (BTS + 4 pairing tags) — v5.1
+- ✓ K-pop News RSS expansion (Billboard, Rolling Stone general feeds) — v5.1
+- ✓ Content Type taxonomy expanded to 8 types with source-level defaults — v5.1
+- ✓ Combined "Source · Content Type" pill badges — v5.1
+- ✓ FilterSheet dynamic content type chip ordering by volume — v5.1
+- ✓ End-to-end description pipeline (scraper → DB → API → preview) — v5.1
+
 ### Active
 
-<!-- v5.1 Quick Wins — config expansions + content type filter -->
-- [ ] Reddit subreddit expansion (+9 subs: r/BTSARMY, r/Korean_Hip_Hop, 7 solo member subs)
-- [ ] Tumblr blog expansion (additional BTS fan blogs)
-- [ ] Google News RSS (4 BTS-scoped query feeds)
-- [ ] K-pop News RSS expansion (Billboard K-Town, Rolling Stone — pending URL verification)
-- [ ] AO3 fan fiction RSS feed (Atom tag feed)
-- [ ] Content Type filter expansion (fan fiction, social, music categories in LLM + UI)
+(No active requirements — define with `/gsd:new-milestone`)
 
 ### Out of Scope
 
@@ -99,36 +102,28 @@ Fans see a rich, diverse stream of content from everywhere — official and fan-
 - Pull-to-refresh — conflicts with scroll-snap overscroll behavior on mobile
 - Dark/light mode toggle — app is dark-first; light mode doubles CSS surface area
 
-## Current Milestone: v5.1 Quick Wins
-
-**Goal:** Expand content coverage through config-only source additions and enhance the content type filter system.
-
-**Target features:**
-- Reddit subreddit expansion (+9 subs including solo member subs)
-- Tumblr blog expansion (additional fan blogs)
-- Google News RSS (4 BTS-scoped feeds)
-- K-pop News RSS expansion (Billboard, Rolling Stone)
-- AO3 fan fiction RSS feed
-- Content Type filter expansion (new LLM categories + UI)
-
 ## Context
 
-**Current state:** 11,697 LOC TypeScript/CSS across 3 packages (frontend, server, shared). React 19 + Vite 7 frontend, Fastify API server, SQLite + Drizzle ORM. Monorepo with npm workspaces.
+**Current state:** 12,042 LOC TypeScript/CSS across 3 packages (frontend, server, shared). React 19 + Vite 7 frontend, Fastify API server, SQLite + Drizzle ORM. Monorepo with npm workspaces.
 
-**Architecture:** Server scrapes 6 sources on 20-min cron → stores in SQLite → LLM pipeline filters/classifies → rankFeed() scores and interleaves → API serves ranked feed → frontend renders immersive snap feed with sort/filter controls, adaptive card layouts, and animations.
+**Architecture:** Server scrapes 7 source types (Reddit, YouTube, RSS, Tumblr, Bluesky, Google News, AO3) on 20-min cron → stores in SQLite → LLM pipeline filters/classifies with source-level defaults → rankFeed() scores and interleaves → API serves ranked feed → frontend renders immersive snap feed with sort/filter controls, adaptive card layouts, and animations.
 
-**Shipped:** v1.0 (feed expansion), v2.0 (scraping engine), v3.0 (immersive snap feed), v4.0 (enhanced feed UI). 4 milestones, 15 phases, 41 plans.
+**Shipped:** v1.0 (feed expansion), v2.0 (scraping engine), v3.0 (immersive snap feed), v4.0 (enhanced feed UI), v5.1 (quick wins). 5 milestones, 17 phases, 45 plans.
 
 **Known tech debt:**
 - Zero test coverage
 - Dead code in frontend: sanitizeHtml, fetchAllFeeds (v1.0 leftovers)
 - TikTok short URL embeds degraded (CORS blocks)
-- Reddit/Bluesky/Tumblr scrapers returning empty on some server IPs
+- Reddit/Bluesky scrapers returning empty on some server IPs
 - Seoul Space RSS source disabled pending URL verification
 - v2.0 UAT tests all skipped (need live deployment verification)
 - windowedItems (5-item) computed but only 3-item visibleItems rendered (v3.0)
 - SortMode type duplicated between @bts/shared and useFeedState.ts (v3.0)
 - startIndex position-preserve dead code — feed resets on sort/filter change (v3.0)
+- Bluesky missing from frontend sources.ts FilterSheet (v5.1)
+- useFeed.ts doesn't pass contentType to server — client-side filtering only (v5.1)
+- sourceBadgeColors duplicated across 3 components (v5.1)
+- DB migration needed for description column (v5.1)
 
 ## Constraints
 
@@ -175,6 +170,11 @@ Fans see a rich, diverse stream of content from everywhere — official and fan-
 | InfoPanel as named export in SnapCard.tsx | Shared across card types, no separate file | ✓ Good — colocation, simple imports |
 | "(Show More)" links to source URL | Replaces SeeMoreSheet bottom sheet | ✓ Good — simpler, drives traffic to source |
 | Dead Nitter/Twitter source removed | nitter.net shut down early 2024 | ✓ Good — eliminated dead code |
+| Source-level content type defaults | Skip LLM for known sources (AO3, Google News, YouTube, Bluesky) | ✓ Good — reduces LLM costs, faster pipeline |
+| Combined pill badge over separate badges | "Source · Content Type" surfaces both at a glance | ✓ Good — cleaner than two separate badges |
+| Dynamic chip ordering by volume | Most common content types appear first in FilterSheet | ✓ Good — relevant filters surface first |
+| Billboard/Rolling Stone as general RSS | No K-pop-specific RSS endpoints available | ✓ Good — keyword filtering catches BTS content |
+| Description pipeline end-to-end | Scraper → DB → API → frontend preview | ✓ Good — richer cards for news/AO3 content |
 
 ---
-*Last updated: 2026-03-06 after v5.1 milestone start*
+*Last updated: 2026-03-07 after v5.1 milestone*

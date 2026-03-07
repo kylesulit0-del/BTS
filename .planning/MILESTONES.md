@@ -84,3 +84,28 @@
 
 ---
 
+
+## v5.1 Quick Wins (Shipped: 2026-03-07)
+
+**Phases completed:** 2 phases, 4 plans, 8 tasks
+**Timeline:** 1 day (2026-03-06)
+**Codebase:** 12,042 LOC TypeScript/CSS (39 files modified, +2,515/-166 lines)
+
+**Key accomplishments:**
+- Expanded scraping sources from 22 to 47 — Google News RSS (8 feeds), AO3 fan fiction (5 feeds), solo member subreddits (7), Billboard, Rolling Stone
+- End-to-end description pipeline: scraper extracts snippets → DB column → API response → frontend preview text
+- Content type taxonomy expanded from 7 to 8 types (fan_fiction, music, social_posts, media, general replace meme, video, translation, official)
+- Source-level content type defaults: AO3→fan_fiction, Google News→news, YouTube→media, Bluesky→social_posts (skip LLM)
+- Combined "Source · Content Type" pill badges on all card types with warm/cool/neutral color grouping
+- FilterSheet: grouped source display with expandable detail chips + dynamic content type chip ordering by volume
+
+**Known tech debt (6 items from audit):**
+- Bluesky missing from frontend sources.ts (can't filter by Bluesky in FilterSheet)
+- Frontend sources.ts detail entries diverged from server config (googlenews, ao3, RSS)
+- sourceBadgeColors duplicated across SnapCard/FeedCard/SwipeFeed
+- useFeed.ts doesn't pass contentType to server — client-side filtering works but server filter unused
+- feedState.contentTypes absent from useFeed useCallback dependency array
+- DB migration needed for description column + server rebuild needed for Phase 16 sources
+
+---
+
